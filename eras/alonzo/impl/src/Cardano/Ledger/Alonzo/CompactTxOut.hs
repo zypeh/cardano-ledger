@@ -8,7 +8,7 @@
 module Test.Cardano.Ledger.Alonzo.CompactTxOut where
 
 import Data.ByteString(ByteString,pack,unpack,index)
-import Cardano.Binary(serialize')
+import Cardano.Binary(serialize',unsafeDeserialize')
 import qualified Data.ByteString as BS
 import Cardano.Ledger.Alonzo.TxBody (TxBody, TxOut (..))
 import Cardano.Ledger.Shelley.CompactAddr (CompactAddr(..), compactAddr, decompactAddr)
@@ -32,7 +32,7 @@ import Cardano.Ledger.Keys(KeyHash(..))
 import Cardano.Slotting.Slot(SlotNo(..))
 import Cardano.Ledger.Mary.Value(Value(..))
 import qualified Data.Map as Map
-import Data.Word(Word8,Word64)
+import Data.Word(Word8,Word16,Word64)
 import Data.Bits
   ( Bits,(.&.),
     (.|.),
@@ -111,6 +111,7 @@ getTags tag = (addr,val,dhash)
 testTag = [ getTags(makeTag addr val dhash) == (addr,val,dhash) | addr <- [0..4], val <- [0..2], dhash <- [0..1]]
 
 -- ===============================================
+--  It should be the case that getAddrBytes  and readAddr  are inverses?
 
 getAddrBytes :: Addr crypto -> (Word8,StakeReference crypto,ByteString)
 getAddrBytes (Addr Testnet (ScriptHashObj (ScriptHash hash1)) stake) = (0,stake,hashToBytes hash1)
@@ -119,23 +120,52 @@ getAddrBytes (Addr Mainnet (ScriptHashObj (ScriptHash hash1)) stake) = (2,stake,
 getAddrBytes (Addr Mainnet (KeyHashObj (KeyHash hash1)) stake)       = (3,stake,hashToBytes hash1)
 getAddrBytes (AddrBootstrap byron)                                   = (4,undefined,undefined)
 
+
+readAddr :: forall c. HashAlgorithm (CC.ADDRHASH c) => Word8 -> Int -> StakeReference c -> ByteString -> (Int, Addr c)
+readAddr 0 i stake bs =  (i2,Addr Testnet (ScriptHashObj (ScriptHash (makeHash bs2))) stake)
+  where (i2,bs2) = readByteString 28 i bs
+readAddr 1 i stake bs = (i2, Addr Testnet (KeyHashObj (KeyHash (makeHash bs2))) stake)
+  where (i2,bs2) = readByteString 28 i bs
+readAddr 2 i stake bs =(i2,Addr Mainnet (ScriptHashObj (ScriptHash (makeHash bs2))) stake)
+  where (i2,bs2) = readByteString 28 i bs 
+readAddr 3 i stake bs = (i2, Addr Mainnet (KeyHashObj (KeyHash (makeHash bs2))) stake)
+  where (i2,bs2) = readByteString 28 i bs
+readAddr 4 i stake bs = undefined
+
+
+-- ===============================================
+--  It should be the case that getValueBytes  and readVal  are inverses?
+
 getValueBytes :: CC.Crypto crypto => Value crypto -> (Word8,ByteString)
 getValueBytes (Value 0 m) | Map.null m = (0,mempty)
 getValueBytes (Value n m) | Map.null m = (1,word64ToByteString (fromIntegral n))
-getValueBytes (v@(Value _ _))          = (2,serialize' (unJust(toCompact v)))
+getValueBytes (v@(Value _ _))          = (2,word16ToByteString n <> valBytes)
     where unJust (Just x) = x
           unJust Nothing = error ("Value does not have compact form.")
+          valBytes = serialize' (unJust(toCompact v))
+          n :: Word16
+          n = fromIntegral (BS.length valBytes)
 
-readVal :: forall crypto. Word8 -> Int -> ByteString -> (Int, Value crypto)
+
+readVal :: forall crypto. CC.Crypto crypto => Word8 -> Int -> ByteString -> (Int, Value crypto)
 readVal 0 i bs = (i,Value 0 Map.empty)
 readVal 1 i bs = (j, Value (fromIntegral n) Map.empty)
   where (j,n) = readWord64 i bs
-readVal 2 i bs = undefined
+readVal 2 i bs = (i3, fromCompact(unsafeDeserialize' bytes))
+  where (i2,n) = readWord16 i bs
+        (i3,bytes) = readByteString (fromIntegral n) i2 bs
 
+-- ===================================================
+--  It should be the case that getDataHashBytes  and readDataHash  are inverses?
 
 getDataHashBytes :: StrictMaybe (DataHash crypto) -> (Word8,ByteString)
 getDataHashBytes SNothing      = (0,mempty)
 getDataHashBytes (SJust mhash) = (1,safeHashToBytes mhash)
+
+readDataHash :: forall c. HashAlgorithm (CC.HASH c) => Word8 -> Int -> ByteString -> (Int, StrictMaybe (DataHash c))
+readDataHash 0 i bs = (i,SNothing)
+readDataHash 1 i bs = (i2,SJust (bytesToSafeHash bs2))
+  where (i2,bs2) = readByteString 28 i bs
 
 -- ===============================================
 
@@ -168,12 +198,6 @@ decompactTxOut (PostByron stake bytes) = TxOut addr val dhash
         (i3,val) = readVal @(Crypto era) valtag i2 bytes
         (i4,dhash) = readDataHash @(Crypto era) dhashtag i3 bytes
 
-readAddr :: forall crypto. Word8 -> Int -> StakeReference crypto -> ByteString -> (Int, Addr crypto)
-readAddr tag i stake bs = undefined
-
-
-readDataHash :: forall crypto. Word8 -> Int -> ByteString -> (Int, StrictMaybe (DataHash crypto))
-readDataHash tag i bs = undefined
 
 -- =============================================
 showBS :: ByteString -> String
@@ -184,6 +208,13 @@ word64ToByteString w64 = pack(loop 8 w64 [])
   where loop :: Word64 -> Word64 -> [Word8] -> [Word8]
         loop 0 _ ans = ans
         loop cnt n ans = loop (cnt - 1) (div n 256) ((fromIntegral (mod n 256)):ans)
+
+word16ToByteString :: Word16 -> ByteString
+word16ToByteString w16 = pack(loop 2 w16 [])
+  where loop :: Word16 -> Word16 -> [Word8] -> [Word8]
+        loop 0 _ ans = ans
+        loop cnt n ans = loop (cnt - 1) (div n 256) ((fromIntegral (mod n 256)):ans)
+
 
 readWord8:: Int -> ByteString -> (Int,Word8)
 readWord8 i bs | i > (BS.length bs -1) = error ("Not enough bytes to read a Word8")
@@ -198,6 +229,13 @@ readWord64 i bs | i+7 > BS.length bs = error ("Not enough bytes to read a Word64
 readWord64 i bs = (i+8,loop 0 0)
   where loop :: Int -> Word64 -> Word64
         loop i ans | i >= 8 = ans
+        loop i ans = loop (i+1) (ans * 256 + fromIntegral(index bs i))
+
+readWord16:: Int -> ByteString -> (Int,Word16)
+readWord16 i bs | i+2 > BS.length bs = error ("Not enough bytes to read a Word16")
+readWord16 i bs = (i+2,loop 0 0)
+  where loop :: Int -> Word16 -> Word16
+        loop i ans | i >= 2 = ans
         loop i ans = loop (i+1) (ans * 256 + fromIntegral(index bs i))
 
 -- | Read a (sub) ByteString of length 'len', starting at index 'i' from 'bs'
