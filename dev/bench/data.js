@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1638213080127,
+  "lastUpdate": 1638223157670,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -588,6 +588,90 @@ window.BENCHMARK_DATA = {
             "value": 0.00006843159380423905,
             "unit": "Nanoseconds",
             "range": 8.333372557117601e-7
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "sheard@pdx.edu",
+            "name": "Tim Sheard",
+            "username": "TimSheard"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ccaecc8029644fdda9190410680975dccd31b648",
+          "message": "Reorganized SetAlgebra by breaking it into 4 modules.  (#2564)\n\n* Reorganized SetAlgebra by breaking it into 4 modules. New ones are Control.Iterate.BaseTypes, Control.Iterate.Exp, and Control.Iterate.BiMap\r\n\r\n* fixed a revertion of PRs: #2563",
+          "timestamp": "2021-11-29T13:32:37-08:00",
+          "tree_id": "9837ac411f7dd092755e23e939393cbfbfa33c89",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/ccaecc8029644fdda9190410680975dccd31b648"
+        },
+        "date": 1638223153484,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/Apply Shelley Tx/0/ShelleyEra C_Crypto",
+            "value": 0.0000834159623600099,
+            "unit": "Nanoseconds",
+            "range": 0.000012424922610035655
+          },
+          {
+            "name": "applyTxBenchmarks/Apply Shelley Tx/0/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00008641649099498022,
+            "unit": "Nanoseconds",
+            "range": 0.000004124757759257884
+          },
+          {
+            "name": "applyTxBenchmarks/Apply Shelley Tx/0/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00008832987097970283,
+            "unit": "Nanoseconds",
+            "range": 0.000004502640514114564
+          },
+          {
+            "name": "applyTxBenchmarks/Apply Shelley Tx/1/ShelleyEra C_Crypto",
+            "value": 0.00005572076687595509,
+            "unit": "Nanoseconds",
+            "range": 0.00000202212086601821
+          },
+          {
+            "name": "applyTxBenchmarks/Apply Shelley Tx/1/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00006312592509994594,
+            "unit": "Nanoseconds",
+            "range": 0.0000030381309231915906
+          },
+          {
+            "name": "applyTxBenchmarks/Apply Shelley Tx/1/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00006468658071910556,
+            "unit": "Nanoseconds",
+            "range": 0.000003499707852207253
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.00007923775251932572,
+            "unit": "Nanoseconds",
+            "range": 0.0000036687616822611886
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00008646770387560703,
+            "unit": "Nanoseconds",
+            "range": 0.000003857192358594007
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.0000874949542625788,
+            "unit": "Nanoseconds",
+            "range": 0.000003218837921984093
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/AlonzoEra C_Crypto",
+            "value": 0.00010056549573628715,
+            "unit": "Nanoseconds",
+            "range": 0.000003928527882834661
           }
         ]
       }
