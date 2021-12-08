@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1638927855514,
+  "lastUpdate": 1638980599626,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -888,6 +888,72 @@ window.BENCHMARK_DATA = {
             "value": 0.00008524301913855065,
             "unit": "Nanoseconds",
             "range": 0.0000021288911693087995
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "sheard@pdx.edu",
+            "name": "Tim Sheard",
+            "username": "TimSheard"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fdcb83f35f58d0320f8a0bcf6c1ae54395bb984c",
+          "message": "Adding a new datatype to replace UTxO currently a Data.Map (#2567)\n\n* Adding a new datatype to replace UTxO as Data.Map\r\nIntroduces the SplitMap. Added basic operations for SplitMap that\r\nevery Map should supply (insert, delete, union, intersection etc).\r\nAdded Basic and Iter instances for Control.SetAlgebra.\r\nAdded the function rewite that applies SplitMap specific rules.\r\nAdded tests that every rewrite that applies, has the same answer\r\nin the fast mode (using the rewrite) and the slow mode (using\r\nthe Iterator instances).",
+          "timestamp": "2021-12-08T19:00:52+03:00",
+          "tree_id": "d1f1032d41b6c84907df91acd069f21a65fdb809",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/fdcb83f35f58d0320f8a0bcf6c1ae54395bb984c"
+        },
+        "date": 1638980593655,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyEra C_Crypto",
+            "value": 0.00007090743062477324,
+            "unit": "Nanoseconds",
+            "range": 0.0000036697613535582124
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00007838411514314528,
+            "unit": "Nanoseconds",
+            "range": 0.000001855377255709058
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00008013062493527355,
+            "unit": "Nanoseconds",
+            "range": 0.0000024185129526470516
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.00008725779993628852,
+            "unit": "Nanoseconds",
+            "range": 0.000004943875488716675
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00009445156433320858,
+            "unit": "Nanoseconds",
+            "range": 0.0000035191425024806778
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00008907722910172746,
+            "unit": "Nanoseconds",
+            "range": 0.000004945977158920905
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/AlonzoEra C_Crypto",
+            "value": 0.00010607716233668307,
+            "unit": "Nanoseconds",
+            "range": 0.000006570480694984434
           }
         ]
       }
