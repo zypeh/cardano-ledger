@@ -51,6 +51,7 @@ library
   hs-source-dirs: src
   ghc-options:
     -Wall
+                      -fno-omit-yields
     -Werror
     -Wcompat
     -Wincomplete-record-updates

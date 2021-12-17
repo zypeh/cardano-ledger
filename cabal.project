@@ -32,6 +32,63 @@ write-ghc-environment-files: always
 tests: true
 benchmarks: true
 
+package cardano-ledger-alonzo-test
+  ghc-options: -fno-omit-yields
+
+package cardano-ledger-alonzo
+  ghc-options: -fno-omit-yields
+
+package byron-spec-chain
+  ghc-options: -fno-omit-yields
+
+package byron-spec-ledger
+  ghc-options: -fno-omit-yields
+
+package cardano-ledger-byron
+  ghc-options: -fno-omit-yields
+
+package cardano-ledger-byron-test
+  ghc-options: -fno-omit-yields
+
+package cardano-crypto-wrapper
+  ghc-options: -fno-omit-yields
+
+package cardano-crypto-test
+  ghc-options: -fno-omit-yields
+
+package cardano-ledger-shelley
+  ghc-options: -fno-omit-yields
+
+package cardano-ledger-shelley-test
+  ghc-options: -fno-omit-yields
+
+package cardano-ledger-shelley-ma
+  ghc-options: -fno-omit-yields
+
+package cardano-ledger-shelley-ma-test
+  ghc-options: -fno-omit-yields
+
+package cardano-ledger-core
+  ghc-options: -fno-omit-yields
+
+package cardano-ledger-example-shelley
+  ghc-options: -fno-omit-yields
+
+package cardano-ledger-pretty
+  ghc-options: -fno-omit-yields
+
+package cardano-ledger-test
+  ghc-options: -fno-omit-yields
+
+package cardano-protocol-tpraos
+  ghc-options: -fno-omit-yields
+
+package plutus-preprocessor
+  ghc-options: -fno-omit-yields
+
+package ledger-state
+  ghc-options: -fno-omit-yields
+
 -- The only sensible test display option
 test-show-details: streaming
 

@@ -22,6 +22,7 @@ common project-config
   build-depends:      base >= 4.12 && < 4.15
 
   ghc-options:        -Wall
+                      -fno-omit-yields
                       -Wcompat
                       -Wincomplete-record-updates
                       -Wincomplete-uni-patterns

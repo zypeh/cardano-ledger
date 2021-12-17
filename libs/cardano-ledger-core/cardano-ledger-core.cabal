@@ -27,6 +27,7 @@ common project-config
 
   ghc-options:
     -Wall
+    -fno-omit-yields
     -Wcompat
     -Wincomplete-record-updates
     -Wincomplete-uni-patterns
