@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1641255519589,
+  "lastUpdate": 1641322580204,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -1680,6 +1680,72 @@ window.BENCHMARK_DATA = {
             "value": 0.0000755232919999328,
             "unit": "Nanoseconds",
             "range": 0.000003646990847000647
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "zacharyachurchill@gmail.com",
+            "name": "Zachary Churchill",
+            "username": "goolord"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b37412b7307b2004e28cb098b7fb8da76e834359",
+          "message": "Babbage: TxBody + TxOut (#2560)\n\n* add babbage era, TxBody and TxOut\r\n\r\n* update collateralReturn\r\n\r\n* reuse Alonzo code, update TxOut\r\n\r\n* revert pattern synonym change\r\n\r\n* WIP\r\n\r\n* correct FromCBOR instance\r\n\r\n* Update eras/babbage/impl/src/Cardano/Ledger/Babbage/TxBody.hs\r\n\r\nCo-authored-by: Alexey Kuleshevich <alexey.kuleshevich@iohk.io>\r\n\r\nCo-authored-by: Alexey Kuleshevich <alexey.kuleshevich@iohk.io>",
+          "timestamp": "2022-01-04T13:45:43-05:00",
+          "tree_id": "64cfdef29e580adb9f781307bc4300a4126e4617",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/b37412b7307b2004e28cb098b7fb8da76e834359"
+        },
+        "date": 1641322576647,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyEra C_Crypto",
+            "value": 0.000052692060081591506,
+            "unit": "Nanoseconds",
+            "range": 0.0000040364058585347004
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00006193661687689703,
+            "unit": "Nanoseconds",
+            "range": 0.0000013782842846224813
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00006609788860110276,
+            "unit": "Nanoseconds",
+            "range": 0.0000029404370441014084
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.00007098470700867086,
+            "unit": "Nanoseconds",
+            "range": 0.000004065935640390636
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00007476134298083682,
+            "unit": "Nanoseconds",
+            "range": 0.000004005662087405637
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00007659156097779976,
+            "unit": "Nanoseconds",
+            "range": 0.0000026768573936346908
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/AlonzoEra C_Crypto",
+            "value": 0.00008939801837169447,
+            "unit": "Nanoseconds",
+            "range": 0.000005785670397760733
           }
         ]
       }
