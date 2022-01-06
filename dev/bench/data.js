@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1641401351616,
+  "lastUpdate": 1641489550411,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -2142,6 +2142,72 @@ window.BENCHMARK_DATA = {
             "value": 0.00011693374027303657,
             "unit": "Nanoseconds",
             "range": 0.000004401150382058061
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "sheard@pdx.edu",
+            "name": "Tim Sheard",
+            "username": "TimSheard"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "85c75a069c0cabb40a7f91f7ea1e951fa92f004c",
+          "message": "Added Data/UMap (polymorphic) and Data.Compact.ViewMap (monomorphic) (#2584)\n\nThis replaces 3 separate Data.Map in DState, with 1 UnifiedMap.\r\nAdded SetAlgebra instances for UMap. Added libs/cardano-data/src/Data/MapExtras.hs\r\nwhich provide operation on Data.Map not available i the standard library.\r\nRewrote incrementalStakeDistr to use the Unified reward maps.\r\nAdded 50 property tests for UMap.\r\nAdded the space saving Trip data and Triple pattern.",
+          "timestamp": "2022-01-06T09:09:07-08:00",
+          "tree_id": "11e94ecc236db3de8b3effb61c5239b49395da0e",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/85c75a069c0cabb40a7f91f7ea1e951fa92f004c"
+        },
+        "date": 1641489547355,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyEra C_Crypto",
+            "value": 0.00004277649815066674,
+            "unit": "Nanoseconds",
+            "range": 0.0000010049199167899505
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00005211195557146997,
+            "unit": "Nanoseconds",
+            "range": 9.42936359794067e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.000054231009842266274,
+            "unit": "Nanoseconds",
+            "range": 0.0000013062817138891442
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.00005952596407613043,
+            "unit": "Nanoseconds",
+            "range": 0.000001506815809090476
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00006411883255179019,
+            "unit": "Nanoseconds",
+            "range": 0.0000024233083835717114
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00006545742034453601,
+            "unit": "Nanoseconds",
+            "range": 0.000001696632712926768
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/AlonzoEra C_Crypto",
+            "value": 0.00007438908098575026,
+            "unit": "Nanoseconds",
+            "range": 9.767476682139298e-7
           }
         ]
       }
