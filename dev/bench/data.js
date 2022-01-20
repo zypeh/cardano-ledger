@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1642619503693,
+  "lastUpdate": 1642640881637,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -3066,6 +3066,72 @@ window.BENCHMARK_DATA = {
             "value": 0.00008015313533890858,
             "unit": "Nanoseconds",
             "range": 0.0000014642040833542133
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jared.corduan@iohk.io",
+            "name": "Jared Corduan",
+            "username": "JaredCorduan"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5358946cd2659adcb3c95ecf0df6d625ec70a419",
+          "message": "Merge pull request #2622 from input-output-hk/jc/remove-double-from-computeStabilityWindow\n\ncomputeStabilityWindow should not use to Double",
+          "timestamp": "2022-01-19T19:51:06-05:00",
+          "tree_id": "af60908dafccad3181b7ca1ef2599c88e741ce3f",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/5358946cd2659adcb3c95ecf0df6d625ec70a419"
+        },
+        "date": 1642640877852,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyEra C_Crypto",
+            "value": 0.000059472878125749845,
+            "unit": "Nanoseconds",
+            "range": 4.757548226780032e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00006715634436290205,
+            "unit": "Nanoseconds",
+            "range": 3.2746029809770135e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00006720082121492348,
+            "unit": "Nanoseconds",
+            "range": 3.809169366342666e-7
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.00006566474417711782,
+            "unit": "Nanoseconds",
+            "range": 0.000001088476426110152
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00007177599502113231,
+            "unit": "Nanoseconds",
+            "range": 0.000001083772543537957
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00007232291711363256,
+            "unit": "Nanoseconds",
+            "range": 0.0000012557469578356036
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/AlonzoEra C_Crypto",
+            "value": 0.0000837118131992872,
+            "unit": "Nanoseconds",
+            "range": 0.000001285536234317041
           }
         ]
       }
