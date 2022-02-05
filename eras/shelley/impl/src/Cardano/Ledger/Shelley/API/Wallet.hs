@@ -113,6 +113,7 @@ import qualified Cardano.Ledger.Val as Val
 import Cardano.Slotting.Slot (EpochSize)
 import Control.DeepSeq (NFData)
 import Control.Monad.Trans.Reader (runReader)
+import Control.Parallel.Strategies (parTraversable, rseq, using)
 import Control.Provenance (runWithProvM)
 import Data.Aeson (FromJSON, ToJSON)
 import qualified Data.ByteString.Lazy as LBS
@@ -157,10 +158,10 @@ getFilteredUTxO ::
   Set (Addr (Crypto era)) ->
   UTxO era
 getFilteredUTxO ss addrs =
-  UTxO $
-    Map.filter
+  UTxO
+    (Map.filter
       (\out -> getField @"compactAddress" out `Set.member` addrSBSs)
-      fullUTxO
+      fullUTxO `using` parTraversable rseq)
   where
     UTxO fullUTxO = getUTxO ss
     -- Instead of decompacting each address in the huge UTxO, compact each
