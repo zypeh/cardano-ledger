@@ -110,6 +110,7 @@ library
     microlens,
     nothunks,
     primitive >= 0.7.1.0,
+    parallel,
     quiet,
     set-algebra,
     small-steps,
