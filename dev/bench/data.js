@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1648672639318,
+  "lastUpdate": 1648690463567,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -4698,6 +4698,66 @@ window.BENCHMARK_DATA = {
             "value": 0.00006580210997319897,
             "unit": "Nanoseconds",
             "range": 0.0000018045789384715372
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jared.corduan@iohk.io",
+            "name": "Jared Corduan",
+            "username": "JaredCorduan"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "28632ee614b76ae189f140889f4722c35a81bb5e",
+          "message": "neededTxInsForBlock now accounts for all inputs (#2715)\n\nI've add a new class method to Era, getAllTxInputs, which collects\r\nall the various inputs in the transaction body in each era.\r\n\r\n* For Shelley through Mary this is just the spending inputs.\r\n* Alonzo adds collateral inputs.\r\n* Babbage adds reference inputs.",
+          "timestamp": "2022-03-30T21:28:46-04:00",
+          "tree_id": "1cd3495e8d7dfa22d80e9766b432abd15650fa29",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/28632ee614b76ae189f140889f4722c35a81bb5e"
+        },
+        "date": 1648690459959,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyEra C_Crypto",
+            "value": 0.0000551335498487934,
+            "unit": "Nanoseconds",
+            "range": 2.688155137132419e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.0000632247702097302,
+            "unit": "Nanoseconds",
+            "range": 1.555085436641737e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00006200399443531421,
+            "unit": "Nanoseconds",
+            "range": 9.125953917642043e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.000022718565233200927,
+            "unit": "Nanoseconds",
+            "range": 4.7734637683858803e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.0000790046056571729,
+            "unit": "Nanoseconds",
+            "range": 1.194840855317683e-7
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00005448810210742379,
+            "unit": "Nanoseconds",
+            "range": 7.194020469701427e-8
           }
         ]
       }
