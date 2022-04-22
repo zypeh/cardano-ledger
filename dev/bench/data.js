@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1650628698365,
+  "lastUpdate": 1650654583217,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -5778,6 +5778,66 @@ window.BENCHMARK_DATA = {
             "value": 0.00005478061053757775,
             "unit": "Nanoseconds",
             "range": 0.0000011900369816216115
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jared.corduan@iohk.io",
+            "name": "Jared Corduan",
+            "username": "JaredCorduan"
+          },
+          "committer": {
+            "email": "jared.corduan@iohk.io",
+            "name": "Jared Corduan",
+            "username": "JaredCorduan"
+          },
+          "distinct": true,
+          "id": "7e37829a0f6bf1e6bf85a5e1b99babd74b701b13",
+          "message": "Remove OnePhaseFailure constructor\n\nThe OnePhaseFailure constructor of FailureDescription is no longer\nneeded after commit 731b80c0b45ab7918498c470297378ca16ab6385.",
+          "timestamp": "2022-04-22T14:52:36-04:00",
+          "tree_id": "174851c65b88f59108eeeb8596f9ef2608a7866d",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/7e37829a0f6bf1e6bf85a5e1b99babd74b701b13"
+        },
+        "date": 1650654579803,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyEra C_Crypto",
+            "value": 0.000051208752057554925,
+            "unit": "Nanoseconds",
+            "range": 0.0000010852796208634262
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00005808351388914371,
+            "unit": "Nanoseconds",
+            "range": 0.0000018530594014117142
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.000056379783663581764,
+            "unit": "Nanoseconds",
+            "range": 0.000001690945721023896
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.00002085683496803943,
+            "unit": "Nanoseconds",
+            "range": 6.205697972918551e-7
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00007257259630377076,
+            "unit": "Nanoseconds",
+            "range": 0.000003202353984452971
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.000051902486146046,
+            "unit": "Nanoseconds",
+            "range": 0.000002060705623728185
           }
         ]
       }
