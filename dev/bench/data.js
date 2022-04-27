@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1651050597954,
+  "lastUpdate": 1651067803278,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -6138,6 +6138,66 @@ window.BENCHMARK_DATA = {
             "value": 0.000040842485567048226,
             "unit": "Nanoseconds",
             "range": 9.345838410555889e-7
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "sheard@pdx.edu",
+            "name": "Tim Sheard",
+            "username": "TimSheard"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f3b0cf3994d5a9a1a53e9864144d524be6033276",
+          "message": "Ts generic state to env (#2698)\n\n* Restructured Generic.Properties into mutiple files\r\n\r\nMoved some code to Generic.Functions and Generic.GenState\r\nAdded viewGenState, to observe what is generated.\r\nAdjusted generators to exercise more code, and to run faster.\r\nAdded a few more 'Summary' pretty printers.\r\nAdded the files Trace.hs and MockChain, moving towards full Trace Generation\r\nMockChain is a simplified Chain which does none of the BlockHeader tests.\r\nAdded HasTrace (MockChain era) (GenState era) instance\r\nAdded Trace.hs which builds traces.\r\n\r\n* Ensure trace generator properties are reproducable\r\n\r\nCo-authored-by: Alexey Kuleshevich <alexey.kuleshevich@iohk.io>",
+          "timestamp": "2022-04-27T06:49:23-07:00",
+          "tree_id": "ed95b1d065248027555352b49dc4c49db3302f07",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/f3b0cf3994d5a9a1a53e9864144d524be6033276"
+        },
+        "date": 1651067799693,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyEra C_Crypto",
+            "value": 0.00004596446922492425,
+            "unit": "Nanoseconds",
+            "range": 4.32009732791185e-8
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.000052468029902086923,
+            "unit": "Nanoseconds",
+            "range": 4.772460562205976e-8
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00005162899094309514,
+            "unit": "Nanoseconds",
+            "range": 6.098890965321089e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.000019418639868641612,
+            "unit": "Nanoseconds",
+            "range": 3.750987460260939e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00006659554848483164,
+            "unit": "Nanoseconds",
+            "range": 7.096827438078929e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.000046104069602023585,
+            "unit": "Nanoseconds",
+            "range": 4.6118471181265075e-8
           }
         ]
       }
