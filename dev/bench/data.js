@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1651877169935,
+  "lastUpdate": 1652109131752,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -6918,6 +6918,66 @@ window.BENCHMARK_DATA = {
             "value": 0.00004629151601834699,
             "unit": "Nanoseconds",
             "range": 4.345840179888684e-8
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "alexey.kuleshevich@iohk.io",
+            "name": "Alexey Kuleshevich",
+            "username": "lehins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "34d2bd2988ad12b36b53f440367f7f1f16c502b8",
+          "message": "Merge pull request #2772 from input-output-hk/lehins/disable-plutus-debug-tracing\n\nRemove Show for PlutusDebug and disable traceEvent on PlutusScriptResult",
+          "timestamp": "2022-05-09T18:06:33+03:00",
+          "tree_id": "c8725bdd0b5806e7770c1337fbe5651751b5eb4f",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/34d2bd2988ad12b36b53f440367f7f1f16c502b8"
+        },
+        "date": 1652109127664,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyEra C_Crypto",
+            "value": 0.00005848979333242071,
+            "unit": "Nanoseconds",
+            "range": 2.497802877378091e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00006615838581157718,
+            "unit": "Nanoseconds",
+            "range": 1.78024824768781e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.0000646735753744102,
+            "unit": "Nanoseconds",
+            "range": 2.7611254869524473e-7
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.000022528616345978112,
+            "unit": "Nanoseconds",
+            "range": 4.0732590411834607e-7
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00007982400859672018,
+            "unit": "Nanoseconds",
+            "range": 2.6557142810886465e-7
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.000054459029141633254,
+            "unit": "Nanoseconds",
+            "range": 4.3924176560159017e-7
           }
         ]
       }
