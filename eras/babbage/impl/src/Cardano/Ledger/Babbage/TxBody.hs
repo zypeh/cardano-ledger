@@ -384,25 +384,25 @@ pattern TxOutCompactDH addr vl dh <-
 type ScriptIntegrityHash crypto = SafeHash crypto EraIndependentScriptIntegrity
 
 data TxBodyRaw era = TxBodyRaw
-  { _spendInputs :: !(Set (TxIn (Crypto era))),
-    _collateralInputs :: !(Set (TxIn (Crypto era))),
-    _referenceInputs :: !(Set (TxIn (Crypto era))),
-    _outputs :: !(StrictSeq (TxOut era)),
-    _collateralReturn :: !(StrictMaybe (TxOut era)),
-    _totalCollateral :: !(StrictMaybe Coin),
-    _certs :: !(StrictSeq (DCert (Crypto era))),
-    _wdrls :: !(Wdrl (Crypto era)),
-    _txfee :: !Coin,
-    _vldt :: !ValidityInterval,
-    _update :: !(StrictMaybe (Update era)),
-    _reqSignerHashes :: Set (KeyHash 'Witness (Crypto era)),
-    _mint :: !(Value (Crypto era)),
+  { txSpendInputs :: !(Set (TxIn (Crypto era))),
+    txCollateralInputs :: !(Set (TxIn (Crypto era))),
+    txReferenceInputs :: !(Set (TxIn (Crypto era))),
+    txOutputs :: !(StrictSeq (TxOut era)),
+    txCollateralReturn :: !(StrictMaybe (TxOut era)),
+    txTotalCollateral :: !(StrictMaybe Coin),
+    txCerts :: !(StrictSeq (DCert (Crypto era))),
+    txWdrls :: !(Wdrl (Crypto era)),
+    txFee :: !Coin,
+    txVldt :: !ValidityInterval,
+    txUpdate :: !(StrictMaybe (Update era)),
+    txReqSignerHashes :: Set (KeyHash 'Witness (Crypto era)),
+    txMint :: !(Value (Crypto era)),
     -- The spec makes it clear that the mint field is a
     -- Cardano.Ledger.Mary.Value.Value, not a Core.Value.
     -- Operations on the TxBody in the BabbageEra depend upon this.
-    _scriptIntegrityHash :: !(StrictMaybe (ScriptIntegrityHash (Crypto era))),
-    _adHash :: !(StrictMaybe (AuxiliaryDataHash (Crypto era))),
-    _txnetworkid :: !(StrictMaybe Network)
+    txScriptIntegrityHash :: !(StrictMaybe (ScriptIntegrityHash (Crypto era))),
+    txAdHash :: !(StrictMaybe (AuxiliaryDataHash (Crypto era))),
+    txNetworkid :: !(StrictMaybe Network)
   }
   deriving (Generic, Typeable)
 
@@ -529,22 +529,22 @@ pattern TxBody
   TxBodyConstr
     ( Memo
         TxBodyRaw
-          { _spendInputs = inputs,
-            _collateralInputs = collateral,
-            _referenceInputs = referenceInputs,
-            _outputs = outputs,
-            _collateralReturn = collateralReturn,
-            _totalCollateral = totalCollateral,
-            _certs = txcerts,
-            _wdrls = txwdrls,
-            _txfee = txfee,
-            _vldt = txvldt,
-            _update = txUpdates,
-            _reqSignerHashes = reqSignerHashes,
-            _mint = mint,
-            _scriptIntegrityHash = scriptIntegrityHash,
-            _adHash = adHash,
-            _txnetworkid = txnetworkid
+          { txSpendInputs = inputs,
+            txCollateralInputs = collateral,
+            txReferenceInputs = referenceInputs,
+            txOutputs = outputs,
+            txCollateralReturn = collateralReturn,
+            txTotalCollateral = totalCollateral,
+            txCerts = txcerts,
+            txWdrls = txwdrls,
+            txFee = txfee,
+            txVldt = txvldt,
+            txUpdate = txUpdates,
+            txReqSignerHashes = reqSignerHashes,
+            txMint = mint,
+            txScriptIntegrityHash = scriptIntegrityHash,
+            txAdHash = adHash,
+            txNetworkid = txnetworkid
           }
         _
       )
@@ -613,39 +613,39 @@ reqSignerHashes' :: TxBody era -> Set (KeyHash 'Witness (Crypto era))
 adHash' :: TxBody era -> StrictMaybe (AuxiliaryDataHash (Crypto era))
 mint' :: TxBody era -> Value (Crypto era)
 scriptIntegrityHash' :: TxBody era -> StrictMaybe (ScriptIntegrityHash (Crypto era))
-spendInputs' (TxBodyConstr (Memo raw _)) = _spendInputs raw
+spendInputs' (TxBodyConstr (Memo raw _)) = txSpendInputs raw
 
 txnetworkid' :: TxBody era -> StrictMaybe Network
 
-collateralInputs' (TxBodyConstr (Memo raw _)) = _collateralInputs raw
+collateralInputs' (TxBodyConstr (Memo raw _)) = txCollateralInputs raw
 
-referenceInputs' (TxBodyConstr (Memo raw _)) = _referenceInputs raw
+referenceInputs' (TxBodyConstr (Memo raw _)) = txReferenceInputs raw
 
-outputs' (TxBodyConstr (Memo raw _)) = _outputs raw
+outputs' (TxBodyConstr (Memo raw _)) = txOutputs raw
 
-collateralReturn' (TxBodyConstr (Memo raw _)) = _collateralReturn raw
+collateralReturn' (TxBodyConstr (Memo raw _)) = txCollateralReturn raw
 
-totalCollateral' (TxBodyConstr (Memo raw _)) = _totalCollateral raw
+totalCollateral' (TxBodyConstr (Memo raw _)) = txTotalCollateral raw
 
-certs' (TxBodyConstr (Memo raw _)) = _certs raw
+certs' (TxBodyConstr (Memo raw _)) = txCerts raw
 
-wdrls' (TxBodyConstr (Memo raw _)) = _wdrls raw
+wdrls' (TxBodyConstr (Memo raw _)) = txWdrls raw
 
-txfee' (TxBodyConstr (Memo raw _)) = _txfee raw
+txfee' (TxBodyConstr (Memo raw _)) = txFee raw
 
-vldt' (TxBodyConstr (Memo raw _)) = _vldt raw
+vldt' (TxBodyConstr (Memo raw _)) = txVldt raw
 
-update' (TxBodyConstr (Memo raw _)) = _update raw
+update' (TxBodyConstr (Memo raw _)) = txUpdate raw
 
-reqSignerHashes' (TxBodyConstr (Memo raw _)) = _reqSignerHashes raw
+reqSignerHashes' (TxBodyConstr (Memo raw _)) = txReqSignerHashes raw
 
-adHash' (TxBodyConstr (Memo raw _)) = _adHash raw
+adHash' (TxBodyConstr (Memo raw _)) = txAdHash raw
 
-mint' (TxBodyConstr (Memo raw _)) = _mint raw
+mint' (TxBodyConstr (Memo raw _)) = txMint raw
 
-scriptIntegrityHash' (TxBodyConstr (Memo raw _)) = _scriptIntegrityHash raw
+scriptIntegrityHash' (TxBodyConstr (Memo raw _)) = txScriptIntegrityHash raw
 
-txnetworkid' (TxBodyConstr (Memo raw _)) = _txnetworkid raw
+txnetworkid' (TxBodyConstr (Memo raw _)) = txNetworkid raw
 
 --------------------------------------------------------------------------------
 -- Serialisation
@@ -822,44 +822,44 @@ encodeTxBodyRaw ::
   Encode ('Closed 'Sparse) (TxBodyRaw era)
 encodeTxBodyRaw
   TxBodyRaw
-    { _spendInputs,
-      _collateralInputs,
-      _referenceInputs,
-      _outputs,
-      _collateralReturn,
-      _totalCollateral,
-      _certs,
-      _wdrls,
-      _txfee,
-      _vldt = ValidityInterval bot top,
-      _update,
-      _reqSignerHashes,
-      _mint,
-      _scriptIntegrityHash,
-      _adHash,
-      _txnetworkid
+    { txSpendInputs,
+      txCollateralInputs,
+      txReferenceInputs,
+      txOutputs,
+      txCollateralReturn,
+      txTotalCollateral,
+      txCerts,
+      txWdrls,
+      txFee,
+      txVldt = ValidityInterval bot top,
+      txUpdate,
+      txReqSignerHashes,
+      txMint,
+      txScriptIntegrityHash,
+      txAdHash,
+      txNetworkid
     } =
     Keyed
       ( \i ifee ri o cr tc f t c w u b rsh mi sh ah ni ->
           TxBodyRaw i ifee ri o cr tc c w f (ValidityInterval b t) u rsh mi sh ah ni
       )
-      !> Key 0 (E encodeFoldable _spendInputs)
-      !> Key 13 (E encodeFoldable _collateralInputs)
-      !> Key 18 (E encodeFoldable _referenceInputs)
-      !> Key 1 (E encodeFoldable _outputs)
-      !> encodeKeyedStrictMaybe 16 _collateralReturn
-      !> encodeKeyedStrictMaybe 17 _totalCollateral
-      !> Key 2 (To _txfee)
+      !> Key 0 (E encodeFoldable txSpendInputs)
+      !> Key 13 (E encodeFoldable txCollateralInputs)
+      !> Key 18 (E encodeFoldable txReferenceInputs)
+      !> Key 1 (E encodeFoldable txOutputs)
+      !> encodeKeyedStrictMaybe 16 txCollateralReturn
+      !> encodeKeyedStrictMaybe 17 txTotalCollateral
+      !> Key 2 (To txFee)
       !> encodeKeyedStrictMaybe 3 top
-      !> Omit null (Key 4 (E encodeFoldable _certs))
-      !> Omit (null . unWdrl) (Key 5 (To _wdrls))
-      !> encodeKeyedStrictMaybe 6 _update
+      !> Omit null (Key 4 (E encodeFoldable txCerts))
+      !> Omit (null . unWdrl) (Key 5 (To txWdrls))
+      !> encodeKeyedStrictMaybe 6 txUpdate
       !> encodeKeyedStrictMaybe 8 bot
-      !> Key 14 (E encodeFoldable _reqSignerHashes)
-      !> Omit isZero (Key 9 (E encodeMint _mint))
-      !> encodeKeyedStrictMaybe 11 _scriptIntegrityHash
-      !> encodeKeyedStrictMaybe 7 _adHash
-      !> encodeKeyedStrictMaybe 15 _txnetworkid
+      !> Key 14 (E encodeFoldable txReqSignerHashes)
+      !> Omit isZero (Key 9 (E encodeMint txMint))
+      !> encodeKeyedStrictMaybe 11 txScriptIntegrityHash
+      !> encodeKeyedStrictMaybe 7 txAdHash
+      !> encodeKeyedStrictMaybe 15 txNetworkid
 
 instance
   forall era.
@@ -905,51 +905,51 @@ instance
       bodyFields :: (Word -> Field (TxBodyRaw era))
       bodyFields 0 =
         field
-          (\x tx -> tx {_spendInputs = x})
+          (\x tx -> tx {txSpendInputs = x})
           (D (decodeSet fromCBOR))
       bodyFields 13 =
         field
-          (\x tx -> tx {_collateralInputs = x})
+          (\x tx -> tx {txCollateralInputs = x})
           (D (decodeSet fromCBOR))
       bodyFields 18 =
         field
-          (\x tx -> tx {_referenceInputs = x})
+          (\x tx -> tx {txReferenceInputs = x})
           (D (decodeSet fromCBOR))
       bodyFields 1 =
         field
-          (\x tx -> tx {_outputs = x})
+          (\x tx -> tx {txOutputs = x})
           (D (decodeStrictSeq (fromCborTxOutWithAddr fromCborBothAddr)))
       bodyFields 16 =
         ofield
-          (\x tx -> tx {_collateralReturn = x})
+          (\x tx -> tx {txCollateralReturn = x})
           (D (fromCborTxOutWithAddr fromCborBothAddr))
       bodyFields 17 =
         ofield
-          (\x tx -> tx {_totalCollateral = x})
+          (\x tx -> tx {txTotalCollateral = x})
           From
-      bodyFields 2 = field (\x tx -> tx {_txfee = x}) From
+      bodyFields 2 = field (\x tx -> tx {txFee = x}) From
       bodyFields 3 =
         ofield
-          (\x tx -> tx {_vldt = (_vldt tx) {invalidHereafter = x}})
+          (\x tx -> tx {txVldt = (txVldt tx) {invalidHereafter = x}})
           From
       bodyFields 4 =
         field
-          (\x tx -> tx {_certs = x})
+          (\x tx -> tx {txCerts = x})
           (D (decodeStrictSeq fromCBOR))
       bodyFields 5 =
         field
-          (\x tx -> tx {_wdrls = x})
+          (\x tx -> tx {txWdrls = x})
           (D (Wdrl <$> decodeMap fromCborRewardAcnt fromCBOR))
-      bodyFields 6 = ofield (\x tx -> tx {_update = x}) From
-      bodyFields 7 = ofield (\x tx -> tx {_adHash = x}) From
+      bodyFields 6 = ofield (\x tx -> tx {txUpdate = x}) From
+      bodyFields 7 = ofield (\x tx -> tx {txAdHash = x}) From
       bodyFields 8 =
         ofield
-          (\x tx -> tx {_vldt = (_vldt tx) {invalidBefore = x}})
+          (\x tx -> tx {txVldt = (txVldt tx) {invalidBefore = x}})
           From
-      bodyFields 9 = field (\x tx -> tx {_mint = x}) (D decodeMint)
-      bodyFields 11 = ofield (\x tx -> tx {_scriptIntegrityHash = x}) From
-      bodyFields 14 = field (\x tx -> tx {_reqSignerHashes = x}) (D (decodeSet fromCBOR))
-      bodyFields 15 = ofield (\x tx -> tx {_txnetworkid = x}) From
+      bodyFields 9 = field (\x tx -> tx {txMint = x}) (D decodeMint)
+      bodyFields 11 = ofield (\x tx -> tx {txScriptIntegrityHash = x}) From
+      bodyFields 14 = field (\x tx -> tx {txReqSignerHashes = x}) (D (decodeSet fromCBOR))
+      bodyFields 15 = ofield (\x tx -> tx {txNetworkid = x}) From
       bodyFields n = field (\_ t -> t) (Invalid n)
       requiredFields =
         [ (0, "inputs"),
@@ -961,64 +961,64 @@ instance
 -- HasField instances to be consistent with earlier Eras
 
 instance (Crypto era ~ c) => HasField "inputs" (TxBody era) (Set (TxIn c)) where
-  getField (TxBodyConstr (Memo m _)) = _spendInputs m
+  getField (TxBodyConstr (Memo m _)) = txSpendInputs m
 
 instance HasField "outputs" (TxBody era) (StrictSeq (TxOut era)) where
-  getField (TxBodyConstr (Memo m _)) = _outputs m
+  getField (TxBodyConstr (Memo m _)) = txOutputs m
 
 instance Crypto era ~ crypto => HasField "certs" (TxBody era) (StrictSeq (DCert crypto)) where
-  getField (TxBodyConstr (Memo m _)) = _certs m
+  getField (TxBodyConstr (Memo m _)) = txCerts m
 
 instance Crypto era ~ crypto => HasField "wdrls" (TxBody era) (Wdrl crypto) where
-  getField (TxBodyConstr (Memo m _)) = _wdrls m
+  getField (TxBodyConstr (Memo m _)) = txWdrls m
 
 instance HasField "txfee" (TxBody era) Coin where
-  getField (TxBodyConstr (Memo m _)) = _txfee m
+  getField (TxBodyConstr (Memo m _)) = txFee m
 
 instance HasField "update" (TxBody era) (StrictMaybe (Update era)) where
-  getField (TxBodyConstr (Memo m _)) = _update m
+  getField (TxBodyConstr (Memo m _)) = txUpdate m
 
 instance
   (Crypto era ~ c) =>
   HasField "reqSignerHashes" (TxBody era) (Set (KeyHash 'Witness c))
   where
-  getField (TxBodyConstr (Memo m _)) = _reqSignerHashes m
+  getField (TxBodyConstr (Memo m _)) = txReqSignerHashes m
 
 instance (Crypto era ~ c) => HasField "mint" (TxBody era) (Mary.Value c) where
-  getField (TxBodyConstr (Memo m _)) = _mint m
+  getField (TxBodyConstr (Memo m _)) = txMint m
 
 instance (Crypto era ~ c) => HasField "collateral" (TxBody era) (Set (TxIn c)) where
-  getField (TxBodyConstr (Memo m _)) = _collateralInputs m
+  getField (TxBodyConstr (Memo m _)) = txCollateralInputs m
 
 instance (Crypto era ~ c) => HasField "referenceInputs" (TxBody era) (Set (TxIn c)) where
-  getField (TxBodyConstr (Memo m _)) = _referenceInputs m
+  getField (TxBodyConstr (Memo m _)) = txReferenceInputs m
 
 instance HasField "collateralReturn" (TxBody era) (StrictMaybe (TxOut era)) where
-  getField (TxBodyConstr (Memo m _)) = _collateralReturn m
+  getField (TxBodyConstr (Memo m _)) = txCollateralReturn m
 
 instance HasField "totalCollateral" (TxBody era) (StrictMaybe Coin) where
-  getField (TxBodyConstr (Memo m _)) = _totalCollateral m
+  getField (TxBodyConstr (Memo m _)) = txTotalCollateral m
 
 instance (Crypto era ~ c) => HasField "minted" (TxBody era) (Set (ScriptHash c)) where
-  getField (TxBodyConstr (Memo m _)) = Set.map policyID (policies (_mint m))
+  getField (TxBodyConstr (Memo m _)) = Set.map policyID (policies (txMint m))
 
 instance HasField "vldt" (TxBody era) ValidityInterval where
-  getField (TxBodyConstr (Memo m _)) = _vldt m
+  getField (TxBodyConstr (Memo m _)) = txVldt m
 
 instance
   c ~ Crypto era =>
   HasField "adHash" (TxBody era) (StrictMaybe (AuxiliaryDataHash c))
   where
-  getField (TxBodyConstr (Memo m _)) = _adHash m
+  getField (TxBodyConstr (Memo m _)) = txAdHash m
 
 instance
   c ~ Crypto era =>
   HasField "scriptIntegrityHash" (TxBody era) (StrictMaybe (ScriptIntegrityHash c))
   where
-  getField (TxBodyConstr (Memo m _)) = _scriptIntegrityHash m
+  getField (TxBodyConstr (Memo m _)) = txScriptIntegrityHash m
 
 instance HasField "txnetworkid" (TxBody era) (StrictMaybe Network) where
-  getField (TxBodyConstr (Memo m _)) = _txnetworkid m
+  getField (TxBodyConstr (Memo m _)) = txNetworkid m
 
 instance (Era era, Core.Value era ~ val, Compactible val) => HasField "value" (TxOut era) val where
   getField = \case
