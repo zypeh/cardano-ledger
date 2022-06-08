@@ -36,6 +36,7 @@ class
   (Era era, ValidateScript era, Eq (Core.Script era), Show (Core.Script era)) =>
   Scriptic era
   where
+    --2 : redeemer+ context; 3: reedemer + context + datum
   always :: Natural -> Proof era -> Core.Script era
   alwaysAlt :: Natural -> Proof era -> Core.Script era
   never :: Natural -> Proof era -> Core.Script era

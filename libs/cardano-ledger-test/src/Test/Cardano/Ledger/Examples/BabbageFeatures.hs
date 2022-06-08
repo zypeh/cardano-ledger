@@ -10,6 +10,12 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS -Wno-unused-imports #-}
+{-# OPTIONS -Wno-unused-top-binds #-}
+{-# OPTIONS -Wno-unused-local-binds #-}
+{-# OPTIONS -Wno-unused-matches #-}
+{-# OPTIONS -Wno-redundant-constraints #-}
+
 
 module Test.Cardano.Ledger.Examples.BabbageFeatures where
 
@@ -42,6 +48,7 @@ import Cardano.Ledger.Keys
   ( KeyPair (..),
     KeyRole (..),
     hashKey,
+    KeyHash
   )
 import Cardano.Ledger.Pretty.Babbage ()
 import Cardano.Ledger.SafeHash (hashAnnotated)
@@ -192,6 +199,18 @@ referenceDataHashOutput pf =
       DHash' [hashData $ datumExample1 @era]
     ]
 
+extraneousKeyHash :: CC.Crypto c => KeyHash 'Witness c
+extraneousKeyHash = hashKey . snd . mkKeyPair $ RawSeed 0 0 0 0 99
+
+xxxOutput :: forall era. (Scriptic era) => Proof era -> Core.TxOut era
+xxxOutput pf =
+  newTxOut
+  pf
+    [ Address (plainAddr pf),
+      Amount (inject $ Coin 5000),
+      RefScript (SJust $ allOf [ require extraneousKeyHash] pf )
+    ]
+
 --
 -- Genesis Inputs
 --
@@ -229,7 +248,10 @@ collateralInput17 = mkGenesisTxIn 17
 referenceScriptInput3 :: (CH.HashAlgorithm (CC.HASH crypto), HasCallStack) => TxIn crypto
 referenceScriptInput3 = mkGenesisTxIn 18
 
---
+xxxInput :: (CH.HashAlgorithm (CC.HASH crypto), HasCallStack) => TxIn crypto
+xxxInput = mkGenesisTxIn 9
+
+--6
 -- Genesis UTxO
 --
 
@@ -237,19 +259,21 @@ initUTxO :: PostShelley era => Proof era -> UTxO era
 initUTxO pf =
   UTxO $
     Map.fromList
-      [ (inlineDatumInput, inlineDatumOutput pf),
-        (referenceScriptInput, referenceScriptOutput pf),
-        (referenceDataHashInput, referenceDataHashOutput pf),
-        (somePlainInput, somePlainOutput pf),
+      [
+        -- (inlineDatumInput, inlineDatumOutput pf),
+        -- (referenceScriptInput, referenceScriptOutput pf),
+        -- (referenceDataHashInput, referenceDataHashOutput pf),
+        -- (somePlainInput, somePlainOutput pf),
         (simpleV2EUTxOInput, simpleV2EUTxO pf),
-        (referenceScriptInput2, referenceScriptOutput2 pf),
-        (failsEUTxOInput, failsEUTxO pf),
-        (inlineDatumInputV1, inlineDatumOutputV1 pf),
-        (collateralInput11, collateralOutput pf),
-        (collateralInput17, collateralOutput pf),
-        (referenceScriptInput3, malformedScriptsTxOut pf)
+        -- (referenceScriptInput2, referenceScriptOutput2 pf),
+        -- (failsEUTxOInput, failsEUTxO pf),
+        -- (inlineDatumInputV1, inlineDatumOutputV1 pf),
+        -- (collateralInput11, collateralOutput pf),
+        -- (collateralInput17, collateralOutput pf),
+        -- (referenceScriptInput3, malformedScriptsTxOut pf),
+        (xxxInput, xxxOutput pf)
       ]
-
+--alice owns payment credentials in the adress; bob needs to sign off ; only alice will provide
 defaultPPs :: [PParamsField era]
 defaultPPs =
   [ Costmdls . CostModels $ Map.fromList [(PlutusV1, freeCostModelV1), (PlutusV2, freeCostModelV2)],
@@ -640,6 +664,54 @@ utxoStEx8 ::
   UTxOState era
 utxoStEx8 pf = smartUTxOState (utxoEx8 pf) (Coin 0) (Coin 5) def
 
+
+-- ====================================================================================
+--  Example xxx
+--
+--  No idea...
+-- ====================================================================================
+
+xxxTxBody :: Scriptic era => Proof era -> Core.TxBody era
+xxxTxBody pf =
+  newTxBody
+    pf
+    [ Inputs' [xxxInput],
+      -- Collateral' [collateralInput11],
+      Outputs' [outEx1 pf],
+      Txfee (Coin 5)
+      -- WppHash (newScriptIntegrityHash pf (pp pf) [PlutusV2] validatingRedeemersEx1 txDatsExample2)
+    ]
+
+xxxTx ::
+  forall era.
+  ( Scriptic era,
+    GoodCrypto (Crypto era)
+  ) =>
+  Proof era ->
+  Core.Tx era
+xxxTx pf =
+  newTx
+    pf
+    [ Body (xxxTxBody pf),
+      WitnessesI
+        [ AddrWits' [makeWitnessVKey (hashAnnotated (xxxTxBody pf)) (someKeys pf)]
+          -- ScriptWits' [alwaysAlt 3 pf]
+          -- RdmrWits validatingRedeemersEx1
+        ]
+    ]
+
+
+xxxUTxO :: forall era. PostShelley era => Proof era -> UTxO era
+xxxUTxO pf = expectedUTxO (initUTxO pf) (ExpectSuccess (xxxTxBody pf) (outEx1 pf)) 9
+
+xxxState ::
+  forall era.
+  (Default (State (EraRule "PPUP" era)), PostShelley era) =>
+  Proof era ->
+  UTxOState era
+xxxState pf = smartUTxOState (xxxUTxO pf) (Coin 0) (Coin 5) def
+
+
 -- ====================================================================================
 --  Example 9: Invalid - collateral total
 -- ====================================================================================
@@ -892,43 +964,49 @@ genericBabbageFeatures pf =
     (show pf ++ " UTXOW examples")
     [ testGroup
         "valid transactions"
-        [ testCase "inline datum" $
+        [
+          -- testCase "inline datum" $
+          --   testU
+          --     pf
+          --     (trustMeP pf True $ inlineDatumTx pf)
+          --     (Right $ utxoStEx1 pf),
+          -- testCase "reference script" $
+          --   testU
+          --     pf
+          --     (trustMeP pf True $ referenceScriptTx pf)
+          --     (Right $ utxoStEx2 pf),
+          -- testCase "inline datum and ref script" $
+          --   testU
+          --     pf
+          --     (trustMeP pf True $ inlineDatumAndRefScriptTx pf)
+          --     (Right $ utxoStEx3 pf),
+          -- testCase "reference input with data hash, no data witness" $
+          --   testU
+          --     pf
+          --     (trustMeP pf True $ refInputWithDataHashNoWitTx pf)
+          --     (Right $ utxoStEx5 pf),
+          -- testCase "reference input with data hash, with data witness" $
+          --   testU
+          --     pf
+          --     (trustMeP pf True $ refInputWithDataHashWithWitTx pf)
+          --     (Right $ utxoStEx6 pf),
+          -- testCase "reference script to authorize delegation certificate" $
+          --   testU
+          --     pf
+          --     (trustMeP pf True $ refScriptForDelegCertTx pf)
+          --     (Right $ utxoStEx7 pf),
+          -- testCase "use a collateral output" $
+          --   testU
+          --     pf
+          --     (trustMeP pf False $ collateralOutputTx pf)
+          --     (Right $ utxoStEx8 pf),
+          testCase "not validating scripts not required" $
             testU
               pf
-              (trustMeP pf True $ inlineDatumTx pf)
-              (Right $ utxoStEx1 pf),
-          testCase "reference script" $
-            testU
-              pf
-              (trustMeP pf True $ referenceScriptTx pf)
-              (Right $ utxoStEx2 pf),
-          testCase "inline datum and ref script" $
-            testU
-              pf
-              (trustMeP pf True $ inlineDatumAndRefScriptTx pf)
-              (Right $ utxoStEx3 pf),
-          testCase "reference input with data hash, no data witness" $
-            testU
-              pf
-              (trustMeP pf True $ refInputWithDataHashNoWitTx pf)
-              (Right $ utxoStEx5 pf),
-          testCase "reference input with data hash, with data witness" $
-            testU
-              pf
-              (trustMeP pf True $ refInputWithDataHashWithWitTx pf)
-              (Right $ utxoStEx6 pf),
-          testCase "reference script to authorize delegation certificate" $
-            testU
-              pf
-              (trustMeP pf True $ refScriptForDelegCertTx pf)
-              (Right $ utxoStEx7 pf),
-          testCase "use a collateral output" $
-            testU
-              pf
-              (trustMeP pf False $ collateralOutputTx pf)
-              (Right $ utxoStEx8 pf)
-        ],
-      testGroup
+              (trustMeP pf True $ xxxTx pf)
+              (Right . xxxState $ pf)
+        ]
+     {- testGroup
         "invalid transactions"
         [ testCase "incorrect collateral total" $
             testU
@@ -974,6 +1052,7 @@ genericBabbageFeatures pf =
               (trustMeP pf True $ largeOutputTx pf)
               (Left [fromUtxoB @era $ BabbageOutputTooSmallUTxO [(largeOutput pf, Coin 8915)]])
         ]
+-}
     ]
 
 babbageFeatures :: TestTree
