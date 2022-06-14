@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1654890464301,
+  "lastUpdate": 1655226259782,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -10266,6 +10266,78 @@ window.BENCHMARK_DATA = {
             "value": 0.000009251517444036888,
             "unit": "Nanoseconds",
             "range": 4.169840383062429e-8
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jared.corduan@iohk.io",
+            "name": "Jared Corduan",
+            "username": "JaredCorduan"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "aaca526f8cc0b62c3b36bdd2adb9b3d75b469f03",
+          "message": "Merge pull request #2864 from input-output-hk/jc/fix-vrf-range-extension-in-babbage-ledger-spec\n\ncorrect the use of VRF extension in babbage spec",
+          "timestamp": "2022-06-14T12:58:39-04:00",
+          "tree_id": "ad2347fed31df670adfed4ec25916692b18089d2",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/aaca526f8cc0b62c3b36bdd2adb9b3d75b469f03"
+        },
+        "date": 1655226255874,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyEra C_Crypto",
+            "value": 0.00004741745469551912,
+            "unit": "Nanoseconds",
+            "range": 1.6008349802676642e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00005150894073398383,
+            "unit": "Nanoseconds",
+            "range": 3.6209315554848206e-8
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00005261567963063528,
+            "unit": "Nanoseconds",
+            "range": 2.0488132336062385e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/AlonzoEra C_Crypto",
+            "value": 0.00006831449097385979,
+            "unit": "Nanoseconds",
+            "range": 7.762476789656783e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.000010411113042340461,
+            "unit": "Nanoseconds",
+            "range": 9.438674625189418e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00001831512753785238,
+            "unit": "Nanoseconds",
+            "range": 3.285141871839206e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.000018459045422444652,
+            "unit": "Nanoseconds",
+            "range": 3.0280090149313756e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/AlonzoEra C_Crypto",
+            "value": 0.000010389805811703857,
+            "unit": "Nanoseconds",
+            "range": 4.5306905866546405e-8
           }
         ]
       }
