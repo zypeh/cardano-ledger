@@ -204,7 +204,7 @@ pp :: Proof era -> Core.PParams era
 pp pf = newPParams pf defaultPPs
 
 -- =========================================================================
--- Valid: Spend a EUTxO with an inline datum.
+-- Spend a EUTxO with an inline datum (without and with a failing script)
 -- =========================================================================
 
 inlineDatum :: forall era. (Scriptic era) => Proof era -> TestCaseData era
