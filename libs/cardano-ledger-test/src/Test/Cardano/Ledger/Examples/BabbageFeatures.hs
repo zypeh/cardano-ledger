@@ -239,9 +239,6 @@ inlineDatum pf =
         ]
     }
 
--- =========================================================================
--- Invalid: EUTxO with an inline datum with a failing script.
--- =========================================================================
 
 inlineDatumFailingScript :: forall era. (Scriptic era) => Proof era -> TestCaseData era
 inlineDatumFailingScript pf =
