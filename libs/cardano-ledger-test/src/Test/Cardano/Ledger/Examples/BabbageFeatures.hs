@@ -91,20 +91,6 @@ import Test.Cardano.Ledger.Shelley.Utils (RawSeed (..), mkKeyPair)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (Assertion, testCase)
 
-defaultPPs :: [PParamsField era]
-defaultPPs =
-  [ Costmdls . CostModels $ Map.fromList [(PlutusV1, freeCostModelV1), (PlutusV2, freeCostModelV2)],
-    MaxValSize 1000000000,
-    MaxTxExUnits $ ExUnits 1000000 1000000,
-    MaxBlockExUnits $ ExUnits 1000000 1000000,
-    ProtocolVersion $ ProtVer 7 0,
-    CollateralPercentage 1,
-    AdaPerUTxOByte (Coin 5)
-  ]
-
-pp :: Proof era -> Core.PParams era
-pp pf = newPParams pf defaultPPs
-
 someKeys :: forall era. Era era => Proof era -> KeyPair 'Payment (Crypto era)
 someKeys _pf = KeyPair vk sk
   where
@@ -202,6 +188,20 @@ anotherTxIn = mkGenesisTxIn 2
 
 yetAnotherTxIn :: (CH.HashAlgorithm (CC.HASH crypto), HasCallStack) => TxIn crypto
 yetAnotherTxIn = mkGenesisTxIn 3
+
+defaultPPs :: [PParamsField era]
+defaultPPs =
+  [ Costmdls . CostModels $ Map.fromList [(PlutusV1, freeCostModelV1), (PlutusV2, freeCostModelV2)],
+    MaxValSize 1000000000,
+    MaxTxExUnits $ ExUnits 1000000 1000000,
+    MaxBlockExUnits $ ExUnits 1000000 1000000,
+    ProtocolVersion $ ProtVer 7 0,
+    CollateralPercentage 1,
+    AdaPerUTxOByte (Coin 5)
+  ]
+
+pp :: Proof era -> Core.PParams era
+pp pf = newPParams pf defaultPPs
 
 -- =========================================================================
 -- Valid: Spend a EUTxO with an inline datum.
