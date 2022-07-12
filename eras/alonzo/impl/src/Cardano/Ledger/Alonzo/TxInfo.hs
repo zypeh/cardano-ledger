@@ -45,7 +45,7 @@ import qualified Cardano.Ledger.Crypto as CC (Crypto)
 import Cardano.Ledger.Era (Era (..), getTxOutBootstrapAddress)
 import Cardano.Ledger.Hashes (EraIndependentData)
 import Cardano.Ledger.Keys (KeyHash (..), KeyRole (Witness), hashKey)
-import qualified Cardano.Ledger.Mary.Value as Mary (AssetName (..), PolicyID (..), Value (..))
+import qualified Cardano.Ledger.Mary.Value as Mary (AssetName (..), MultiAsset (..), PolicyID (..), Value (..))
 import Cardano.Ledger.SafeHash (SafeHash, extractHash, hashAnnotated)
 import Cardano.Ledger.Serialization (Sized (sizedValue))
 import qualified Cardano.Ledger.Shelley.HardForks as HardForks
@@ -315,7 +315,7 @@ transAssetName :: Mary.AssetName -> PV1.TokenName
 transAssetName (Mary.AssetName bs) = PV1.TokenName (PV1.toBuiltin (SBS.fromShort bs))
 
 transValue :: Mary.Value c -> PV1.Value
-transValue (Mary.Value n mp) = Map.foldlWithKey' accum1 justada mp
+transValue (Mary.Value n (Mary.MultiAsset mp)) = Map.foldlWithKey' accum1 justada mp
   where
     accum1 ans sym mp2 = Map.foldlWithKey' accum2 ans mp2
       where

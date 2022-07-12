@@ -56,7 +56,7 @@ import qualified Cardano.Ledger.Core as Core
 import Cardano.Ledger.Credential (Credential (..), StakeReference (..))
 import Cardano.Ledger.Era (Era (..), ValidateScript, hashScript)
 import Cardano.Ledger.Keys (KeyHash, KeyPair (..), KeyRole (..), hashKey)
-import qualified Cardano.Ledger.Mary.Value as Mary (Value (..))
+import qualified Cardano.Ledger.Mary.Value as Mary (MultiAsset (..), Value (..))
 import Cardano.Ledger.Serialization (sizedValue)
 import Cardano.Ledger.Shelley.Address.Bootstrap (BootstrapWitness (..))
 import qualified Cardano.Ledger.Shelley.PParams as PP (Update)
@@ -236,7 +236,7 @@ initWdrl :: Wdrl crypto
 initWdrl = Wdrl Map.empty
 
 initValue :: Mary.Value crypto
-initValue = (Mary.Value 0 Map.empty)
+initValue = Mary.Value 0 (Mary.MultiAsset Map.empty)
 
 initialTxBody :: Era era => Proof era -> Core.TxBody era
 initialTxBody (Shelley _) = Shelley.TxBody Set.empty Seq.empty Seq.empty initWdrl (Coin 0) (SlotNo 0) SNothing SNothing

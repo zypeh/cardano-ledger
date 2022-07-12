@@ -14,6 +14,7 @@
 module Cardano.Ledger.Mary.Value
   ( PolicyID (..),
     AssetName (..),
+    MultiAsset (..),
     Value (..),
     insert,
     lookup,
@@ -126,29 +127,34 @@ newtype PolicyID crypto = PolicyID {policyID :: ScriptHash crypto}
   deriving (Show, Eq, ToCBOR, FromCBOR, Ord, NoThunks, NFData)
 
 -- | The Value representing MultiAssets
-data Value crypto = Value !Integer !(Map (PolicyID crypto) (Map AssetName Integer))
+data Value crypto = Value !Integer !(MultiAsset crypto)
+  deriving (Show, Generic)
+
+newtype MultiAsset crypto = MultiAsset (Map (PolicyID crypto) (Map AssetName Integer))
   deriving (Show, Generic)
 
 instance CC.Crypto crypto => Eq (Value crypto) where
   x == y = pointwise (==) x y
 
 instance NFData (Value crypto) where
-  rnf (Value c m) = c `deepseq` rnf m
+  rnf (Value c (MultiAsset m)) = c `deepseq` rnf m
+
+instance NoThunks (MultiAsset crypto)
 
 instance NoThunks (Value crypto)
 
 instance Semigroup (Value crypto) where
-  Value c m <> Value c1 m1 =
-    Value (c + c1) (canonicalMapUnion (canonicalMapUnion (+)) m m1)
+  Value c (MultiAsset m) <> Value c1 (MultiAsset m1) =
+    Value (c + c1) (MultiAsset (canonicalMapUnion (canonicalMapUnion (+)) m m1))
 
 instance Monoid (Value crypto) where
-  mempty = Value 0 mempty
+  mempty = Value 0 (MultiAsset mempty)
 
 instance Group (Value crypto) where
-  invert (Value c m) =
+  invert (Value c (MultiAsset m)) =
     Value
       (-c)
-      (canonicalMap (canonicalMap ((-1 :: Integer) *)) m)
+      (MultiAsset (canonicalMap (canonicalMap ((-1 :: Integer) *)) m))
 
 instance Abelian (Value crypto)
 
@@ -156,24 +162,24 @@ instance Abelian (Value crypto)
 -- Make the Val instance of Value
 
 instance CC.Crypto crypto => Val (Value crypto) where
-  s <×> Value c v =
+  s <×> Value c (MultiAsset v) =
     Value
       (fromIntegral s * c)
-      (canonicalMap (canonicalMap (fromIntegral s *)) v)
-  isZero (Value c v) = c == 0 && Map.null v
+      (MultiAsset (canonicalMap (canonicalMap (fromIntegral s *)) v))
+  isZero (Value c (MultiAsset v)) = c == 0 && Map.null v
   coin (Value c _) = Coin c
-  inject (Coin c) = Value c mempty
+  inject (Coin c) = Value c (MultiAsset mempty)
   modifyCoin f (Value c m) = Value n m where (Coin n) = f (Coin c)
-  pointwise p (Value c x) (Value d y) = p c d && pointWise (pointWise p) x y
+  pointwise p (Value c (MultiAsset x)) (Value d (MultiAsset y)) = p c d && pointWise (pointWise p) x y
 
   -- returns the size, in Word64's, of the CompactValue representation of Value
-  size vv@(Value _ v)
+  size vv@(Value _ (MultiAsset m))
     -- when Value contains only ada
     -- !WARNING! This branch is INCORRECT in the Mary era and should ONLY be
     -- used in the Alonzo ERA.
     -- TODO - find a better way to reconcile the mistakes in Mary with what needs
     -- to be the case in Alonzo.
-    | v == mempty = 2
+    | m == mempty = 2
     -- when Value contains ada as well as other tokens
     -- sums up :
     -- i) adaWords : the space taken up by the ada amount
@@ -187,7 +193,7 @@ instance CC.Crypto crypto => Val (Value crypto) where
               + repOverhead
           )
 
-  isAdaOnly (Value _ v) = Map.null v
+  isAdaOnly (Value _ (MultiAsset v)) = Map.null v
 
   isAdaOnlyCompact = \case
     CompactValue (CompactValueAdaOnly _) -> True
@@ -249,16 +255,18 @@ decodeValuePair decodeAmount =
 
 encodeMultiAssetMaps ::
   CC.Crypto crypto =>
-  Map (PolicyID crypto) (Map AssetName Integer) ->
+  MultiAsset crypto ->
   Encoding
-encodeMultiAssetMaps = encodeMap toCBOR (encodeMap toCBOR toCBOR)
+encodeMultiAssetMaps (MultiAsset v) =
+  encodeMap toCBOR (encodeMap toCBOR toCBOR) v
 
 decodeMultiAssetMaps ::
   CC.Crypto crypto =>
   Decoder s Integer ->
-  Decoder s (Map (PolicyID crypto) (Map AssetName Integer))
+  -- Decoder s (Map (PolicyID crypto) (Map AssetName Integer))
+  Decoder s (MultiAsset crypto)
 decodeMultiAssetMaps decodeAmount =
-  prune <$> decodeMap fromCBOR (decodeMap fromCBOR decodeAmount)
+  MultiAsset . prune <$> decodeMap fromCBOR (decodeMap fromCBOR decodeAmount)
 
 decodeNonNegativeInteger :: Decoder s Integer
 decodeNonNegativeInteger = fromIntegral <$> decodeWord64
@@ -280,14 +288,14 @@ instance
   CC.Crypto crypto =>
   ToCBOR (Value crypto)
   where
-  toCBOR (Value c v) =
-    if Map.null v
+  toCBOR (Value c (MultiAsset m)) =
+    if Map.null m
       then toCBOR c
       else
         encode $
           Rec Value
             !> To c
-            !> E encodeMultiAssetMaps v
+            !> E encodeMultiAssetMaps (MultiAsset m)
 
 instance
   CC.Crypto crypto =>
@@ -494,8 +502,8 @@ to ::
   -- The Nothing case of the return value corresponds to a quantity that is outside
   -- the bounds of a Word64. x < 0 or x > (2^64 - 1)
   Maybe (CompactValue crypto)
-to (Value ada ma)
-  | Map.null ma =
+to (Value ada (MultiAsset m))
+  | Map.null m =
       CompactValueAdaOnly . CompactCoin <$> integerToWord64 ada
 to v = do
   c <- integerToWord64 ada
@@ -631,7 +639,7 @@ representationSize xs = abcRegionSize + pidBlockSize + anameBlockSize
       Semigroup.getSum $ foldMap' (Semigroup.Sum . SBS.length . assetName) assetNames
 
 from :: forall crypto. (CC.Crypto crypto) => CompactValue crypto -> Value crypto
-from (CompactValueAdaOnly (CompactCoin c)) = Value (fromIntegral c) mempty
+from (CompactValueAdaOnly (CompactCoin c)) = Value (fromIntegral c) (MultiAsset mempty)
 from (CompactValueMultiAsset (CompactCoin c) numAssets rep) =
   valueFromList (fromIntegral c) triples
   where
@@ -715,10 +723,10 @@ readShortByteString sbs start len =
 --   This function is equivalent to computing the support of the value in the
 --   spec.
 policies :: Value crypto -> Set (PolicyID crypto)
-policies (Value _ m) = Map.keysSet m
+policies (Value _ (MultiAsset m)) = Map.keysSet m
 
 lookup :: PolicyID crypto -> AssetName -> Value crypto -> Integer
-lookup pid aid (Value _ m) =
+lookup pid aid (Value _ (MultiAsset m)) =
   case Map.lookup pid m of
     Nothing -> 0
     Just m2 -> Map.findWithDefault 0 aid m2
@@ -734,7 +742,7 @@ insert ::
   Integer ->
   Value crypto ->
   Value crypto
-insert combine pid aid new (Value cn m1) =
+insert combine pid aid new (Value cn (MultiAsset m1)) =
   case splitLookup pid m1 of
     (l1, Just m2, l2) ->
       case splitLookup aid m2 of
@@ -743,29 +751,33 @@ insert combine pid aid new (Value cn m1) =
             then
               let m3 = link2 v1 v2
                in if Map.null m3
-                    then Value cn (link2 l1 l2)
-                    else Value cn (link pid m3 l1 l2)
-            else Value cn (link pid (link aid n v1 v2) l1 l2)
+                    then Value cn (MultiAsset (link2 l1 l2))
+                    else Value cn (MultiAsset (link pid m3 l1 l2))
+            else Value cn (MultiAsset (link pid (link aid n v1 v2) l1 l2))
           where
             n = combine old new
         (_, Nothing, _) ->
           Value
             cn
-            ( link
-                pid
-                ( if new == 0
-                    then m2
-                    else Map.insert aid new m2
+            ( MultiAsset
+                ( link
+                    pid
+                    ( if new == 0
+                        then m2
+                        else Map.insert aid new m2
+                    )
+                    l1
+                    l2
                 )
-                l1
-                l2
             )
     (l1, Nothing, l2) ->
       Value
         cn
-        ( if new == 0
-            then link2 l1 l2
-            else link pid (Map.singleton aid new) l1 l2
+        ( MultiAsset
+            ( if new == 0
+                then link2 l1 l2
+                else link pid (Map.singleton aid new) l1 l2
+            )
         )
 
 -- ========================================================
@@ -783,7 +795,7 @@ valueFromList :: Integer -> [(PolicyID era, AssetName, Integer)] -> Value era
 valueFromList ada =
   foldr
     (\(p, n, i) ans -> insert (+) p n i ans)
-    (Value ada Map.empty)
+    (Value ada (MultiAsset Map.empty))
 
 -- | Display a Value as a String, one token per line
 showValue :: Value crypto -> String
@@ -800,7 +812,7 @@ showValue v = show c ++ "\n" ++ unlines (map trans ts)
 -- | Turn the nested 'Value' map-of-maps representation into a flat sequence
 -- of policyID, asset name and quantity, plus separately the ada quantity.
 gettriples' :: Value crypto -> (Integer, [(PolicyID crypto, AssetName, Integer)], [PolicyID crypto])
-gettriples' (Value c m1) = (c, triples, bad)
+gettriples' (Value c (MultiAsset m1)) = (c, triples, bad)
   where
     triples =
       [ (policyId, aname, amount)

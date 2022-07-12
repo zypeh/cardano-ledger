@@ -34,7 +34,7 @@ import qualified Cardano.Ledger.Crypto as CC (Crypto)
 import Cardano.Ledger.Era (Era (..), hashScript)
 import Cardano.Ledger.Hashes (DataHash, ScriptHash (..))
 import Cardano.Ledger.Keys (GenDelegs (..), HasKeyRole (coerceKeyRole), KeyHash (..), KeyPair (..), KeyRole (..), VKey (..), hashKey)
-import Cardano.Ledger.Mary.Value (Value (..))
+import Cardano.Ledger.Mary.Value (MultiAsset (..), Value (..))
 import Cardano.Ledger.PoolDistr (IndividualPoolStake (..), PoolDistr (..))
 import Cardano.Ledger.Pretty
 import Cardano.Ledger.Pretty.Alonzo
@@ -882,7 +882,7 @@ plutusDataSummary (I n) = ppInteger n
 plutusDataSummary (B bs) = trim (ppLong bs)
 
 vSummary :: Value c -> PDoc
-vSummary (Value n m) = ppSexp "Value" [ppInteger n, ppString ("num tokens = " ++ show (Map.size m))]
+vSummary (Value n (MultiAsset m)) = ppSexp "Value" [ppInteger n, ppString ("num tokens = " ++ show (Map.size m))]
 
 scriptSummary :: forall era. Proof era -> Core.Script era -> PDoc
 scriptSummary p@(Babbage _) script = plutusSummary p script
@@ -1064,7 +1064,7 @@ pcCoin (Coin n) = hsep [ppString "₳", ppInteger n]
 instance PrettyC Coin era where prettyC _ = pcCoin
 
 pcValue :: Value c -> PDoc
-pcValue (Value n m) = ppSexp "Value" [ppInteger n, ppString ("num tokens = " ++ show (Map.size m))]
+pcValue (Value n (MultiAsset m)) = ppSexp "Value" [ppInteger n, ppString ("num tokens = " ++ show (Map.size m))]
 
 instance c ~ Crypto era => PrettyC (Value c) era where prettyC _ = pcValue
 

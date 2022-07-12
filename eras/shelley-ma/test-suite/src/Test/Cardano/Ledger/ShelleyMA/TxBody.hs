@@ -21,6 +21,7 @@ import Cardano.Ledger.Coin (Coin (..))
 import Cardano.Ledger.Mary (MaryEra)
 import Cardano.Ledger.Mary.Value
   ( AssetName (..),
+    MultiAsset (..),
     PolicyID (..),
     Value (..),
   )
@@ -70,7 +71,7 @@ txM =
     testmint
 
 testmint :: Value TestCrypto
-testmint = Value 0 (Map.singleton policyId (Map.singleton aname 2))
+testmint = Value 0 $ MultiAsset $ Map.singleton policyId (Map.singleton aname 2)
   where
     policyId = PolicyID . hashScript @TestEra . RequireAnyOf $ fromList []
     aname = AssetName $ fromString "asset name"

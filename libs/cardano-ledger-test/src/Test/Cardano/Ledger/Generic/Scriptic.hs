@@ -15,7 +15,7 @@ import qualified Cardano.Ledger.Core as Core
 import qualified Cardano.Ledger.Crypto as CC (Crypto)
 import Cardano.Ledger.Era (Era (..), ValidateScript (..))
 import Cardano.Ledger.Keys (KeyHash, KeyRole (..))
-import qualified Cardano.Ledger.Mary.Value as Mary (AssetName (..), PolicyID (..), Value (..))
+import qualified Cardano.Ledger.Mary.Value as Mary (AssetName (..), MultiAsset (..), PolicyID (..), Value (..))
 import qualified Cardano.Ledger.Shelley.Scripts as Multi
 import Cardano.Ledger.ShelleyMA.Timelocks (Timelock (..))
 import Cardano.Slotting.Slot (SlotNo (..))
@@ -91,19 +91,19 @@ instance CC.Crypto c => PostShelley (MaryEra c) where
   after n (Mary _) = RequireTimeExpire (theSlot n)
 
 instance forall c. CC.Crypto c => HasTokens (MaryEra c) where
-  forge n s = Mary.Value 0 $ Map.singleton pid (Map.singleton an n)
+  forge n s = Mary.Value 0 $ Mary.MultiAsset $ Map.singleton pid (Map.singleton an n)
     where
       pid = Mary.PolicyID (hashScript @(MaryEra c) s)
       an = Mary.AssetName "an"
 
 instance forall c. CC.Crypto c => HasTokens (AlonzoEra c) where
-  forge n s = Mary.Value 0 $ Map.singleton pid (Map.singleton an n)
+  forge n s = Mary.Value 0 $ Mary.MultiAsset $ Map.singleton pid (Map.singleton an n)
     where
       pid = Mary.PolicyID (hashScript @(AlonzoEra c) s)
       an = Mary.AssetName "an"
 
 instance forall c. CC.Crypto c => HasTokens (BabbageEra c) where
-  forge n s = Mary.Value 0 $ Map.singleton pid (Map.singleton an n)
+  forge n s = Mary.Value 0 $ Mary.MultiAsset $ Map.singleton pid (Map.singleton an n)
     where
       pid = Mary.PolicyID (hashScript @(BabbageEra c) s)
       an = Mary.AssetName "an"

@@ -14,6 +14,7 @@ import Cardano.Ledger.Compactible (fromCompact, toCompact)
 import qualified Cardano.Ledger.Crypto as CC (Crypto)
 import Cardano.Ledger.Mary.Value
   ( AssetName (..),
+    MultiAsset (..),
     PolicyID (..),
     Value (..),
     insert,
@@ -56,22 +57,25 @@ insert3 ::
   Integer ->
   Value crypto ->
   Value crypto
-insert3 combine pid aid new (Value c m1) =
+insert3 combine pid aid new (Value c (MultiAsset m1)) =
   case Map.lookup pid m1 of
     Nothing ->
       Value c $
-        canonicalInsert (canonicalMapUnion combine) pid (canonicalInsert combine aid new zeroC) m1
+        MultiAsset $
+          canonicalInsert (canonicalMapUnion combine) pid (canonicalInsert combine aid new zeroC) m1
     Just m2 -> case Map.lookup aid m2 of
       Nothing ->
         Value c $
-          canonicalInsert (canonicalMapUnion combine) pid (singleton aid new) m1
+          MultiAsset $
+            canonicalInsert (canonicalMapUnion combine) pid (singleton aid new) m1
       Just old ->
         Value c $
-          canonicalInsert pickNew pid (canonicalInsert pickNew aid (combine old new) m2) m1
+          MultiAsset $
+            canonicalInsert pickNew pid (canonicalInsert pickNew aid (combine old new) m2) m1
 
 -- | Make a Value with no coin, and just one token.
 unit :: PolicyID crypto -> AssetName -> Integer -> Value crypto
-unit pid aid n = Value 0 (canonicalInsert pickNew pid (canonicalInsert pickNew aid n empty) empty)
+unit pid aid n = Value 0 $ MultiAsset $ (canonicalInsert pickNew pid (canonicalInsert pickNew aid n empty) empty)
 
 -- Use <+> and <->
 
@@ -98,17 +102,17 @@ insert2 combine pid aid new m1 =
 -- 3 functions that build Values from Policy Asset triples.
 
 valueFromList :: [(PolicyID C_Crypto, AssetName, Integer)] -> Integer -> Value C_Crypto
-valueFromList list c = foldr acc (Value c empty) list
+valueFromList list c = foldr acc (Value c (MultiAsset empty)) list
   where
     acc (policy, asset, count) m = insert (+) policy asset count m
 
 valueFromList3 :: [(PolicyID C_Crypto, AssetName, Integer)] -> Integer -> Value C_Crypto
-valueFromList3 list c = foldr acc (Value c empty) list
+valueFromList3 list c = foldr acc (Value c (MultiAsset empty)) list
   where
     acc (policy, asset, count) m = insert3 (+) policy asset count m
 
 valueFromList2 :: [(PolicyID C_Crypto, AssetName, Integer)] -> Integer -> Value C_Crypto
-valueFromList2 list c = foldr acc (Value c empty) list
+valueFromList2 list c = foldr acc (Value c (MultiAsset empty)) list
   where
     acc (policy, asset, count) m = insert2 (+) policy asset count m
 

@@ -114,7 +114,7 @@ import qualified Cardano.Ledger.Crypto as CC
 import Cardano.Ledger.Era (Crypto, Era, ValidateScript (hashScript, isNativeScript))
 import Cardano.Ledger.Hashes (ScriptHash)
 import Cardano.Ledger.Keys (KeyRole (Witness))
-import Cardano.Ledger.Mary.Value (AssetName, PolicyID (..), Value (..))
+import Cardano.Ledger.Mary.Value (AssetName, MultiAsset (..), PolicyID (..), Value (..))
 import Cardano.Ledger.SafeHash
   ( HashAnnotated,
     SafeToHash (..),
@@ -440,7 +440,7 @@ rdptrInv txb (RdmrPtr Cert idx) =
   Certifying <$> fromIndex idx (getField @"certs" txb)
 
 getMapFromValue :: Value crypto -> Map.Map (PolicyID crypto) (Map.Map AssetName Integer)
-getMapFromValue (Value _ m) = m
+getMapFromValue (Value _ (MultiAsset m)) = m
 
 -- | Find the Data and ExUnits assigned to a script.
 indexedRdmrs ::

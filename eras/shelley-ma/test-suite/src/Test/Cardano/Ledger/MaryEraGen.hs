@@ -21,6 +21,7 @@ import qualified Cardano.Ledger.Crypto as CryptoClass
 import Cardano.Ledger.Era (Crypto)
 import Cardano.Ledger.Mary.Value
   ( AssetName (..),
+    MultiAsset (..),
     PolicyID (..),
     Value (..),
     policies,
@@ -318,7 +319,7 @@ instance Split (Value era) where
   vsplit (Value n mp) m
     | m Prelude.<= 0 = error "must split coins into positive parts"
     | otherwise =
-        ( take (fromIntegral m) (Value (n `div` m) mp : repeat (Value (n `div` m) Map.empty)),
+        ( take (fromIntegral m) (Value (n `div` m) mp : repeat (Value (n `div` m) (MultiAsset Map.empty))),
           Coin (n `rem` m)
         )
 

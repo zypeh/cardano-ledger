@@ -36,7 +36,7 @@ exampleMultiAssetValue ::
   Int ->
   Cardano.Ledger.Mary.Value.Value c
 exampleMultiAssetValue x =
-  Value 100 $ Map.singleton policyId $ Map.singleton couttsCoin 1000
+  Value 100 $ (Cardano.Ledger.Mary.Value.MultiAsset (Map.singleton policyId $ Map.singleton couttsCoin 1000))
   where
     policyId :: PolicyID c
     policyId = PolicyID $ mkScriptHash x

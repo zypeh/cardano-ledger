@@ -573,7 +573,7 @@ countTxOutStats :: [Alonzo.TxOut CurrentEra] -> TxOutStats
 countTxOutStats = foldMap countTxOutStat
   where
     countTxOutStat :: Alonzo.TxOut CurrentEra -> TxOutStats
-    countTxOutStat (Alonzo.TxOut addr (Value v vm) mData) =
+    countTxOutStat (Alonzo.TxOut addr (Value v (Mary.MultiAsset vm)) mData) =
       let !dataStat =
             strictMaybe
               mempty

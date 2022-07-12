@@ -6,7 +6,7 @@
 module Test.Cardano.Ledger.ValueFromList where
 
 import qualified Cardano.Ledger.Crypto as C
-import Cardano.Ledger.Mary.Value (AssetName, PolicyID (..))
+import Cardano.Ledger.Mary.Value (AssetName, MultiAsset (..), PolicyID (..))
 import qualified Cardano.Ledger.Mary.Value
 import qualified Cardano.Ledger.Val as Val
 import qualified Data.Map.Strict as Map
@@ -23,7 +23,7 @@ instance C.Crypto crypto => ValueFromList (Cardano.Ledger.Mary.Value.Value crypt
 
   insert = Cardano.Ledger.Mary.Value.insert
 
-  gettriples (Cardano.Ledger.Mary.Value.Value c m1) = (c, triples)
+  gettriples (Cardano.Ledger.Mary.Value.Value c (MultiAsset m1)) = (c, triples)
     where
       triples =
         [ (policyId, aname, amount)

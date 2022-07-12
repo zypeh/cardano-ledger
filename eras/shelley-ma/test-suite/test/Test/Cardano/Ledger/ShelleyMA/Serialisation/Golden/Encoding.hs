@@ -20,7 +20,7 @@ import Cardano.Ledger.Credential (Credential (..), StakeReference (..))
 import qualified Cardano.Ledger.Crypto as CC (Crypto)
 import Cardano.Ledger.Era (Crypto (..), ValidateScript (hashScript))
 import Cardano.Ledger.Keys (KeyHash (..), KeyRole (..), hashKey)
-import Cardano.Ledger.Mary.Value (AssetName (..), PolicyID (..), Value (..))
+import Cardano.Ledger.Mary.Value (AssetName (..), MultiAsset (..), PolicyID (..), Value (..))
 import qualified Cardano.Ledger.Shelley.Metadata as SMD
 import Cardano.Ledger.Shelley.PParams
   ( PParams' (..),
@@ -316,17 +316,18 @@ goldenEncodingTestsMary =
       checkEncodingCBOR
         "not_just_ada_value"
         ( Value @TestCrypto 2 $
-            Map.fromList
-              [ ( policyID1,
-                  Map.fromList
-                    [ (AssetName assetName1, 13),
-                      (AssetName assetName2, 17)
-                    ]
-                ),
-                ( policyID2,
-                  Map.singleton (AssetName assetName3) 19
-                )
-              ]
+            MultiAsset $
+              Map.fromList
+                [ ( policyID1,
+                    Map.fromList
+                      [ (AssetName assetName1, 13),
+                        (AssetName assetName2, 17)
+                      ]
+                  ),
+                  ( policyID2,
+                    Map.singleton (AssetName assetName3) 19
+                  )
+                ]
         )
         ( T
             ( TkListLen 2
@@ -350,7 +351,7 @@ goldenEncodingTestsMary =
         ),
       checkEncodingCBOR
         "value_with_negative"
-        (Value 0 $ Map.singleton policyID1 (Map.singleton (AssetName assetName1) (-19)))
+        (Value 0 $ MultiAsset $ Map.singleton policyID1 (Map.singleton (AssetName assetName1) (-19)))
         ( T
             ( TkListLen 2
                 . TkInteger 0
@@ -411,7 +412,7 @@ goldenEncodingTestsMary =
                 (ValidityInterval (SJust $ SlotNo 500) (SJust $ SlotNo 600))
                 (SJust up)
                 (SJust mdh)
-                (Value 0 mint)
+                (Value 0 (MultiAsset mint))
             )
             ( T (TkMapLen 10)
                 <> T (TkWord 0) -- Tx Ins

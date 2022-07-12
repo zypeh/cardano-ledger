@@ -105,7 +105,7 @@ collateralOutput :: TxOut StandardBabbage
 collateralOutput =
   TxOut
     (mkAddr (SLE.examplePayKey, SLE.exampleStakeKey))
-    (Mary.Value 8675309 mempty)
+    (Mary.Value 8675309 (Mary.MultiAsset mempty))
     NoDatum
     SNothing
 
