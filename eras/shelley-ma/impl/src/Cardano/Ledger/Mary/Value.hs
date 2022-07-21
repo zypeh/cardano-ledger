@@ -126,35 +126,59 @@ instance FromCBOR AssetName where
 newtype PolicyID crypto = PolicyID {policyID :: ScriptHash crypto}
   deriving (Show, Eq, ToCBOR, FromCBOR, Ord, NoThunks, NFData)
 
--- | The Value representing MultiAssets
-data Value crypto = Value !Integer !(MultiAsset crypto)
+-- | MultiAsset
+newtype MultiAsset crypto = MultiAsset (Map (PolicyID crypto) (Map AssetName Integer))
   deriving (Show, Generic)
 
-newtype MultiAsset crypto = MultiAsset (Map (PolicyID crypto) (Map AssetName Integer))
+instance CC.Crypto crypto => Eq (MultiAsset crypto) where
+  (MultiAsset x) == (MultiAsset y) = pointWise (pointWise (==)) x y
+
+instance NFData (MultiAsset cypto) where
+  rnf (MultiAsset m) = rnf m
+
+instance NoThunks (MultiAsset crypto)
+
+instance Semigroup (MultiAsset crypto) where
+  (MultiAsset m) <> (MultiAsset m1) =
+    MultiAsset (canonicalMapUnion (canonicalMapUnion (+)) m m1)
+
+instance Monoid (MultiAsset crypto) where
+  mempty = MultiAsset mempty
+
+instance Group (MultiAsset crypto) where
+  invert (MultiAsset m) =
+    MultiAsset (canonicalMap (canonicalMap ((-1 :: Integer) *)) m)
+
+instance CC.Crypto crypto => DecodeMint (MultiAsset crypto) where
+  decodeMint = decodeMultiAssetMaps decodeIntegerBounded64
+
+instance CC.Crypto crypto => EncodeMint (MultiAsset crypto) where
+  encodeMint = encodeMultiAssetMaps
+
+-- | The Value representing MultiAssets
+data Value crypto = Value !Integer !(MultiAsset crypto)
   deriving (Show, Generic)
 
 instance CC.Crypto crypto => Eq (Value crypto) where
   x == y = pointwise (==) x y
 
 instance NFData (Value crypto) where
-  rnf (Value c (MultiAsset m)) = c `deepseq` rnf m
-
-instance NoThunks (MultiAsset crypto)
+  rnf (Value c m) = c `deepseq` rnf m
 
 instance NoThunks (Value crypto)
 
 instance Semigroup (Value crypto) where
-  Value c (MultiAsset m) <> Value c1 (MultiAsset m1) =
-    Value (c + c1) (MultiAsset (canonicalMapUnion (canonicalMapUnion (+)) m m1))
+  Value c m <> Value c1 m1 =
+    Value (c + c1) (m <> m1)
 
 instance Monoid (Value crypto) where
-  mempty = Value 0 (MultiAsset mempty)
+  mempty = Value 0 mempty
 
 instance Group (Value crypto) where
-  invert (Value c (MultiAsset m)) =
+  invert (Value c m) =
     Value
       (-c)
-      (MultiAsset (canonicalMap (canonicalMap ((-1 :: Integer) *)) m))
+      (invert m)
 
 instance Abelian (Value crypto)
 
@@ -166,11 +190,11 @@ instance CC.Crypto crypto => Val (Value crypto) where
     Value
       (fromIntegral s * c)
       (MultiAsset (canonicalMap (canonicalMap (fromIntegral s *)) v))
-  isZero (Value c (MultiAsset v)) = c == 0 && Map.null v
+  isZero (Value c m) = c == 0 && (m == mempty)
   coin (Value c _) = Coin c
-  inject (Coin c) = Value c (MultiAsset mempty)
+  inject (Coin c) = Value c mempty
   modifyCoin f (Value c m) = Value n m where (Coin n) = f (Coin c)
-  pointwise p (Value c (MultiAsset x)) (Value d (MultiAsset y)) = p c d && pointWise (pointWise p) x y
+  pointwise p (Value c x) (Value d y) = p c d && (x == y)
 
   -- returns the size, in Word64's, of the CompactValue representation of Value
   size vv@(Value _ (MultiAsset m))
@@ -193,7 +217,7 @@ instance CC.Crypto crypto => Val (Value crypto) where
               + repOverhead
           )
 
-  isAdaOnly (Value _ (MultiAsset v)) = Map.null v
+  isAdaOnly (Value _ m) = m == mempty
 
   isAdaOnlyCompact = \case
     CompactValue (CompactValueAdaOnly _) -> True
@@ -263,7 +287,6 @@ encodeMultiAssetMaps (MultiAsset v) =
 decodeMultiAssetMaps ::
   CC.Crypto crypto =>
   Decoder s Integer ->
-  -- Decoder s (Map (PolicyID crypto) (Map AssetName Integer))
   Decoder s (MultiAsset crypto)
 decodeMultiAssetMaps decodeAmount =
   MultiAsset . prune <$> decodeMap fromCBOR (decodeMap fromCBOR decodeAmount)
@@ -288,14 +311,14 @@ instance
   CC.Crypto crypto =>
   ToCBOR (Value crypto)
   where
-  toCBOR (Value c (MultiAsset m)) =
-    if Map.null m
+  toCBOR (Value c m) =
+    if m == mempty
       then toCBOR c
       else
         encode $
           Rec Value
             !> To c
-            !> E encodeMultiAssetMaps (MultiAsset m)
+            !> E encodeMultiAssetMaps m
 
 instance
   CC.Crypto crypto =>
@@ -313,7 +336,7 @@ instance
   CC.Crypto crypto =>
   DecodeMint (Value crypto)
   where
-  decodeMint = Value 0 <$> decodeMultiAssetMaps decodeIntegerBounded64
+  decodeMint = Value 0 <$> decodeMint
 
 -- Note: we do not use `decodeInt64` from the cborg library here because the
 -- implementation contains "-- TODO FIXME: overflow"
@@ -347,7 +370,7 @@ instance
   CC.Crypto crypto =>
   EncodeMint (Value crypto)
   where
-  encodeMint (Value _ multiasset) = encodeMultiAssetMaps multiasset
+  encodeMint (Value _ multiasset) = encodeMint multiasset
 
 -- ========================================================================
 -- Compactible
@@ -502,8 +525,8 @@ to ::
   -- The Nothing case of the return value corresponds to a quantity that is outside
   -- the bounds of a Word64. x < 0 or x > (2^64 - 1)
   Maybe (CompactValue crypto)
-to (Value ada (MultiAsset m))
-  | Map.null m =
+to (Value ada m)
+  | m == mempty =
       CompactValueAdaOnly . CompactCoin <$> integerToWord64 ada
 to v = do
   c <- integerToWord64 ada
