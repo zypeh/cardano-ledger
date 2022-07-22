@@ -529,9 +529,9 @@ utxoTransition = do
   runTest $
     ShelleyMA.validateValueNotConservedUTxO pp utxo stakepools txb
 
-  {-   adaID ∉ supp mint tx   -}
-  runTestOnSignal $
-    ShelleyMA.validateTriesToForgeADA txb
+  -- {-   adaID ∉ supp mint tx   -}
+  -- runTestOnSignal $
+  --   ShelleyMA.validateTriesToForgeADA txb
 
   let outputs = txouts txb
   {-   ∀ txout ∈ txouts txb, getValuetxout ≥ inject (uxoEntrySizetxout ∗ coinsPerUTxOWord p) -}

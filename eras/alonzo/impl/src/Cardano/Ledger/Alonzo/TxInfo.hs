@@ -8,6 +8,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# OPTIONS_GHC -Wno-unused-local-binds #-}
 
 module Cardano.Ledger.Alonzo.TxInfo where
 
@@ -455,7 +456,7 @@ alonzoTxInfo ::
     HasField "reqSignerHashes" (Core.TxBody era) (Set (KeyHash 'Witness (Crypto era))),
     HasField "certs" (Core.TxBody era) (StrictSeq (DCert (Crypto era))),
     HasField "wdrls" (Core.TxBody era) (Wdrl (Crypto era)),
-    HasField "mint" (Core.TxBody era) (Mary.Value (Crypto era)),
+    HasField "mint" (Core.TxBody era) (Mary.MultiAsset (Crypto era)),
     HasField "vldt" (Core.TxBody era) ValidityInterval
   ) =>
   Core.PParams era ->
@@ -480,7 +481,9 @@ alonzoTxInfo pp lang ei sysS utxo tx = do
           { PV1.txInfoInputs = mapMaybe (uncurry txInfoIn) txOuts,
             PV1.txInfoOutputs = mapMaybe txInfoOut (foldr (:) [] outs),
             PV1.txInfoFee = transValue (inject @(Mary.Value (Crypto era)) fee),
-            PV1.txInfoMint = transValue forge,
+            -- PV1.txInfoMint = transValue forge,
+            -- TODO !! FIX THIS
+            PV1.txInfoMint = undefined,
             PV1.txInfoDCert = foldr (\c ans -> transDCert c : ans) [] (getField @"certs" tbody),
             PV1.txInfoWdrl = Map.toList (transWdrl (getField @"wdrls" tbody)),
             PV1.txInfoValidRange = timeRange,

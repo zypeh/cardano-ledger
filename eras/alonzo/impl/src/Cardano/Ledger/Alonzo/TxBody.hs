@@ -18,6 +18,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_GHC -Wno-unused-imports #-}
 
 module Cardano.Ledger.Alonzo.TxBody
   ( TxOut (.., TxOut, TxOutCompact, TxOutCompactDH),
@@ -102,7 +103,7 @@ import Cardano.Ledger.Hashes
     EraIndependentTxBody,
   )
 import Cardano.Ledger.Keys (KeyHash (..), KeyRole (..))
-import Cardano.Ledger.Mary.Value (Value (..), policies, policyID)
+import Cardano.Ledger.Mary.Value (MultiAsset, Value (..), policies, policyID)
 import qualified Cardano.Ledger.Mary.Value as Mary
 import Cardano.Ledger.SafeHash
   ( HashAnnotated,
@@ -368,7 +369,7 @@ data TxBodyRaw era = TxBodyRaw
     _vldt :: !ValidityInterval,
     _update :: !(StrictMaybe (Update era)),
     _reqSignerHashes :: Set (KeyHash 'Witness (Crypto era)),
-    _mint :: !(Value (Crypto era)),
+    _mint :: !(MultiAsset (Crypto era)),
     -- The spec makes it clear that the mint field is a
     -- Cardano.Ledger.Mary.Value.Value, not a Core.Value.
     -- Operations on the TxBody in the AlonzoEra depend upon this.
@@ -459,7 +460,7 @@ pattern TxBody ::
   ValidityInterval ->
   StrictMaybe (Update era) ->
   Set (KeyHash 'Witness (Crypto era)) ->
-  Value (Crypto era) ->
+  MultiAsset (Crypto era) ->
   StrictMaybe (ScriptIntegrityHash (Crypto era)) ->
   StrictMaybe (AuxiliaryDataHash (Crypto era)) ->
   StrictMaybe Network ->
@@ -552,7 +553,7 @@ vldt' :: TxBody era -> ValidityInterval
 update' :: TxBody era -> StrictMaybe (Update era)
 reqSignerHashes' :: TxBody era -> Set (KeyHash 'Witness (Crypto era))
 adHash' :: TxBody era -> StrictMaybe (AuxiliaryDataHash (Crypto era))
-mint' :: TxBody era -> Value (Crypto era)
+mint' :: TxBody era -> MultiAsset (Crypto era)
 scriptIntegrityHash' :: TxBody era -> StrictMaybe (ScriptIntegrityHash (Crypto era))
 inputs' (TxBodyConstr (Memo raw _)) = _inputs raw
 
@@ -730,7 +731,7 @@ encodeTxBodyRaw
       !> encodeKeyedStrictMaybe 6 _update
       !> encodeKeyedStrictMaybe 8 bot
       !> Omit null (Key 14 (E encodeFoldable _reqSignerHashes))
-      !> Omit isZero (Key 9 (E encodeMint _mint))
+      !> Omit (== mempty) (Key 9 (E encodeMint _mint))
       !> encodeKeyedStrictMaybe 11 _scriptIntegrityHash
       !> encodeKeyedStrictMaybe 7 _adHash
       !> encodeKeyedStrictMaybe 15 _txnetworkid
@@ -858,7 +859,7 @@ instance
   where
   getField (TxBodyConstr (Memo m _)) = _reqSignerHashes m
 
-instance (Crypto era ~ c) => HasField "mint" (TxBody era) (Mary.Value c) where
+instance (Crypto era ~ c) => HasField "mint" (TxBody era) (Mary.MultiAsset c) where
   getField (TxBodyConstr (Memo m _)) = _mint m
 
 instance (Crypto era ~ c) => HasField "collateral" (TxBody era) (Set (TxIn c)) where
