@@ -19,6 +19,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_GHC -Wno-unused-imports #-}
 
 module Cardano.Ledger.Babbage.TxBody
   ( TxOut (TxOut, TxOutCompact, TxOutCompactDH, TxOutCompactDatum, TxOutCompactRefScript),
@@ -125,7 +126,7 @@ import Cardano.Ledger.Hashes
     EraIndependentTxBody,
   )
 import Cardano.Ledger.Keys (KeyHash (..), KeyRole (..))
-import Cardano.Ledger.Mary.Value (Value (..), policies, policyID)
+import Cardano.Ledger.Mary.Value (MultiAsset, Value (..), policies, policyID)
 import qualified Cardano.Ledger.Mary.Value as Mary
 import Cardano.Ledger.SafeHash
   ( HashAnnotated,
@@ -376,7 +377,7 @@ data TxBodyRaw era = TxBodyRaw
     _vldt :: !ValidityInterval,
     _update :: !(StrictMaybe (Update era)),
     _reqSignerHashes :: !(Set (KeyHash 'Witness (Crypto era))),
-    _mint :: !(Value (Crypto era)),
+    _mint :: !(MultiAsset (Crypto era)),
     -- The spec makes it clear that the mint field is a
     -- Cardano.Ledger.Mary.Value.Value, not a Core.Value.
     -- Operations on the TxBody in the BabbageEra depend upon this.
@@ -469,6 +470,38 @@ type BabbageBody era =
     Core.SerialisableData (PParamsDelta era)
   )
 
+{-
+
+Simple tx:
+  cardano-cli transaction build --alonzo-era
+    --testnet-magic 1097911063
+    --change-address $(cat payment.addr)
+    --tx-in 887b7e58c17f5b458297df179d3eef556546d4d73a5ab971d326ed9e0193ac56#1
+    --tx-out $(cat payment2.addr)+999978 --out-file tx.build
+
+Minting:
+ cardano-cli transaction build --babbage-era
+  --testnet-magic 1097911063
+  --witness-override 2
+  --tx-in 6b9355384f0e22a2492595c6ad601a6701d41864feff72f296b9625b44faeb1b#0
+  --tx-out $(cat payment.addr)+1+"5 ${policyId}.${tokenName}"
+  --change-address $(cat payment.addr)
+  --mint="5 ${policyId}.${tokenName}"
+  --minting-script-file policy/policy.script  --out-file tx.build
+
+Burning:
+  cardano-cli transaction build --babbage-era
+    --testnet-magic 1097911063
+    --tx-in 876441e3bb46504fe3740b6c74b118e36e8a81be70daeeb180f9ce34940cacc0#1
+    --tx-out $(cat payment.addr)+V
+    --mint="-1 ${policyId}.${tokenName}"
+    --change-address $(cat payment.addr)
+    --mint-script-file policy/policy.script --out-file tx.build
+
+-}
+
+-- There should be a special MintValue type that allows negative values
+-- and does not contain any ADA, while TxOut can continue using the Value type.
 pattern TxBody ::
   BabbageBody era =>
   Set (TxIn (Crypto era)) ->
@@ -483,7 +516,7 @@ pattern TxBody ::
   ValidityInterval ->
   StrictMaybe (Update era) ->
   Set (KeyHash 'Witness (Crypto era)) ->
-  Value (Crypto era) ->
+  MultiAsset (Crypto era) ->
   StrictMaybe (ScriptIntegrityHash (Crypto era)) ->
   StrictMaybe (AuxiliaryDataHash (Crypto era)) ->
   StrictMaybe Network ->
@@ -591,7 +624,7 @@ vldt' :: TxBody era -> ValidityInterval
 update' :: TxBody era -> StrictMaybe (Update era)
 reqSignerHashes' :: TxBody era -> Set (KeyHash 'Witness (Crypto era))
 adHash' :: TxBody era -> StrictMaybe (AuxiliaryDataHash (Crypto era))
-mint' :: TxBody era -> Value (Crypto era)
+mint' :: TxBody era -> MultiAsset (Crypto era)
 scriptIntegrityHash' :: TxBody era -> StrictMaybe (ScriptIntegrityHash (Crypto era))
 spendInputs' (TxBodyConstr (Memo raw _)) = _spendInputs raw
 
@@ -837,7 +870,7 @@ encodeTxBodyRaw
       !> encodeKeyedStrictMaybe 6 _update
       !> encodeKeyedStrictMaybe 8 bot
       !> Omit null (Key 14 (E encodeFoldable _reqSignerHashes))
-      !> Omit isZero (Key 9 (E encodeMint _mint))
+      !> Omit (== mempty) (Key 9 (E encodeMint _mint))
       !> encodeKeyedStrictMaybe 11 _scriptIntegrityHash
       !> encodeKeyedStrictMaybe 7 _adHash
       !> encodeKeyedStrictMaybe 15 _txnetworkid
@@ -968,7 +1001,7 @@ instance
   where
   getField (TxBodyConstr (Memo m _)) = _reqSignerHashes m
 
-instance (Crypto era ~ c) => HasField "mint" (TxBody era) (Mary.Value c) where
+instance (Crypto era ~ c) => HasField "mint" (TxBody era) (MultiAsset c) where
   getField (TxBodyConstr (Memo m _)) = _mint m
 
 instance (Crypto era ~ c) => HasField "collateral" (TxBody era) (Set (TxIn c)) where
@@ -988,6 +1021,9 @@ instance HasField "totalCollateral" (TxBody era) (StrictMaybe Coin) where
 
 instance (Crypto era ~ c) => HasField "minted" (TxBody era) (Set (ScriptHash c)) where
   getField (TxBodyConstr (Memo m _)) = Set.map policyID (policies (_mint m))
+
+-- getField (TxBodyConstr (Memo m _)) = Set.map policyID (policies ma)
+-- where (Value _ ma) = _mint m
 
 instance HasField "vldt" (TxBody era) ValidityInterval where
   getField (TxBodyConstr (Memo m _)) = _vldt m

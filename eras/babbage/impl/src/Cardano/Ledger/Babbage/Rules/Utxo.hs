@@ -9,6 +9,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -Wno-unused-imports #-}
 
 module Cardano.Ledger.Babbage.Rules.Utxo where
 
@@ -377,8 +378,8 @@ utxoTransition = do
     ShelleyMA.validateValueNotConservedUTxO pp utxo stakepools txb
 
   {-   adaID ∉ supp mint tx   -}
-  runTestOnSignal $
-    ShelleyMA.validateTriesToForgeADA txb
+  -- runTestOnSignal $
+  -- ShelleyMA.validateTriesToForgeADA txb
 
   {-   ∀ txout ∈ allOuts txb, getValue txout ≥ inject (serSize txout ∗ coinsPerUTxOByte pp) -}
   runTest $ validateOutputTooSmallUTxO pp $ allSizedOuts txb

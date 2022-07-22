@@ -4,6 +4,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# OPTIONS_GHC -Wno-unused-local-binds #-}
 
 module Cardano.Ledger.Babbage.TxInfo where
 
@@ -24,7 +25,7 @@ import Cardano.Ledger.BaseTypes (ProtVer (..), StrictMaybe (..), isSJust)
 import Cardano.Ledger.Core as Core (PParams, Script, Tx, TxBody, TxOut, Value)
 import Cardano.Ledger.Era (Era (..), ValidateScript (..))
 import Cardano.Ledger.Keys (KeyHash (..), KeyRole (Witness))
-import qualified Cardano.Ledger.Mary.Value as Mary (Value (..))
+import qualified Cardano.Ledger.Mary.Value as Mary (MultiAsset, Value (..))
 import Cardano.Ledger.SafeHash (hashAnnotated)
 import Cardano.Ledger.Shelley.Scripts (ScriptHash (..))
 import Cardano.Ledger.Shelley.TxBody (DCert (..), Wdrl (..))
@@ -185,7 +186,7 @@ babbageTxInfo ::
     HasField "reqSignerHashes" (Core.TxBody era) (Set (KeyHash 'Witness (Crypto era))),
     HasField "certs" (Core.TxBody era) (StrictSeq (DCert (Crypto era))),
     HasField "wdrls" (Core.TxBody era) (Wdrl (Crypto era)),
-    HasField "mint" (Core.TxBody era) (Mary.Value (Crypto era)),
+    HasField "mint" (Core.TxBody era) (Mary.MultiAsset (Crypto era)),
     HasField "vldt" (Core.TxBody era) ValidityInterval
   ) =>
   Core.PParams era ->
@@ -212,7 +213,9 @@ babbageTxInfo pp lang ei sysS utxo tx = do
           { PV1.txInfoInputs = inputs,
             PV1.txInfoOutputs = outputs,
             PV1.txInfoFee = Alonzo.transValue (inject @(Mary.Value (Crypto era)) fee),
-            PV1.txInfoMint = Alonzo.transValue forge,
+            -- PV1.txInfoMint = Alonzo.transValue forge,
+            -- TODO --- FIX THIS!
+            PV1.txInfoMint = undefined,
             PV1.txInfoDCert = foldr (\c ans -> Alonzo.transDCert c : ans) [] (getField @"certs" tbody),
             PV1.txInfoWdrl = Map.toList (Alonzo.transWdrl (getField @"wdrls" tbody)),
             PV1.txInfoValidRange = timeRange,
@@ -235,7 +238,9 @@ babbageTxInfo pp lang ei sysS utxo tx = do
             PV2.txInfoOutputs = outputs,
             PV2.txInfoReferenceInputs = refInputs,
             PV2.txInfoFee = Alonzo.transValue (inject @(Mary.Value (Crypto era)) fee),
-            PV2.txInfoMint = Alonzo.transValue forge,
+            -- TODO --- FIX THIS!
+            -- PV2.txInfoMint = Alonzo.transValue forge,
+            PV2.txInfoMint = undefined,
             PV2.txInfoDCert = foldr (\c ans -> Alonzo.transDCert c : ans) [] (getField @"certs" tbody),
             PV2.txInfoWdrl = PV2.fromList $ Map.toList (Alonzo.transWdrl (getField @"wdrls" tbody)),
             PV2.txInfoValidRange = timeRange,
