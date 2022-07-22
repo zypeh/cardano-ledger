@@ -6,6 +6,8 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -Wno-unused-imports #-}
+{-# OPTIONS_GHC -Wno-unused-matches #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Cardano.Ledger.Pretty.Alonzo where
@@ -21,7 +23,9 @@ import Cardano.Ledger.Alonzo.TxWitness
 import qualified Cardano.Ledger.AuxiliaryData as Core
 import Cardano.Ledger.BaseTypes (BoundedRational (unboundRational), StrictMaybe)
 import qualified Cardano.Ledger.Core as Core
+import qualified Cardano.Ledger.Crypto as CC
 import Cardano.Ledger.Era (Era, ValidateScript, hashScript)
+import Cardano.Ledger.Mary.Value (MultiAsset)
 import Cardano.Ledger.Pretty hiding (ppPParams, ppPParamsUpdate, ppTx, ppTxBody, ppTxOut)
 import Cardano.Ledger.Pretty.Mary (ppTimelock, ppValidityInterval, ppValue)
 import qualified Plutus.V1.Ledger.Api as Plutus
@@ -198,7 +202,9 @@ ppTxBody (TxBody i ifee o c w fee vi u rsh mnt sdh axh ni) =
       ("vldt", ppValidityInterval vi),
       ("update", ppStrictMaybe ppUpdate u),
       ("reqSignerHashes", ppSet ppKeyHash rsh),
-      ("mint", ppValue mnt),
+      -- ("mint", ppValue mnt),
+      -- TODO: FIX THIS !! print multiasset
+      ("mint", undefined),
       ("scriptIntegrityHash", ppStrictMaybe ppSafeHash sdh),
       ("adHash", ppStrictMaybe ppAuxDataHash axh),
       ("txnetworkid", ppStrictMaybe ppNetwork ni)

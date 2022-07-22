@@ -6,6 +6,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Cardano.Ledger.Pretty.Babbage where
@@ -249,7 +250,9 @@ ppTxBody x =
       ("vldt", ppValidityInterval (vldt' x)),
       ("update", ppStrictMaybe ppUpdate (update' x)),
       ("reqSignerHashes", ppSet ppKeyHash (reqSignerHashes' x)),
-      ("mint", ppValue (mint' x)),
+      -- ("mint", ppValue (mint' x)),
+      -- TODO: FIX THIS !! print MultiAsset instead of value
+      ("mint", undefined),
       ("scriptIntegrityHash", ppStrictMaybe ppSafeHash (scriptIntegrityHash' x)),
       ("adHash", ppStrictMaybe ppAuxDataHash (adHash' x)),
       ("txnetworkid", ppStrictMaybe ppNetwork (txnetworkid' x))

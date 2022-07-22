@@ -61,6 +61,9 @@ ppValidityInterval (ValidityInterval b a) =
 
 instance PrettyA ValidityInterval where prettyA = ppValidityInterval
 
+-- TODO: FIX THIS !!
+instance CC.Crypto crypto => PrettyA (MultiAsset crypto) where prettyA = undefined
+
 ppAuxiliaryData :: PrettyA (Core.Script era) => AuxiliaryData era -> PDoc
 ppAuxiliaryData (AuxiliaryData' m sp) =
   ppRecord
