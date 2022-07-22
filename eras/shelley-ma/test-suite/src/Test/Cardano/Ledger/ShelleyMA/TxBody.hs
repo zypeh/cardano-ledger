@@ -7,6 +7,8 @@
 {-# LANGUAGE TypeFamilies #-}
 -- Arbitrary instances
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
+{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
 -- =========================
 
@@ -70,8 +72,8 @@ txM =
     SNothing
     testmint
 
-testmint :: Value TestCrypto
-testmint = Value 0 $ MultiAsset $ Map.singleton policyId (Map.singleton aname 2)
+testmint :: MultiAsset TestCrypto
+testmint = MultiAsset $ Map.singleton policyId (Map.singleton aname 2)
   where
     policyId = PolicyID . hashScript @TestEra . RequireAnyOf $ fromList []
     aname = AssetName $ fromString "asset name"

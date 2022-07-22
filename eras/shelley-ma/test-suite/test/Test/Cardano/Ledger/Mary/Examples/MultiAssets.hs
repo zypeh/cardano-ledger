@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeApplications #-}
+{-# OPTIONS_GHC -fno-warn-unused-top-binds #-}
 
 -- |
 -- Module      : Test.Cardano.Ledger.Mary.Examples.MultiAssets
@@ -82,7 +83,7 @@ bootstrapTxId = txid txb
         unboundedInterval
         SNothing
         SNothing
-        (Val.inject (Coin 0))
+        mempty
 
 initUTxO :: UTxO MaryTest
 initUTxO =
@@ -113,7 +114,7 @@ makeTxb ::
   [TxIn TestCrypto] ->
   [TxOut MaryTest] ->
   ValidityInterval ->
-  Value TestCrypto ->
+  MultiAsset TestCrypto ->
   TxBody MaryTest
 makeTxb ins outs interval minted =
   TxBody
@@ -181,7 +182,9 @@ txbodySimpleEx1 =
     [mkTxInPartial bootstrapTxId 0]
     [TxOut Cast.aliceAddr tokensSimpleEx1]
     unboundedInterval
-    mintSimpleEx1
+    -- mintSimpleEx1
+    -- TODO: FIX THIS
+    undefined
 
 txSimpleEx1 :: Tx MaryTest
 txSimpleEx1 =
@@ -232,7 +235,9 @@ txbodySimpleEx2 =
       TxOut Cast.bobAddr bobTokensSimpleEx2
     ]
     unboundedInterval
-    Val.zero
+    undefined
+
+-- Val.zero
 
 txSimpleEx2 :: Tx MaryTest
 txSimpleEx2 =
@@ -307,7 +312,8 @@ txbodyTimeEx1 s e =
     [mkTxInPartial bootstrapTxId 0]
     [TxOut Cast.aliceAddr tokensTimeEx1]
     (ValidityInterval s e)
-    mintTimeEx1
+    -- mintTimeEx1
+    undefined
 
 txbodyTimeEx1Valid :: TxBody MaryTest
 txbodyTimeEx1Valid = txbodyTimeEx1 (SJust startInterval) (SJust stopInterval)
@@ -370,7 +376,9 @@ txbodyTimeEx2 =
       TxOut Cast.bobAddr bobTokensTimeEx2
     ]
     unboundedInterval
-    Val.zero
+    undefined
+
+-- Val.zero
 
 txTimeEx2 :: Tx MaryTest
 txTimeEx2 =
@@ -430,7 +438,9 @@ txbodySingWitEx1 =
     [mkTxInPartial bootstrapTxId 1]
     [TxOut Cast.bobAddr tokensSingWitEx1]
     unboundedInterval
-    mintSingWitEx1
+    undefined
+
+-- mintSingWitEx1
 
 txSingWitEx1Valid :: Tx MaryTest
 txSingWitEx1Valid =
@@ -490,7 +500,9 @@ txbodyNegEx1 =
     [mkTxInPartial (txid txbodySimpleEx2) 0]
     [TxOut Cast.aliceAddr aliceTokensNegEx1]
     unboundedInterval
-    mintNegEx1
+    undefined
+
+-- mintNegEx1
 
 txNegEx1 :: Tx MaryTest
 txNegEx1 =
@@ -537,7 +549,9 @@ txbodyNegEx2 =
     [mkTxInPartial (txid txbodySimpleEx2) 0]
     [TxOut Cast.aliceAddr aliceTokensNegEx2]
     unboundedInterval
-    mintNegEx2
+    undefined
+
+-- mintNegEx2
 
 testNegEx2 :: Assertion
 testNegEx2 = do
@@ -583,7 +597,9 @@ txbodyWithBigValue =
     [mkTxInPartial bootstrapTxId 0]
     [smallOut, bigOut]
     unboundedInterval
-    (bigValue <+> smallValue)
+    -- (bigValue <+> smallValue)
+    -- TODO: FIX THIS
+    undefined
 
 txBigValue :: Tx MaryTest
 txBigValue =

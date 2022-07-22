@@ -13,6 +13,8 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
+{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
 module Test.Cardano.Ledger.ShelleyMA.Serialisation.Generators
   ( sizedTimelock,
@@ -183,8 +185,11 @@ instance Mock c => Arbitrary (Mary.Value c) where
 --
 -- - Fix the ADA value to 0
 -- - Allow both positive and negative quantities
-genMintValues :: forall c. Mock c => Gen (Mary.Value c)
-genMintValues = valueFromListBounded @Int64 0 <$> arbitrary
+genMintValues :: forall c. Mock c => Gen (Mary.MultiAsset c)
+-- TOOD: FIX THIS
+genMintValues = undefined
+
+-- genMintValues = valueFromListBounded @Int64 0 <$> arbitrary
 
 -- | Variant on @valueFromList@ that makes sure that generated values stay
 -- bounded within the range of a given integral type.
@@ -226,7 +231,9 @@ instance Mock c => Arbitrary (MA.TxBody (AllegraEra c)) where
       <*> arbitrary
       <*> arbitrary
       <*> arbitrary
-      <*> pure (Coin 0)
+      -- pure (Coin 0)
+      -- TODO: FIX THIS
+      <*> arbitrary
 
 instance Mock c => Arbitrary (Timelock c) where
   arbitrary = sizedTimelock maxTimelockDepth

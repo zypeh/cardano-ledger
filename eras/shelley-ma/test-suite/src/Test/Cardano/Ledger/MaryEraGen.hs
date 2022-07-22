@@ -9,6 +9,9 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
+{-# OPTIONS_GHC -fno-warn-unused-imports #-}
+{-# OPTIONS_GHC -fno-warn-unused-top-binds #-}
 
 -- | Export the EraGen instance for MaryEra, as well as some reusable functions for future Eras
 module Test.Cardano.Ledger.MaryEraGen (genMint, maryGenesisValue, policyIndex, addTokens) where
@@ -240,12 +243,15 @@ yellowFreq = 20
 genBundle :: Int -> Gen (Value c) -> Gen (Value c)
 genBundle freq g = QC.frequency [(freq, g), (100 - freq, pure mempty)]
 
-genMint :: CryptoClass.Crypto c => Gen (Value c)
-genMint = do
-  r <- genBundle redFreq genRed
-  b <- genBundle blueFreq genBlue
-  y <- genBundle yellowFreq genYellow
-  pure $ r <> b <> y
+genMint :: CryptoClass.Crypto c => Gen (MultiAsset c)
+-- TODO: FIX THIS
+genMint = undefined
+
+-- do
+-- r <- genBundle redFreq genRed
+-- b <- genBundle blueFreq genBlue
+-- y <- genBundle yellowFreq genYellow
+-- pure $ r <> b <> y
 
 -------------------------------
 -- END Permissionless Tokens --
@@ -263,15 +269,17 @@ addTokens ::
   Proxy era ->
   StrictSeq (Core.TxOut era) -> -- This is an accumuating parameter
   Core.PParams era ->
-  Value (Crypto era) ->
+  MultiAsset (Crypto era) ->
   StrictSeq (Core.TxOut era) ->
   Maybe (StrictSeq (Core.TxOut era))
-addTokens proxy tooLittleLovelace pparams ts (txout :<| os) =
-  let v = getField @"value" txout
-   in if Val.coin v < scaledMinDeposit v (getField @"_minUTxOValue" pparams)
-        then addTokens proxy (txout :<| tooLittleLovelace) pparams ts os
-        else Just $ tooLittleLovelace >< addValToTxOut @era ts txout <| os
-addTokens _proxy _ _ _ StrictSeq.Empty = Nothing
+-- TODO FIX THIS
+-- addTokens proxy tooLittleLovelace pparams ts (txout :<| os) =
+-- let v = getField @"value" txout
+--  in if Val.coin v < scaledMinDeposit v (getField @"_minUTxOValue" pparams)
+-- then addTokens proxy (txout :<| tooLittleLovelace) pparams ts os
+-- else Just $ tooLittleLovelace >< addValToTxOut @era ts txout <| os
+-- addTokens _proxy _ _ _ StrictSeq.Empty = Nothing
+addTokens _proxy _ _ _ _ = Nothing
 
 -- | This function is only good in the Mary Era
 genTxBody ::
