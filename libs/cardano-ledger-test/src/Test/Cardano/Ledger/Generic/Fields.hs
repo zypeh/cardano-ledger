@@ -117,7 +117,7 @@ data TxBodyField era
   | TTL SlotNo
   | Update (StrictMaybe (PP.Update era))
   | ReqSignerHashes (Set (KeyHash 'Witness (Crypto era)))
-  | Mint (Core.Value era)
+  | Mint (Mary.MultiAsset (Crypto era))
   | WppHash (StrictMaybe (Alonzo.ScriptIntegrityHash (Crypto era)))
   | AdHash (StrictMaybe (AuxiliaryDataHash (Crypto era)))
   | Txnetworkid (StrictMaybe Network)
@@ -240,8 +240,8 @@ initValue = Mary.Value 0 (Mary.MultiAsset Map.empty)
 
 initialTxBody :: Era era => Proof era -> Core.TxBody era
 initialTxBody (Shelley _) = Shelley.TxBody Set.empty Seq.empty Seq.empty initWdrl (Coin 0) (SlotNo 0) SNothing SNothing
-initialTxBody (Allegra _) = MA.TxBody Set.empty Seq.empty Seq.empty initWdrl (Coin 0) initVI SNothing SNothing (Coin 0)
-initialTxBody (Mary _) = MA.TxBody Set.empty Seq.empty Seq.empty initWdrl (Coin 0) initVI SNothing SNothing initValue
+initialTxBody (Allegra _) = MA.TxBody Set.empty Seq.empty Seq.empty initWdrl (Coin 0) initVI SNothing SNothing mempty
+initialTxBody (Mary _) = MA.TxBody Set.empty Seq.empty Seq.empty initWdrl (Coin 0) initVI SNothing SNothing mempty
 initialTxBody (Alonzo _) =
   Alonzo.TxBody
     Set.empty
@@ -253,7 +253,7 @@ initialTxBody (Alonzo _) =
     initVI
     SNothing
     Set.empty
-    initValue
+    mempty
     SNothing
     SNothing
     SNothing
@@ -271,7 +271,7 @@ initialTxBody (Babbage _) =
     initVI
     SNothing
     Set.empty
-    initValue
+    mempty
     SNothing
     SNothing
     SNothing

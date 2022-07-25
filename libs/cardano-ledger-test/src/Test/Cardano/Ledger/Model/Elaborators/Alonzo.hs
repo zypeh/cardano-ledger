@@ -118,7 +118,7 @@ instance
   makePlutusScript _ (SupportsPlutus x) = x -- Alonzo.PlutusScript
   makeExtendedTxOut _ (Alonzo.TxOut a v _) (SupportsPlutus dh) = Alonzo.TxOut a v (SJust dh)
 
-  makeTxBody nes (TxBodyArguments maxTTL fee ins outs dcerts wdrl (SupportsMint mint) (SupportsPlutus redeemers) (SupportsPlutus cins) (SupportsPlutus _)) =
+  makeTxBody nes (TxBodyArguments maxTTL fee ins outs dcerts wdrl (SupportsMint _) (SupportsPlutus redeemers) (SupportsPlutus cins) (SupportsPlutus _)) =
     Alonzo.TxBody
       { Alonzo.inputs = ins,
         Alonzo.collateral = cins,
@@ -129,7 +129,8 @@ instance
         Alonzo.txvldt = ValidityInterval SNothing $ SJust (1 + maxTTL),
         Alonzo.txUpdates = SNothing,
         Alonzo.reqSignerHashes = Set.empty,
-        Alonzo.mint = mint,
+        -- TODO: FIX ME
+        Alonzo.mint = undefined,
         Alonzo.scriptIntegrityHash = redeemers >>= uncurry (Alonzo.hashScriptIntegrity langViews),
         Alonzo.adHash = SNothing,
         Alonzo.txnetworkid = SNothing -- SJust Testnet

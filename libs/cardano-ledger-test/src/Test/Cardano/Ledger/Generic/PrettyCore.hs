@@ -71,7 +71,6 @@ import qualified Cardano.Ledger.ShelleyMA.Rules.Utxo as Mary (UtxoPredicateFailu
 import Cardano.Ledger.ShelleyMA.Timelocks (Timelock (..))
 import Cardano.Ledger.TxIn (TxId (..), TxIn (..))
 import Cardano.Ledger.UnifiedMap (UnifiedMap)
-import qualified Cardano.Ledger.Val as Val
 import Control.State.Transition.Extended (STS (..))
 import Data.Foldable (toList)
 import qualified Data.Map.Strict as Map
@@ -794,7 +793,7 @@ instance
 -- =======================================================
 -- Summaries
 
-txBodyFieldSummary :: Era era => TxBodyField era -> [(Text, PDoc)]
+txBodyFieldSummary :: TxBodyField era -> [(Text, PDoc)]
 txBodyFieldSummary txb = case txb of
   (Inputs s) -> [("Inputs", ppInt (Set.size s))]
   (Collateral s) -> [("Collateral", ppInt (Set.size s))]
@@ -808,13 +807,13 @@ txBodyFieldSummary txb = case txb of
   (Txfee c) -> [("Fee", ppCoin c)]
   (Update (SJust _)) -> [("Collateral Return", ppString "?")]
   (ReqSignerHashes x) -> [("Required Signer hashes", ppInt (Set.size x))]
-  (Mint v) -> [("Mint", ppInteger (Val.size v) <> ppString " bytes")]
+  (Mint (MultiAsset m)) -> [("Mint", ppInt (Map.size m) <> ppString " bytes")]
   (WppHash (SJust _)) -> [("WppHash", ppString "?")]
   (AdHash (SJust _)) -> [("AdHash", ppString "?")]
   (Txnetworkid (SJust x)) -> [("Network id", ppNetwork x)]
   _ -> []
 
-bodySummary :: Era era => Proof era -> Core.TxBody era -> PDoc
+bodySummary :: Proof era -> Core.TxBody era -> PDoc
 bodySummary proof body =
   ppRecord
     "TxBody"
@@ -834,7 +833,7 @@ witnessSummary proof wits =
     "Witnesses"
     (map witnessFieldSummary (abstractWitnesses proof wits))
 
-txFieldSummary :: Era era => Proof era -> TxField era -> [PDoc]
+txFieldSummary :: Proof era -> TxField era -> [PDoc]
 txFieldSummary proof tx = case tx of
   (Body b) -> [bodySummary proof b]
   (BodyI xs) -> [ppRecord "TxBody" (concat (map txBodyFieldSummary xs))]
@@ -844,7 +843,7 @@ txFieldSummary proof tx = case tx of
   (Valid (IsValid b)) -> [ppSexp "IsValid" [ppBool b]]
   _ -> []
 
-txSummary :: Era era => Proof era -> Core.Tx era -> PDoc
+txSummary :: Proof era -> Core.Tx era -> PDoc
 txSummary proof tx =
   ppSexp "Tx" (concat (map (txFieldSummary proof) (abstractTx proof tx)))
 
@@ -1210,7 +1209,8 @@ pcTxBodyField proof x = case x of
   Update SNothing -> []
   Update (SJust _) -> [("update", ppString "UPDATE")]
   ReqSignerHashes s -> [("required hashes", ppSet pcKeyHash s)]
-  Mint v -> [("minted", pcCoreValue proof v)]
+  -- TODO: FIX THIS!
+  Mint _ -> [("minted", undefined)]
   WppHash SNothing -> []
   WppHash (SJust h) -> [("integrity hash", trim (ppSafeHash h))]
   AdHash SNothing -> []
