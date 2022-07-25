@@ -7,6 +7,8 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+{-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- |  AlonzoEra instances for EraGen and ScriptClass
@@ -52,7 +54,7 @@ import Cardano.Ledger.Era (Crypto, Era (..), ValidateScript (..))
 import Cardano.Ledger.Hashes (ScriptHash)
 import Cardano.Ledger.Keys (KeyHash, KeyRole (Witness))
 import Cardano.Ledger.Mary (MaryEra)
-import Cardano.Ledger.Mary.Value (AssetName (..), PolicyID (..), Value, policies, valueFromList)
+import Cardano.Ledger.Mary.Value (AssetName (..), MultiAsset, PolicyID (..), Value, policies, valueFromList)
 import Cardano.Ledger.Pretty.Alonzo ()
 import Cardano.Ledger.Shelley.PParams (Update)
 import Cardano.Ledger.Shelley.TxBody (DCert, Wdrl)
@@ -162,15 +164,18 @@ genPlutus2Arg :: Mock c => Gen (Maybe (TwoPhase2ArgInfo (AlonzoEra c)))
 genPlutus2Arg = frequency [(10, Just <$> elements phase2scripts2Arg), (90, pure Nothing)]
 
 -- | Gen a Mint value in the Alonzo Era, with a 10% chance that it includes an AlonzoScript
-genAlonzoMint :: Mock c => Value c -> Gen (Value c, [Alonzo.Script (AlonzoEra c)])
-genAlonzoMint startvalue = do
-  ans <- genPlutus2Arg
-  case ans of
-    Nothing -> pure (startvalue, [])
-    Just (TwoPhase2ArgInfo script shash _ _) -> do
-      count <- chooseEnum (1, 10)
-      let assetname = AssetName "purple"
-      pure (valueFromList 0 [(PolicyID shash, assetname, count)] <> startvalue, [script])
+genAlonzoMint :: Mock c => MultiAsset c -> Gen (MultiAsset c, [Alonzo.Script (AlonzoEra c)])
+-- TODO -- FIX THIS!
+genAlonzoMint = undefined
+
+-- genAlonzoMint startvalue = do
+--   ans <- genPlutus2Arg
+--   case ans of
+--     Nothing -> pure (startvalue, [])
+--     Just (TwoPhase2ArgInfo script shash _ _) -> do
+--       count <- chooseEnum (1, 10)
+--       let assetname = AssetName "purple"
+--       pure (valueFromList 0 [(PolicyID shash, assetname, count)] <> startvalue, [script])
 
 -- ================================================================
 

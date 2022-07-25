@@ -21,6 +21,7 @@ import Cardano.Ledger.Core (TxBody)
 import Cardano.Ledger.Crypto (StandardCrypto)
 import Cardano.Ledger.Era (ValidateScript (hashScript))
 import Cardano.Ledger.Keys (asWitness)
+import Cardano.Ledger.Mary.Value (Value (..))
 import Cardano.Ledger.SafeHash (hashAnnotated)
 import Cardano.Ledger.Shelley.API
   ( ApplyTxError (..),
@@ -124,10 +125,12 @@ exampleTxBodyAlonzo =
           (EpochNo 0)
     ) -- txUpdates
     (Set.singleton $ SLE.mkKeyHash 212) -- reqSignerHashes
-    (SLE.exampleMultiAssetValue 3) -- mint
+    multiAsset -- mint
     (SJust $ SLE.mkDummySafeHash (Proxy @StandardCrypto) 42) -- scriptIntegrityHash
     (SJust . AuxiliaryDataHash $ SLE.mkDummySafeHash (Proxy @StandardCrypto) 42) -- adHash
     (SJust Mainnet) -- txnetworkid
+  where
+    (Value _ multiAsset) = SLE.exampleMultiAssetValue 3
 
 datumExample :: Data StandardAlonzo
 datumExample = Data (Plutus.I 191)
