@@ -52,6 +52,7 @@ import Cardano.Ledger.Core (PParamsDelta, Script, Value)
 import qualified Cardano.Ledger.Core as Core
 import Cardano.Ledger.Era (Crypto, Era)
 import Cardano.Ledger.Hashes (EraIndependentTxBody)
+import Cardano.Ledger.Mary.Value (MultiAsset)
 import Cardano.Ledger.SafeHash (HashAnnotated, SafeToHash)
 import Cardano.Ledger.Serialization (encodeFoldable)
 import Cardano.Ledger.Shelley.Constraints (TransValue)
@@ -67,7 +68,6 @@ import Cardano.Ledger.Val
   ( DecodeMint (..),
     DecodeNonNegative,
     EncodeMint (..),
-    Val (..),
   )
 import Control.DeepSeq (NFData (..))
 import Data.Coders
@@ -135,7 +135,7 @@ data TxBodyRaw era = TxBodyRaw
     vldt :: !ValidityInterval, -- imported from Timelocks
     update :: !(StrictMaybe (Update era)),
     adHash :: !(StrictMaybe (AuxiliaryDataHash (Crypto era))),
-    mint :: !(Value era)
+    mint :: !(MultiAsset (Crypto era))
   }
   deriving (Typeable)
 
@@ -200,7 +200,7 @@ txSparse (TxBodyRaw inp out cert wdrl fee (ValidityInterval bot top) up hash frg
     !> encodeKeyedStrictMaybe 6 up
     !> encodeKeyedStrictMaybe 7 hash
     !> encodeKeyedStrictMaybe 8 bot
-    !> Omit isZero (Key 9 (E encodeMint frge))
+    !> Omit (== mempty) (Key 9 (E encodeMint frge))
 
 bodyFields :: FamsFrom era => Word -> Field (TxBodyRaw era)
 bodyFields 0 = field (\x tx -> tx {inputs = x}) (D (decodeSet fromCBOR))
@@ -215,7 +215,7 @@ bodyFields 8 = ofield (\x tx -> tx {vldt = (vldt tx) {invalidBefore = x}}) From
 bodyFields 9 = field (\x tx -> tx {mint = x}) (D decodeMint)
 bodyFields n = invalidField n
 
-initial :: (Val (Value era)) => TxBodyRaw era
+initial :: TxBodyRaw era
 initial =
   TxBodyRaw
     empty
@@ -226,7 +226,7 @@ initial =
     (ValidityInterval SNothing SNothing)
     SNothing
     SNothing
-    zero
+    mempty
 
 -- ===========================================================================
 -- Wrap it all up in a newtype, hiding the insides with a pattern construtor.
@@ -276,7 +276,7 @@ pattern TxBody ::
   ValidityInterval ->
   StrictMaybe (Update era) ->
   StrictMaybe (AuxiliaryDataHash (Crypto era)) ->
-  Value era ->
+  MultiAsset (Crypto era) ->
   TxBody era
 pattern TxBody inputs outputs certs wdrls txfee vldt update adHash mint <-
   TxBodyConstr
@@ -304,7 +304,7 @@ pattern TxBody' ::
   ValidityInterval ->
   StrictMaybe (Update era) ->
   StrictMaybe (AuxiliaryDataHash (Crypto era)) ->
-  Value era ->
+  MultiAsset (Crypto era) ->
   TxBody era
 pattern TxBody' {inputs', outputs', certs', wdrls', txfee', vldt', update', adHash', mint'} <-
   TxBodyConstr
@@ -372,5 +372,5 @@ instance
   where
   getField (TxBodyConstr (Memo m _)) = getField @"adHash" m
 
-instance Value era ~ value => HasField "mint" (TxBody era) value where
+instance Crypto era ~ crypto => HasField "mint" (TxBody era) (MultiAsset crypto) where
   getField (TxBodyConstr (Memo m _)) = getField @"mint" m

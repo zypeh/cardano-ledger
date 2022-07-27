@@ -51,6 +51,7 @@ import Cardano.Ledger.Shelley.TxBody (DCert, RewardAcnt, Wdrl)
 import Cardano.Ledger.Shelley.UTxO (UTxO (..), totalDeposits, txouts, txup)
 import Cardano.Ledger.ShelleyMA.Timelocks
 import Cardano.Ledger.ShelleyMA.TxBody (TxBody)
+import Cardano.Ledger.Mary.Value (MultiAsset(..), Value (..))
 import qualified Cardano.Ledger.Val as Val
 import Cardano.Slotting.Slot (SlotNo)
 import Control.Monad.Trans.Reader (asks)
@@ -195,17 +196,18 @@ newtype UtxoEvent era
 consumed ::
   forall era.
   ( Era era,
+    Core.Value era ~ Value (Crypto era),
     HasField "certs" (Core.TxBody era) (StrictSeq (DCert (Crypto era))),
     HasField "inputs" (Core.TxBody era) (Set (TxIn (Crypto era))),
-    HasField "mint" (Core.TxBody era) (Core.Value era),
+    HasField "mint" (Core.TxBody era) (MultiAsset (Crypto era)),
     HasField "wdrls" (Core.TxBody era) (Wdrl (Crypto era)),
     HasField "_keyDeposit" (Core.PParams era) Coin
   ) =>
   Core.PParams era ->
   UTxO era ->
   Core.TxBody era ->
-  Core.Value era
-consumed pp u tx = Shelley.consumed pp u tx <> getField @"mint" tx
+  Value (Crypto era)
+consumed pp u tx = Shelley.consumed pp u tx <> Value 0 (getField @"mint" tx)
 
 -- | The UTxO transition rule for the Shelley-MA (Mary and Allegra) eras.
 utxoTransition ::
@@ -214,13 +216,14 @@ utxoTransition ::
     UsesValue era,
     STS (UTXO era),
     Core.Tx era ~ Tx era,
+    Core.Value era ~ Value (Crypto era),
     Embed (Core.EraRule "PPUP" era) (UTXO era),
     Environment (Core.EraRule "PPUP" era) ~ PPUPEnv era,
     State (Core.EraRule "PPUP" era) ~ PPUPState era,
     Signal (Core.EraRule "PPUP" era) ~ Maybe (Update era),
     HasField "certs" (Core.TxBody era) (StrictSeq (DCert (Crypto era))),
     HasField "inputs" (Core.TxBody era) (Set (TxIn (Crypto era))),
-    HasField "mint" (Core.TxBody era) (Core.Value era),
+    HasField "mint" (Core.TxBody era) (MultiAsset (Crypto era)),
     HasField "wdrls" (Core.TxBody era) (Wdrl (Crypto era)),
     HasField "vldt" (Core.TxBody era) ValidityInterval,
     HasField "update" (Core.TxBody era) (StrictMaybe (Update era)),
@@ -265,8 +268,6 @@ utxoTransition = do
   ppup' <-
     trans @(Core.EraRule "PPUP" era) $ TRC (PPUPEnv slot pp genDelegs, ppup, txup tx)
 
-  runTest $ validateTriesToForgeADA txb
-
   let outputs = txouts txb
   {- ∀ txout ∈ txouts txb, getValue txout ≥ inject (scaledMinDeposit v (minUTxOValue pp)) -}
   runTest $ validateOutputTooSmallUTxO pp outputs
@@ -299,17 +300,6 @@ validateOutsideValidityIntervalUTxO slot txb =
     OutsideValidityIntervalUTxO (txvldt txb) slot
   where
     txvldt = getField @"vldt"
-
--- | Check that the mint field does not try to mint ADA. This is equivalent to
--- the check:
---
--- > adaPolicy ∉ supp mint tx
-validateTriesToForgeADA ::
-  (Val.Val (Core.Value era), HasField "mint" (Core.TxBody era) (Core.Value era)) =>
-  Core.TxBody era ->
-  Test (UtxoPredicateFailure era)
-validateTriesToForgeADA txb =
-  failureUnless (Val.coin (getField @"mint" txb) == Val.zero) TriesToForgeADA
 
 -- | Ensure that there are no `Core.TxOut`s that have `Value` of size larger than @MaxValSize@
 --
@@ -361,12 +351,13 @@ validateOutputTooSmallUTxO pp (UTxO outputs) =
 -- > consumed pp utxo txb = produced pp poolParams txb
 validateValueNotConservedUTxO ::
   ( Era era,
+    Core.Value era ~ Value (Crypto era),
     HasField "_keyDeposit" (Core.PParams era) Coin,
     HasField "_poolDeposit" (Core.PParams era) Coin,
     HasField "certs" (Core.TxBody era) (StrictSeq (DCert (Crypto era))),
     HasField "inputs" (Core.TxBody era) (Set (TxIn (Crypto era))),
     HasField "wdrls" (Core.TxBody era) (Wdrl (Crypto era)),
-    HasField "mint" (Core.TxBody era) (Core.Value era)
+    HasField "mint" (Core.TxBody era) (MultiAsset (Crypto era))
   ) =>
   Core.PParams era ->
   UTxO era ->
@@ -398,6 +389,7 @@ instance
     Core.TxBody era ~ TxBody era,
     Core.TxOut era ~ TxOut era,
     Core.Tx era ~ Tx era,
+    Core.Value era ~ Value (Crypto era),
     Embed (Core.EraRule "PPUP" era) (UTXO era),
     Environment (Core.EraRule "PPUP" era) ~ PPUPEnv era,
     State (Core.EraRule "PPUP" era) ~ PPUPState era,

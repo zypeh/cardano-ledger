@@ -7,6 +7,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
 module Cardano.Ledger.ShelleyMA
   ( ShelleyMAEra,
@@ -28,7 +29,7 @@ import Cardano.Ledger.Compactible (Compactible)
 import qualified Cardano.Ledger.Core as Core
 import qualified Cardano.Ledger.Crypto as CryptoClass
 import Cardano.Ledger.Era (Era (..), SupportsSegWit (..), ValidateScript (..))
-import Cardano.Ledger.Mary.Value (Value, policies, policyID)
+import Cardano.Ledger.Mary.Value (Value (..), policies, policyID)
 import Cardano.Ledger.SafeHash (hashAnnotated)
 import Cardano.Ledger.Shelley (nativeMultiSigTag)
 import qualified Cardano.Ledger.Shelley.BlockChain as Shelley
@@ -92,7 +93,7 @@ class
 
 instance CryptoClass.Crypto c => MAClass 'Mary c where
   type MAValue 'Mary c = Value c
-  getScriptHash Proxy x = Set.map policyID (policies x)
+  getScriptHash Proxy (Value _ m) = Set.map policyID (policies m)
 
 instance CryptoClass.Crypto c => MAClass 'Allegra c where
   type MAValue 'Allegra c = Coin
@@ -207,9 +208,11 @@ instance
   validateAuxiliaryData _ (AuxiliaryData md as) = deepseq as $ all validMetadatum md
   hashAuxiliaryData aux = AuxiliaryDataHash (hashAnnotated aux)
 
+--- TODO!! FIX THIS, but how?
 instance
   forall ma c.
   MAClass ma c =>
   HasField "minted" (TxBody (ShelleyMAEra (ma :: MaryOrAllegra) c)) (Set.Set (ScriptHash c))
   where
-  getField x = getScriptHash (Proxy @ma) (getField @"mint" x)
+  -- getField x = getScriptHash (Proxy @ma) (getField @"mint" x)
+  getField = undefined
