@@ -152,7 +152,8 @@ data ShelleyMAUtxoPredFailure era
   | UpdateFailure !(PredicateFailure (EraRule "PPUP" era)) -- Subtransition Failures
   | OutputBootAddrAttrsTooBig
       ![TxOut era] -- list of supplied bad transaction outputs
-  | TriesToForgeADA
+  | -- Kept for backwards compatibility - no longer used because the `MultiAsset` type of mint doesn't allow for this possibility
+    TriesToForgeADA
   | OutputTooBigUTxO
       ![TxOut era] -- list of supplied bad transaction outputs
   deriving (Generic)
@@ -202,7 +203,7 @@ consumed ::
   UTxO era ->
   TxBody era ->
   Value era
-consumed pp u txBody = Shelley.consumed pp u txBody <> txBody ^. mintTxBodyL
+consumed pp u txBody = Shelley.consumed pp u txBody <> txBody ^. mintValueTxBodyF
 
 -- | The UTxO transition rule for the Shelley-MA (Mary and Allegra) eras.
 utxoTransition ::
@@ -298,7 +299,7 @@ validateTriesToForgeADA ::
   TxBody era ->
   Test (ShelleyMAUtxoPredFailure era)
 validateTriesToForgeADA txb =
-  failureUnless (Val.coin (txb ^. mintTxBodyL) == Val.zero) TriesToForgeADA
+  failureUnless (Val.coin (txb ^. mintValueTxBodyF) == Val.zero) TriesToForgeADA
 
 -- | Ensure that there are no `TxOut`s that have `Value` of size larger than @MaxValSize@
 --
