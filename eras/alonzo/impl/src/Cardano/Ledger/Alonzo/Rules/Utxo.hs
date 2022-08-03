@@ -184,7 +184,8 @@ data AlonzoUtxoPredFailure era
   | -- | list of supplied bad transaction outputs
     OutputBootAddrAttrsTooBig
       ![TxOut era]
-  | TriesToForgeADA
+  | -- | Kept for backwards compatibility - no longer used because the `MultiAsset` type of mint doesn't allow for this possibility
+    TriesToForgeADA
   | -- | list of supplied bad transaction output triples (actualSize,PParameterMaxValue,TxOut)
     OutputTooBigUTxO
       ![(Integer, Integer, TxOut era)]
