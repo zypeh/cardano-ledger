@@ -61,7 +61,7 @@ import Cardano.Ledger.Core
 import Cardano.Ledger.Credential (Credential (..), StakeReference (..))
 import Cardano.Ledger.Keys (KeyHash, KeyPair (..), KeyRole (..), hashKey)
 import Cardano.Ledger.Keys.Bootstrap (BootstrapWitness (..))
-import Cardano.Ledger.Mary.Value (MaryValue (..))
+import Cardano.Ledger.Mary.Value (MaryValue (..), MultiAsset (..))
 import Cardano.Ledger.Serialization (sizedValue)
 import qualified Cardano.Ledger.Shelley.PParams as PP (Update)
 import Cardano.Ledger.Shelley.Tx (ShelleyTx (..), ShelleyTxOut (..), pattern WitnessSet)
@@ -118,7 +118,7 @@ data TxBodyField era
   | TTL SlotNo
   | Update (StrictMaybe (PP.Update era))
   | ReqSignerHashes (Set (KeyHash 'Witness (Crypto era)))
-  | Mint (Value era)
+  | Mint (MultiAsset (Crypto era))
   | WppHash (StrictMaybe (ScriptIntegrityHash (Crypto era)))
   | AdHash (StrictMaybe (AuxiliaryDataHash (Crypto era)))
   | Txnetworkid (StrictMaybe Network)
@@ -241,8 +241,8 @@ initValue = MaryValue 0 mempty
 
 initialTxBody :: Era era => Proof era -> TxBody era
 initialTxBody (Shelley _) = ShelleyTxBody Set.empty Seq.empty Seq.empty initWdrl (Coin 0) (SlotNo 0) SNothing SNothing
-initialTxBody (Allegra _) = MATxBody Set.empty Seq.empty Seq.empty initWdrl (Coin 0) initVI SNothing SNothing (Coin 0)
-initialTxBody (Mary _) = MATxBody Set.empty Seq.empty Seq.empty initWdrl (Coin 0) initVI SNothing SNothing initValue
+initialTxBody (Allegra _) = MATxBody Set.empty Seq.empty Seq.empty initWdrl (Coin 0) initVI SNothing SNothing mempty
+initialTxBody (Mary _) = MATxBody Set.empty Seq.empty Seq.empty initWdrl (Coin 0) initVI SNothing SNothing mempty
 initialTxBody (Alonzo _) =
   AlonzoTxBody
     Set.empty
@@ -254,7 +254,7 @@ initialTxBody (Alonzo _) =
     initVI
     SNothing
     Set.empty
-    initValue
+    mempty
     SNothing
     SNothing
     SNothing
@@ -272,7 +272,7 @@ initialTxBody (Babbage _) =
     initVI
     SNothing
     Set.empty
-    initValue
+    mempty
     SNothing
     SNothing
     SNothing
