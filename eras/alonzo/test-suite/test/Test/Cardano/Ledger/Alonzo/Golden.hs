@@ -31,7 +31,7 @@ import Cardano.Ledger.BaseTypes (StrictMaybe (..), boundRational)
 import Cardano.Ledger.Block (Block (..))
 import Cardano.Ledger.Coin (Coin (..))
 import Cardano.Ledger.Era (EraSegWits (..))
-import Cardano.Ledger.Mary.Value (MaryValue (..), valueFromList)
+import Cardano.Ledger.Mary.Value (MaryValue (..), multiAssetFromList)
 import Cardano.Protocol.TPraos.BHeader (BHeader)
 import Codec.CBOR.Read (deserialiseFromBytes)
 import qualified Data.ByteString.Base16 as B16
@@ -80,7 +80,7 @@ goldenUTxOEntryMinAda =
         calcMinUTxO
           ( AlonzoTxOut
               carlAddr
-              (valueFromList 1407406 [(pid1, smallestName, 1)])
+              (MaryValue 1407406 (multiAssetFromList [(pid1, smallestName, 1)]))
               (SJust $ hashData @(AlonzoEra StandardCrypto) (Data (List [])))
           )
           @?= Coin 1655136,
@@ -88,7 +88,7 @@ goldenUTxOEntryMinAda =
         calcMinUTxO
           ( AlonzoTxOut
               bobAddr
-              (valueFromList 1407406 [(pid1, smallestName, 1)])
+              (MaryValue 1407406 (multiAssetFromList [(pid1, smallestName, 1)]))
               SNothing
           )
           @?= Coin 1310316,
@@ -96,7 +96,7 @@ goldenUTxOEntryMinAda =
         calcMinUTxO
           ( AlonzoTxOut
               aliceAddr
-              (valueFromList 1444443 [(pid1, smallName 1, 1)])
+              (MaryValue 1444443 (multiAssetFromList [(pid1, smallName 1, 1)]))
               SNothing
           )
           @?= Coin 1344798,
@@ -104,12 +104,14 @@ goldenUTxOEntryMinAda =
         calcMinUTxO
           ( AlonzoTxOut
               aliceAddr
-              ( valueFromList
+              ( MaryValue
                   1555554
-                  [ (pid1, smallName 1, 1),
-                    (pid1, smallName 2, 1),
-                    (pid1, smallName 3, 1)
-                  ]
+                  ( multiAssetFromList
+                      [ (pid1, smallName 1, 1),
+                        (pid1, smallName 2, 1),
+                        (pid1, smallName 3, 1)
+                      ]
+                  )
               )
               SNothing
           )
@@ -118,7 +120,7 @@ goldenUTxOEntryMinAda =
         calcMinUTxO
           ( AlonzoTxOut
               carlAddr
-              (valueFromList 1555554 [(pid1, largestName 65, 1)])
+              (MaryValue 1555554 (multiAssetFromList [(pid1, largestName 65, 1)]))
               SNothing
           )
           @?= Coin 1448244,
@@ -126,12 +128,14 @@ goldenUTxOEntryMinAda =
         calcMinUTxO
           ( AlonzoTxOut
               carlAddr
-              ( valueFromList
+              ( MaryValue
                   1962961
-                  [ (pid1, largestName 65, 1),
-                    (pid1, largestName 66, 1),
-                    (pid1, largestName 67, 1)
-                  ]
+                  ( multiAssetFromList
+                      [ (pid1, largestName 65, 1),
+                        (pid1, largestName 66, 1),
+                        (pid1, largestName 67, 1)
+                      ]
+                  )
               )
               (SJust $ hashData @(AlonzoEra StandardCrypto) (Data (Constr 0 [Constr 0 []])))
           )
@@ -140,7 +144,7 @@ goldenUTxOEntryMinAda =
         calcMinUTxO
           ( AlonzoTxOut
               aliceAddr
-              (valueFromList 1592591 [(pid1, smallestName, 1), (pid2, smallestName, 1)])
+              (MaryValue 1592591 (multiAssetFromList [(pid1, smallestName, 1), (pid2, smallestName, 1)]))
               SNothing
           )
           @?= Coin 1482726,
@@ -148,7 +152,7 @@ goldenUTxOEntryMinAda =
         calcMinUTxO
           ( AlonzoTxOut
               aliceAddr
-              (valueFromList 1592591 [(pid1, smallestName, 1), (pid2, smallestName, 1)])
+              (MaryValue 1592591 (multiAssetFromList [(pid1, smallestName, 1), (pid2, smallestName, 1)]))
               (SJust $ hashData @(AlonzoEra StandardCrypto) (Data (Constr 0 [])))
           )
           @?= Coin 1827546,
@@ -156,7 +160,7 @@ goldenUTxOEntryMinAda =
         calcMinUTxO
           ( AlonzoTxOut
               bobAddr
-              (valueFromList 1629628 [(pid1, smallName 1, 1), (pid2, smallName 2, 1)])
+              (MaryValue 1629628 (multiAssetFromList [(pid1, smallName 1, 1), (pid2, smallName 2, 1)]))
               SNothing
           )
           @?= Coin 1517208,
@@ -165,7 +169,7 @@ goldenUTxOEntryMinAda =
           ( AlonzoTxOut
               aliceAddr
               ( let f i c = (i, smallName c, 1)
-                 in valueFromList 7407400 [f i c | (i, cs) <- [(pid1, [32 .. 63]), (pid2, [64 .. 95]), (pid3, [96 .. 127])], c <- cs]
+                 in MaryValue 7407400 (multiAssetFromList [f i c | (i, cs) <- [(pid1, [32 .. 63]), (pid2, [64 .. 95]), (pid3, [96 .. 127])], c <- cs])
               )
               SNothing
           )
