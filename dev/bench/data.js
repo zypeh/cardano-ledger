@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1659580819369,
+  "lastUpdate": 1659581520848,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -13074,6 +13074,78 @@ window.BENCHMARK_DATA = {
             "value": 0.0000092727221609446,
             "unit": "Nanoseconds",
             "range": 1.9860227228190018e-8
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jared.corduan@iohk.io",
+            "name": "Jared Corduan",
+            "username": "JaredCorduan"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3bf6a4b7e7d8c2a4992a8ec82a982a1a0ebf530b",
+          "message": "Merge pull request #2953 from input-output-hk/ts-validate-by-phase-onTopOf-alexisPr\n\nValidateScript can only be applied to phase 1 scripts, enforced by types. Take 2",
+          "timestamp": "2022-08-03T22:37:02-04:00",
+          "tree_id": "f739b43ae1bbe6f0884047e256e3c70f65d7b9e0",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/3bf6a4b7e7d8c2a4992a8ec82a982a1a0ebf530b"
+        },
+        "date": 1659581516785,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyEra C_Crypto",
+            "value": 0.00006068641907068685,
+            "unit": "Nanoseconds",
+            "range": 2.501193799005571e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.0000653206076853228,
+            "unit": "Nanoseconds",
+            "range": 1.1721803116707917e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00006706203218470191,
+            "unit": "Nanoseconds",
+            "range": 4.9728165956825745e-8
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/AlonzoEra C_Crypto",
+            "value": 0.00009438624787726476,
+            "unit": "Nanoseconds",
+            "range": 1.6434502414434195e-7
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.00000973816430992884,
+            "unit": "Nanoseconds",
+            "range": 1.3205361147297977e-7
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.000020425310365441045,
+            "unit": "Nanoseconds",
+            "range": 2.815268832386116e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.000020574353059535092,
+            "unit": "Nanoseconds",
+            "range": 5.2350245872743505e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/AlonzoEra C_Crypto",
+            "value": 0.00000911476684718149,
+            "unit": "Nanoseconds",
+            "range": 1.6847625169422037e-8
           }
         ]
       }
