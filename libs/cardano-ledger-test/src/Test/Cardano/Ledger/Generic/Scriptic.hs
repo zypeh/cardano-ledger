@@ -105,7 +105,7 @@ instance forall c. CC.Crypto c => HasTokens (BabbageEra c) where
       an = AssetName "an"
 
 instance forall c. CC.Crypto c => HasTokens (ConwayEra c) where
-  forge n s = MaryValue 0 $ Map.singleton pid (Map.singleton an n)
+  forge n s = MultiAsset $ Map.singleton pid (Map.singleton an n)
     where
       pid = PolicyID (hashScript @(ConwayEra c) s)
       an = AssetName "an"

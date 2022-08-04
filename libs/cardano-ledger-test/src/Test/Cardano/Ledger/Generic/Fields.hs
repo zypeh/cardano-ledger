@@ -290,7 +290,7 @@ initialTxBody (Conway _) =
     initVI
     SNothing
     Set.empty
-    initValue
+    mempty
     SNothing
     SNothing
     SNothing
