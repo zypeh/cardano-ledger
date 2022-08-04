@@ -61,6 +61,7 @@ module Cardano.Ledger.Babbage.TxBody
     auxDataHashBabbageTxBodyL,
     allInputsBabbageTxBodyF,
     mintedBabbageTxBodyF,
+    mintValueBabbageTxBodyF,
     wdrlsBabbbageTxBodyL,
     notSupportedInThisEraL,
     updateBabbageTxBodyL,
