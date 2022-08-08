@@ -83,6 +83,8 @@ BabbageEraTxBody --> AlonzoEraTxBody --> ....
   - `TxBody` to `BabbageTxBody` (kept type synonym with a deprecation message)
   - `PParams` to `BabbagePParams` (kept type synonym with a deprecation message)
   - `PParamsUpdate` to `BabbagePParamsUpdate` (kept type synonym with a deprecation message)
+- Changed `mint` field from type `Value era`/`Value (Crypto era)` to type `MultiAsset (Crypto era)` in `MATxBody`, `AlonzoTxBody`, `BabbageTxBody`
+  # 2964
 ### Deprecated
 - The provenance for the reward calculation has been removed.
   The type signature to the API function `getRewardProvenance` has not change,
