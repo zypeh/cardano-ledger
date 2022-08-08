@@ -551,9 +551,7 @@ utxoTransition = do
   runTest $
     ShelleyMA.validateValueNotConservedUTxO pp utxo stakepools txBody
 
-  {-   adaID ∉ supp mint tx   -}
-  runTestOnSignal $
-    ShelleyMA.validateTriesToForgeADA txBody
+  {- adaPolicy ∉ supp mint tx  - check not needed because mint field of type MultiAsset cannot contain ada -}
 
   let outputs = txouts txBody
   {-   ∀ txout ∈ txouts txb, getValuetxout ≥ inject (uxoEntrySizetxout ∗ coinsPerUTxOWord p) -}
