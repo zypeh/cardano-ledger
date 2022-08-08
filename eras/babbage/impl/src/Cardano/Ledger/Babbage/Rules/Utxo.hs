@@ -77,7 +77,6 @@ import Cardano.Ledger.Shelley.UTxO (UTxO (..))
 import qualified Cardano.Ledger.ShelleyMA.Rules as ShelleyMA
   ( UtxoPredicateFailure,
     validateOutsideValidityIntervalUTxO,
-    validateTriesToForgeADA,
     validateValueNotConservedUTxO,
   )
 import Cardano.Ledger.TxIn (TxIn)
@@ -401,9 +400,7 @@ utxoTransition = do
   runTest $
     ShelleyMA.validateValueNotConservedUTxO pp utxo stakepools txBody
 
-  {-   adaID ∉ supp mint tx   -}
-  runTestOnSignal $
-    ShelleyMA.validateTriesToForgeADA txBody
+  {-   adaID ∉ supp mint tx  - check not needed because mint field of type MultiAsset cannot contain ada  -}
 
   {-   ∀ txout ∈ allOuts txb, getValue txout ≥ inject (serSize txout ∗ coinsPerUTxOByte pp) -}
   runTest $ validateOutputTooSmallUTxO pp $ allSizedOuts txBody

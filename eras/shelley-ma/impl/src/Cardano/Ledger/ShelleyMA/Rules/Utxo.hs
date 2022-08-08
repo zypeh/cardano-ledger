@@ -19,7 +19,6 @@ module Cardano.Ledger.ShelleyMA.Rules.Utxo
     scaledMinDeposit,
     validateOutsideValidityIntervalUTxO,
     validateValueNotConservedUTxO,
-    validateTriesToForgeADA,
   )
 where
 
@@ -256,7 +255,7 @@ utxoTransition = do
   ppup' <-
     trans @(EraRule "PPUP" era) $ TRC (PPUPEnv slot pp genDelegs, ppup, txup tx)
 
-  runTest $ validateTriesToForgeADA txb
+  {- adaPolicy ∉ supp mint tx  - check not needed because mint field of type MultiAsset cannot contain ada -}
 
   let outputs = txouts txb
   {- ∀ txout ∈ txouts txb, getValue txout ≥ inject (scaledMinDeposit v (minUTxOValue pp)) -}
@@ -288,17 +287,6 @@ validateOutsideValidityIntervalUTxO ::
 validateOutsideValidityIntervalUTxO slot txb =
   failureUnless (inInterval slot (txb ^. vldtTxBodyL)) $
     OutsideValidityIntervalUTxO (txb ^. vldtTxBodyL) slot
-
--- | Check that the mint field does not try to mint ADA. This is equivalent to
--- the check:
---
--- > adaPolicy ∉ supp mint tx
-validateTriesToForgeADA ::
-  ShelleyMAEraTxBody era =>
-  TxBody era ->
-  Test (UtxoPredicateFailure era)
-validateTriesToForgeADA txb =
-  failureUnless (Val.coin (txb ^. mintValueTxBodyF) == Val.zero) TriesToForgeADA
 
 -- | Ensure that there are no `TxOut`s that have `Value` of size larger than @MaxValSize@
 --
