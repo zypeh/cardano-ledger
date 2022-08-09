@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1659969556247,
+  "lastUpdate": 1660049313621,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -13578,6 +13578,78 @@ window.BENCHMARK_DATA = {
             "value": 0.0000090788814973888,
             "unit": "Nanoseconds",
             "range": 1.8653093299191864e-8
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jared.corduan@iohk.io",
+            "name": "Jared Corduan",
+            "username": "JaredCorduan"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "66cb66463db7915773544c05796aecc7d08092c0",
+          "message": "Merge pull request #2959 from input-output-hk/jc/move-alonzo-spec-out-of-draft\n\nmove alonzo spec out of draft",
+          "timestamp": "2022-08-09T08:43:42-04:00",
+          "tree_id": "2e174931a38fea05e856988809db8d6934257ae5",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/66cb66463db7915773544c05796aecc7d08092c0"
+        },
+        "date": 1660049309807,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyEra C_Crypto",
+            "value": 0.00005733763889132778,
+            "unit": "Nanoseconds",
+            "range": 0.000002179689076440464
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00006135514459182511,
+            "unit": "Nanoseconds",
+            "range": 6.178402843861619e-8
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00006277207654659468,
+            "unit": "Nanoseconds",
+            "range": 5.978245732060003e-8
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/AlonzoEra C_Crypto",
+            "value": 0.00008894094548122593,
+            "unit": "Nanoseconds",
+            "range": 1.0313335755907307e-7
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.000010524346775564503,
+            "unit": "Nanoseconds",
+            "range": 5.5900334484132797e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.000018218455605124876,
+            "unit": "Nanoseconds",
+            "range": 3.324952602289233e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.000019651310988688467,
+            "unit": "Nanoseconds",
+            "range": 0.0000023171618841070068
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/AlonzoEra C_Crypto",
+            "value": 0.000009557709576899434,
+            "unit": "Nanoseconds",
+            "range": 4.226113204474708e-8
           }
         ]
       }
