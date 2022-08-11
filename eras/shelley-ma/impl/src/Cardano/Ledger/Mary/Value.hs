@@ -26,6 +26,7 @@ module Cardano.Ledger.Mary.Value
     representationSize,
     showValue,
     gettriples',
+    valueFromList,
   )
 where
 
@@ -679,7 +680,7 @@ representationSize xs = abcRegionSize + pidBlockSize + anameBlockSize
 from :: forall crypto. (CC.Crypto crypto) => CompactValue crypto -> MaryValue crypto
 from (CompactValueAdaOnly (CompactCoin c)) = MaryValue (fromIntegral c) (MultiAsset Map.empty)
 from (CompactValueMultiAsset (CompactCoin c) numAssets rep) =
-  MaryValue (fromIntegral c) (multiAssetFromList triples)
+  valueFromList (fromIntegral c) triples
   where
     n = fromIntegral numAssets
 
@@ -825,6 +826,9 @@ prune assets =
 --   first place by using valueFromList to construct a MultiAsset
 multiAssetFromList :: [(PolicyID era, AssetName, Integer)] -> MultiAsset era
 multiAssetFromList = foldr (\(p, n, i) ans -> insert (+) p n i ans) mempty
+
+valueFromList :: Integer -> [(PolicyID era, AssetName, Integer)] -> MaryValue era
+valueFromList ada triples = MaryValue ada (multiAssetFromList triples)
 
 -- | Display a MaryValue as a String, one token per line
 showValue :: MaryValue crypto -> String
