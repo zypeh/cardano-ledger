@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1663335924409,
+  "lastUpdate": 1663455904675,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -17106,6 +17106,78 @@ window.BENCHMARK_DATA = {
             "value": 0.000011674921366126925,
             "unit": "Nanoseconds",
             "range": 2.8999493882705656e-8
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "teodora.danciu@tweag.io",
+            "name": "teodanciu",
+            "username": "teodanciu"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4d850025a11c2ce4897303d15f0cbf99eae4203f",
+          "message": "Remove dependency on cardano-prelude (#2992)\n\nUpdate `plutus` and `cardano-base` dependencies. Remove usage of `cardano-prelude`:\r\n\r\n* Update nix shell to prebuild packages and make them available to ghc-pkg so that\r\n  running cabal from within the shell doesn't have to (which sometimes fails).\r\n\r\n* Update plutus version and adjust to API changes\r\n\r\n* Update cardano-base to a version compatible with plutus and without cardano-prelude\r\n\r\n* Allow newer version of `hashable`, since plutus brings in version 1.4.1.0,\r\n  but our dependency Unique is restricting it to 1.4.\r\n\r\n* Regenerate `PlutusScript` using `plutus-preprocessor`\r\n\r\n* Fix Plutus protocol version in test, which was wrong, but only started \r\n  failing with the new plutus version\r\n\r\n* Replace `panic` function from `cardano-prelude` with `error`\r\n\r\n* Use HeapWords from cardano-base instead of cardano-prelude\r\n\r\n* Remove dependency on `cardano-prelude` from everywhere except byron\r\n\r\nCo-authored-by: Alexey Kuleshevich <alexey.kuleshevich@iohk.io>",
+          "timestamp": "2022-09-18T01:59:14+03:00",
+          "tree_id": "1232d7ec3cd1fbfdb24a492ea2dba906dd84d540",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/4d850025a11c2ce4897303d15f0cbf99eae4203f"
+        },
+        "date": 1663455898378,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyEra C_Crypto",
+            "value": 0.00007141611318969169,
+            "unit": "Nanoseconds",
+            "range": 0.0000030832512173082837
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00007634512337706562,
+            "unit": "Nanoseconds",
+            "range": 0.000004321966432002395
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00008100232855065524,
+            "unit": "Nanoseconds",
+            "range": 0.0000070098262391194446
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/AlonzoEra C_Crypto",
+            "value": 0.00010940585138902639,
+            "unit": "Nanoseconds",
+            "range": 0.0000039787130894645705
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.000015898053898936708,
+            "unit": "Nanoseconds",
+            "range": 0.000001004536574824736
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.000028975944575118192,
+            "unit": "Nanoseconds",
+            "range": 0.0000012258835173276101
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00002945526951364743,
+            "unit": "Nanoseconds",
+            "range": 0.000002275582855558628
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/AlonzoEra C_Crypto",
+            "value": 0.00001437237360230043,
+            "unit": "Nanoseconds",
+            "range": 9.50531205047511e-7
           }
         ]
       }
