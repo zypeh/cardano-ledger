@@ -37,7 +37,6 @@ module Test.Cardano.Ledger.Shelley.Utils
     getBlockNonce,
     ShelleyTest,
     ChainProperty,
-    Split (..),
     RawSeed (..),
   )
 where
@@ -98,6 +97,7 @@ import Cardano.Ledger.Keys
 import Cardano.Ledger.Shelley.API (ApplyBlock)
 import Cardano.Ledger.Shelley.BlockChain (ShelleyTxSeq)
 import Cardano.Ledger.Shelley.LedgerState (StashedAVVMAddresses)
+import Cardano.Ledger.Shelley.PParams
 import Cardano.Ledger.Shelley.Tx (ShelleyTx, ShelleyTxOut)
 import Cardano.Ledger.Shelley.TxBody (ShelleyEraTxBody)
 import Cardano.Ledger.Shelley.TxWits (ShelleyTxWits)
@@ -150,11 +150,15 @@ type ShelleyTest era =
     ShelleyEraTxBody era,
     Tx era ~ ShelleyTx era,
     TxSeq era ~ ShelleyTxSeq era,
-    ShelleyTxOut era ~ TxOut era,
+    TxOut era ~ ShelleyTxOut era,
     TxWits era ~ ShelleyTxWits era,
     Split (Value era),
     Default (State (EraRule "PPUP" era)),
-    Default (StashedAVVMAddresses era)
+    Default (StashedAVVMAddresses era),
+    ProtVerAtMost era 4,
+    ProtVerAtMost era 6,
+    PParamsHKD Identity era ~ ShelleyPParamsHKD Identity era,
+    PParamsHKD StrictMaybe era ~ ShelleyPParamsHKD StrictMaybe era
   )
 
 class Split v where

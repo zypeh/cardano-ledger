@@ -67,8 +67,6 @@ import Data.Map (Map)
 import Data.Sequence (Seq)
 import Data.Sequence.Strict (StrictSeq)
 import Data.Set (Set)
-import GHC.Natural (Natural)
-import GHC.Records (HasField (..))
 import Lens.Micro
 import Test.Cardano.Ledger.Binary.Random (mkDummyHash)
 import Test.Cardano.Ledger.Shelley.Generator.Constants (Constants (..))
@@ -86,7 +84,6 @@ import Test.Cardano.Ledger.Shelley.Generator.ScriptClass
     keyPairs,
   )
 import Test.Cardano.Ledger.Shelley.Rules.Chain (CHAIN, ChainState)
-import Test.Cardano.Ledger.Shelley.Utils (Split (..))
 import Test.QuickCheck (Gen, choose, shuffle)
 
 {------------------------------------------------------------------------------
@@ -156,16 +153,7 @@ type MinUTXO_STS era =
 -- | Minimal requirements on PParams to generate random stuff
 type MinGenPParams era =
   ( EraPParams era,
-    Default (PParams era),
-    HasField "_minPoolCost" (PParams era) Coin,
-    HasField "_protocolVersion" (PParams era) ProtVer,
-    HasField "_eMax" (PParams era) EpochNo,
-    HasField "_d" (PParams era) UnitInterval,
-    HasField "_keyDeposit" (PParams era) Coin,
-    HasField "_poolDeposit" (PParams era) Coin,
-    HasField "_minfeeA" (PParams era) Natural,
-    HasField "_minUTxOValue" (PParams era) Coin,
-    HasField "_minfeeB" (PParams era) Natural
+    Default (PParams era)
   )
 
 class Show (TxOut era) => MinGenTxout era where

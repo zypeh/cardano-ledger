@@ -57,6 +57,7 @@ library
                 cardano-ledger-mary,
                 cardano-ledger-shelley,
                 containers,
+                data-default,
                 microlens,
                 nothunks,
                 cardano-strict-containers,

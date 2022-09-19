@@ -33,12 +33,13 @@ module Cardano.Ledger.Alonzo.Rules.Utxos
 where
 
 import Cardano.Ledger.Alonzo.Era (AlonzoUTXOS)
+import Cardano.Ledger.Alonzo.PParams
 import Cardano.Ledger.Alonzo.PlutusScriptApi
   ( CollectError (..),
     collectTwoPhaseScriptInputs,
     evalScripts,
   )
-import Cardano.Ledger.Alonzo.Scripts (AlonzoScript, CostModels)
+import Cardano.Ledger.Alonzo.Scripts (AlonzoScript)
 import Cardano.Ledger.Alonzo.Tx (AlonzoEraTx (..), IsValid (..))
 import Cardano.Ledger.Alonzo.TxBody
   ( AlonzoEraTxBody (..),
@@ -63,7 +64,6 @@ import Cardano.Ledger.BaseTypes
   )
 import Cardano.Ledger.Binary (FromCBOR (..), ToCBOR (..), serialize')
 import Cardano.Ledger.Binary.Coders
-import Cardano.Ledger.Coin
 import Cardano.Ledger.Core
 import Cardano.Ledger.Rules.ValidationMode (Inject (..), lblStatic)
 import Cardano.Ledger.Shelley.LedgerState (PPUPState (..), UTxOState (..), keyTxRefunds, totalTxDeposits, updateStakeDistribution)
@@ -91,7 +91,6 @@ import Data.MapExtras (extractKeys)
 import Data.Text (Text)
 import Debug.Trace (traceEvent)
 import GHC.Generics (Generic)
-import GHC.Records (HasField (..))
 import Lens.Micro
 import NoThunks.Class (NoThunks)
 
@@ -102,6 +101,7 @@ import NoThunks.Class (NoThunks)
 instance
   forall era.
   ( AlonzoEraTx era,
+    AlonzoEraPParams era,
     ExtendedUTxO era,
     EraUTxO era,
     ScriptsNeeded era ~ AlonzoScriptsNeeded era,
@@ -110,10 +110,6 @@ instance
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
     State (EraRule "PPUP" era) ~ PPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
-    HasField "_costmdls" (PParams era) CostModels,
-    HasField "_protocolVersion" (PParams era) ProtVer,
-    HasField "_keyDeposit" (PParams era) Coin,
-    HasField "_poolDeposit" (PParams era) Coin,
     ToCBOR (PredicateFailure (EraRule "PPUP" era)) -- Serializing the PredicateFailure
   ) =>
   STS (AlonzoUTXOS era)
@@ -153,10 +149,8 @@ utxosTransition ::
     State (EraRule "PPUP" era) ~ PPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
     Embed (EraRule "PPUP" era) (AlonzoUTXOS era),
-    HasField "_costmdls" (PParams era) CostModels,
-    HasField "_keyDeposit" (PParams era) Coin,
-    HasField "_poolDeposit" (PParams era) Coin,
-    ToCBOR (PredicateFailure (EraRule "PPUP" era)) -- Serializing the PredicateFailure
+    ToCBOR (PredicateFailure (EraRule "PPUP" era)),
+    AlonzoEraPParams era
   ) =>
   TransitionRule (AlonzoUTXOS era)
 utxosTransition =
@@ -177,9 +171,9 @@ scriptsTransition ::
     ExtendedUTxO era,
     EraUTxO era,
     ScriptsNeeded era ~ AlonzoScriptsNeeded era,
-    HasField "_costmdls" (PParams era) CostModels,
     BaseM sts ~ ReaderT Globals m,
-    PredicateFailure sts ~ AlonzoUtxosPredFailure era
+    PredicateFailure sts ~ AlonzoUtxosPredFailure era,
+    AlonzoEraPParams era
   ) =>
   SlotNo ->
   PParams era ->
@@ -192,7 +186,7 @@ scriptsTransition slot pp tx utxo action = do
   ei <- liftSTS $ asks epochInfo
   case collectTwoPhaseScriptInputs (unsafeLinearExtendEpochInfo slot ei) sysSt pp tx utxo of
     Right sLst ->
-      when2Phase $ action $ evalScripts (getField @"_protocolVersion" pp) tx sLst
+      when2Phase $ action $ evalScripts (pp ^. ppProtocolVersionL) tx sLst
     Left info
       | alonzoFailures <- filter isNotBadTranslation info,
         not (null alonzoFailures) ->
@@ -207,6 +201,7 @@ scriptsTransition slot pp tx utxo action = do
 scriptsValidateTransition ::
   forall era.
   ( AlonzoEraTx era,
+    AlonzoEraPParams era,
     ExtendedUTxO era,
     EraUTxO era,
     ScriptsNeeded era ~ AlonzoScriptsNeeded era,
@@ -215,17 +210,14 @@ scriptsValidateTransition ::
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
     State (EraRule "PPUP" era) ~ PPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
-    Embed (EraRule "PPUP" era) (AlonzoUTXOS era),
-    HasField "_keyDeposit" (PParams era) Coin,
-    HasField "_poolDeposit" (PParams era) Coin,
-    HasField "_costmdls" (PParams era) CostModels
+    Embed (EraRule "PPUP" era) (AlonzoUTXOS era)
   ) =>
   TransitionRule (AlonzoUTXOS era)
 scriptsValidateTransition = do
   TRC (UtxoEnv slot pp dpstate genDelegs, u@(UTxOState utxo _ _ pup _), tx) <-
     judgmentContext
   let txBody = tx ^. bodyTxL
-      protVer = getField @"_protocolVersion" pp
+      protVer = pp ^. ppProtocolVersionL
       refunded = keyTxRefunds pp dpstate txBody
       depositChange = totalTxDeposits pp dpstate txBody <-> refunded
 
@@ -256,7 +248,7 @@ scriptsNotValidateTransition ::
     ScriptsNeeded era ~ AlonzoScriptsNeeded era,
     STS (AlonzoUTXOS era),
     Script era ~ AlonzoScript era,
-    HasField "_costmdls" (PParams era) CostModels
+    AlonzoEraPParams era
   ) =>
   TransitionRule (AlonzoUTXOS era)
 scriptsNotValidateTransition = do

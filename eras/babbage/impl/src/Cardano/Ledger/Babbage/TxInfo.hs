@@ -182,7 +182,7 @@ babbageTxInfo pp lang ei sysS utxo tx = do
       inputs <- mapM (txInfoInV1 utxo) (Set.toList (txBody ^. inputsTxBodyL))
       outputs <-
         zipWithM
-          (\txIx -> txInfoOutV1 (TxOutFromOutput txIx))
+          (txInfoOutV1 . TxOutFromOutput)
           [minBound ..]
           (foldr (:) [] outs)
       pure . TxInfoPV1 $
@@ -191,7 +191,7 @@ babbageTxInfo pp lang ei sysS utxo tx = do
             PV1.txInfoOutputs = outputs,
             PV1.txInfoFee = Alonzo.transValue (inject @(MaryValue (EraCrypto era)) fee),
             PV1.txInfoMint = Alonzo.transMultiAsset multiAsset,
-            PV1.txInfoDCert = foldr (\c ans -> Alonzo.transDCert c : ans) [] (txBody ^. certsTxBodyL),
+            PV1.txInfoDCert = txBody ^.. certsTxBodyL . folded . to Alonzo.transDCert,
             PV1.txInfoWdrl = Map.toList (Alonzo.transWdrl (txBody ^. wdrlsTxBodyL)),
             PV1.txInfoValidRange = timeRange,
             PV1.txInfoSignatories =
@@ -204,7 +204,7 @@ babbageTxInfo pp lang ei sysS utxo tx = do
       refInputs <- mapM (txInfoInV2 utxo) (Set.toList (txBody ^. referenceInputsTxBodyL))
       outputs <-
         zipWithM
-          (\txIx -> txInfoOutV2 (TxOutFromOutput txIx))
+          (txInfoOutV2 . TxOutFromOutput)
           [minBound ..]
           (foldr (:) [] outs)
       rdmrs' <- mapM (transRedeemerPtr txBody) rdmrs
@@ -215,7 +215,7 @@ babbageTxInfo pp lang ei sysS utxo tx = do
             PV2.txInfoReferenceInputs = refInputs,
             PV2.txInfoFee = Alonzo.transValue (inject @(MaryValue (EraCrypto era)) fee),
             PV2.txInfoMint = Alonzo.transMultiAsset multiAsset,
-            PV2.txInfoDCert = foldr (\c ans -> Alonzo.transDCert c : ans) [] (txBody ^. certsTxBodyL),
+            PV2.txInfoDCert = txBody ^.. certsTxBodyL . folded . to Alonzo.transDCert,
             PV2.txInfoWdrl = PV2.fromList $ Map.toList (Alonzo.transWdrl (txBody ^. wdrlsTxBodyL)),
             PV2.txInfoValidRange = timeRange,
             PV2.txInfoSignatories =

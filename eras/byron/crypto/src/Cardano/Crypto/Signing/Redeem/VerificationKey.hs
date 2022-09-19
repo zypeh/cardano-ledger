@@ -102,18 +102,18 @@ data AvvmVKError
 redeemVKBuild :: ByteString -> RedeemVerificationKey
 redeemVKBuild bs
   | BS.length bs /= 32 =
-      panic $
-        "consRedeemVK: failed to form vk, wrong bs length: "
-          <> show (BS.length bs)
-          <> ", when should be 32"
+    panic $
+      "consRedeemVK: failed to form vk, wrong bs length: "
+        <> show (BS.length bs)
+        <> ", when should be 32"
   | otherwise =
-      case Ed25519.publicKey (BA.convert bs :: BA.Bytes) of
-        CryptoPassed r -> RedeemVerificationKey r
-        CryptoFailed e ->
-          panic $
-            mappend
-              "Cardano.Crypto.Signing.Types.Redeem.hs consRedeemVK failed because "
-              (T.pack $ show e)
+    case Ed25519.publicKey (BA.convert bs :: BA.Bytes) of
+      CryptoPassed r -> RedeemVerificationKey r
+      CryptoFailed e ->
+        panic $
+          mappend
+            "Cardano.Crypto.Signing.Types.Redeem.hs consRedeemVK failed because "
+            (T.pack $ show e)
 
 -- | Read the text into a redeeming verification key. The key should be in
 --   AVVM format which is base64(url). This function must be inverse of

@@ -19,6 +19,7 @@ import Cardano.Ledger.BaseTypes (UnitInterval)
 import qualified Cardano.Ledger.Core as Core
 import Cardano.Ledger.Crypto (VRF)
 import Cardano.Ledger.Era (EraCrypto)
+import Cardano.Ledger.PParams
 import Cardano.Ledger.Shelley.API
 import Cardano.Ledger.Slot (SlotNo (..))
 import Cardano.Protocol.TPraos.API
@@ -44,7 +45,7 @@ import qualified Data.Map.Strict as Map
 import Data.Maybe (catMaybes, fromMaybe)
 import Data.Sequence (Seq)
 import qualified Data.Set as Set
-import GHC.Records (HasField (getField))
+import Lens.Micro ((^.))
 import Test.Cardano.Ledger.Shelley.ConcreteCryptoTypes
   ( Mock,
   )
@@ -60,7 +61,8 @@ import Test.Cardano.Ledger.Shelley.Generator.EraGen (EraGen (..), MinLEDGER_STS)
 import Test.Cardano.Ledger.Shelley.Generator.Trace.Ledger ()
 import Test.Cardano.Ledger.Shelley.Rules.Chain (ChainState (..))
 import Test.Cardano.Ledger.Shelley.Utils
-  ( epochFromSlotNo,
+  ( ShelleyTest,
+    epochFromSlotNo,
     maxKESIterations,
     runShelleyBase,
     slotFromEpoch,
@@ -87,7 +89,8 @@ genBlock ::
     Mock (EraCrypto era),
     GetLedgerView era,
     QC.HasTrace (Core.EraRule "LEDGERS" era) (GenEnv era),
-    EraGen era
+    EraGen era,
+    ShelleyTest era
   ) =>
   GenEnv era ->
   ChainState era ->
@@ -105,7 +108,8 @@ genBlockWithTxGen ::
   ( Mock (EraCrypto era),
     GetLedgerView era,
     ApplyBlock era,
-    EraGen era
+    EraGen era,
+    ShelleyTest era
   ) =>
   TxGen era ->
   GenEnv era ->
@@ -173,7 +177,8 @@ selectNextSlotWithLeader ::
   ( Mock (EraCrypto era),
     EraGen era,
     GetLedgerView era,
-    ApplyBlock era
+    ApplyBlock era,
+    ShelleyTest era
   ) =>
   GenEnv era ->
   ChainState era ->
@@ -234,7 +239,7 @@ selectNextSlotWithLeader
           firstEpochSlot = slotFromEpoch (epochFromSlotNo slotNo)
           f = activeSlotCoeff testGlobals
           getUnitInterval :: Core.PParams era -> UnitInterval
-          getUnitInterval pp = getField @"_d" pp
+          getUnitInterval pp = pp ^. ppDL
           d = (getUnitInterval . esPp . nesEs . chainNes) chainSt
 
           isLeader poolHash vrfKey =

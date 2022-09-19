@@ -1,7 +1,6 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module Cardano.Ledger.Alonzo.Tools
@@ -13,6 +12,7 @@ where
 
 import Cardano.Ledger.Alonzo.Data (Data, Datum (..), binaryDataToData, getPlutusData)
 import Cardano.Ledger.Alonzo.Language (Language (..))
+import Cardano.Ledger.Alonzo.PParams
 import Cardano.Ledger.Alonzo.PlutusScriptApi (knownToNotBe1Phase)
 import Cardano.Ledger.Alonzo.Scripts
   ( AlonzoScript (..),
@@ -53,7 +53,6 @@ import qualified Data.Map.Strict as Map
 import Data.Maybe (mapMaybe)
 import qualified Data.Set as Set
 import Data.Text (Text)
-import GHC.Records (HasField (..))
 import Lens.Micro
 import qualified PlutusLedgerApi.V1 as PV1
 import qualified PlutusLedgerApi.V2 as PV2
@@ -107,8 +106,8 @@ evaluateTransactionExecutionUnits ::
     ExtendedUTxO era,
     EraUTxO era,
     ScriptsNeeded era ~ AlonzoScriptsNeeded era,
-    HasField "_maxTxExUnits" (PParams era) ExUnits,
-    Script era ~ AlonzoScript era
+    Script era ~ AlonzoScript era,
+    AlonzoEraPParams era
   ) =>
   PParams era ->
   -- | The transaction.
@@ -137,10 +136,10 @@ evaluateTransactionExecutionUnits pp tx utxo ei sysS costModels =
 evaluateTransactionExecutionUnitsWithLogs ::
   forall era.
   ( AlonzoEraTx era,
+    AlonzoEraPParams era,
     ExtendedUTxO era,
     EraUTxO era,
     ScriptsNeeded era ~ AlonzoScriptsNeeded era,
-    HasField "_maxTxExUnits" (PParams era) ExUnits,
     Script era ~ AlonzoScript era
   ) =>
   PParams era ->
@@ -165,7 +164,7 @@ evaluateTransactionExecutionUnitsWithLogs pp tx utxo ei sysS costModels = do
   ctx <- sequence $ Map.fromSet getInfo languagesUsed
   pure $
     Map.mapWithKey
-      (findAndCount pp ctx)
+      (findAndCount ctx)
       (unRedeemers $ ws ^. rdmrsTxWitsL)
   where
     txBody = tx ^. bodyTxL
@@ -190,12 +189,11 @@ evaluateTransactionExecutionUnitsWithLogs pp tx utxo ei sysS costModels = do
       pure (pointer, (sp, msb, sh))
 
     findAndCount ::
-      PParams era ->
       Map Language VersionedTxInfo ->
       RdmrPtr ->
       (Data era, ExUnits) ->
       Either (TransactionScriptFailure (EraCrypto era)) ([Text], ExUnits)
-    findAndCount pparams info pointer (rdmr, exunits) = do
+    findAndCount info pointer (rdmr, exunits) = do
       (sp, mscript, sh) <-
         note (RedeemerPointsToUnknownScriptHash pointer) $
           Map.lookup pointer ptrToPlutusScript
@@ -227,9 +225,9 @@ evaluateTransactionExecutionUnitsWithLogs pp tx utxo ei sysS costModels = do
              in Left $ ValidationFailedV2 e logs debug
         (logs, Right exBudget) -> note (IncompatibleBudget exBudget) $ (,) logs <$> exBudgetToExUnits exBudget
       where
-        maxBudget = transExUnits . getField @"_maxTxExUnits" $ pparams
-        protVer = getField @"_protocolVersion" pparams
-        pv = transProtocolVersion protVer
+        maxBudget = transExUnits $ pp ^. ppMaxTxExUnitsL
+        protVer = pp ^. ppProtocolVersionL
+        plutusProtVer = transProtocolVersion protVer
         interpreter lang = case lang of
-          PlutusV1 -> PV1.evaluateScriptRestricting pv PV1.Verbose
-          PlutusV2 -> PV2.evaluateScriptRestricting pv PV2.Verbose
+          PlutusV1 -> PV1.evaluateScriptRestricting plutusProtVer PV1.Verbose
+          PlutusV2 -> PV2.evaluateScriptRestricting plutusProtVer PV2.Verbose

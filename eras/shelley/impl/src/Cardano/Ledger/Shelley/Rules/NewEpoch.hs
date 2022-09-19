@@ -26,7 +26,6 @@ where
 
 import Cardano.Ledger.BaseTypes
   ( BlocksMade (BlocksMade),
-    ProtVer,
     ShelleyBase,
     StrictMaybe (SJust, SNothing),
   )
@@ -53,8 +52,8 @@ import Data.Ratio ((%))
 import Data.Set (Set)
 import Data.VMap as VMap
 import GHC.Generics (Generic)
-import GHC.Records (HasField)
 import GHC.Word (Word64)
+import Lens.Micro ((^.))
 import NoThunks.Class (NoThunks (..))
 
 data ShelleyNewEpochPredFailure era
@@ -105,10 +104,10 @@ instance
     State (EraRule "EPOCH" era) ~ EpochState era,
     Signal (EraRule "EPOCH" era) ~ EpochNo,
     Default (EpochState era),
-    HasField "_protocolVersion" (PParams era) ProtVer,
     Default (State (EraRule "PPUP" era)),
     Default (PParams era),
-    Default (StashedAVVMAddresses era)
+    Default (StashedAVVMAddresses era),
+    EraPParams era
   ) =>
   STS (ShelleyNEWEPOCH era)
   where
@@ -251,13 +250,13 @@ instance
 -- ===========================================
 
 updateRewards ::
-  (HasField "_protocolVersion" (PParams era) ProtVer) =>
+  EraPParams era =>
   EpochState era ->
   EpochNo ->
   RewardUpdate (EraCrypto era) ->
   Rule (ShelleyNEWEPOCH era) 'Transition (EpochState era)
 updateRewards es e ru'@(RewardUpdate dt dr rs_ df _) = do
-  let totRs = sumRewards (esPrevPp es) rs_
+  let totRs = sumRewards (esPrevPp es ^. ppProtocolVersionL) rs_
   Val.isZero (dt <> (dr <> toDeltaCoin totRs <> df)) ?! CorruptRewardUpdate ru'
   let (!es', filtered) = applyRUpdFiltered ru' es
   tellEvent $ RestrainedRewards e (frShelleyIgnored filtered) (frUnregistered filtered)

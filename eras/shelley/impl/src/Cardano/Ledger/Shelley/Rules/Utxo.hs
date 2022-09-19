@@ -63,12 +63,7 @@ import Cardano.Ledger.Shelley.Era (ShelleyEra, ShelleyUTXO)
 import Cardano.Ledger.Shelley.LedgerState (DPState (..), keyTxRefunds, totalTxDeposits)
 import Cardano.Ledger.Shelley.LedgerState.IncrementalStake
 import Cardano.Ledger.Shelley.LedgerState.Types (UTxOState (..))
-import Cardano.Ledger.Shelley.PParams
-  ( PPUPState (..),
-    ShelleyPParams,
-    ShelleyPParamsHKD (..),
-    Update,
-  )
+import Cardano.Ledger.Shelley.PParams (PPUPState (..), Update)
 import Cardano.Ledger.Shelley.Rules.Ppup
   ( PpupEnv (..),
     PpupEvent,
@@ -119,11 +114,9 @@ import qualified Data.Set as Set
 import Data.Typeable (Typeable)
 import Data.Word (Word8)
 import GHC.Generics (Generic)
-import GHC.Records (HasField (..))
 import Lens.Micro
 import Lens.Micro.Extras (view)
 import NoThunks.Class (NoThunks (..))
-import Numeric.Natural (Natural)
 import Validation (failureUnless)
 
 data UtxoEnv era
@@ -300,7 +293,6 @@ instance
     ExactEra ShelleyEra era,
     TxOut era ~ ShelleyTxOut era,
     TxBody era ~ ShelleyTxBody era,
-    PParams era ~ ShelleyPParams era,
     Tx era ~ ShelleyTx era,
     Value era ~ Coin,
     Show (ShelleyTx era),
@@ -378,10 +370,7 @@ utxoInductive ::
     Event (utxo era) ~ UtxoEvent era,
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
     State (EraRule "PPUP" era) ~ PPUPState era,
-    Signal (EraRule "PPUP" era) ~ Maybe (Update era),
-    HasField "_keyDeposit" (PParams era) Coin,
-    HasField "_poolDeposit" (PParams era) Coin,
-    HasField "_maxTxSize" (PParams era) Natural
+    Signal (EraRule "PPUP" era) ~ Maybe (Update era)
   ) =>
   TransitionRule (utxo era)
 utxoInductive = do
@@ -522,9 +511,7 @@ validateWrongNetworkWithdrawal netId txb =
 -- > consumed pp utxo txb = produced pp poolParams txb
 validateValueNotConservedUTxO ::
   ( ShelleyEraTxBody era,
-    EraUTxO era,
-    HasField "_keyDeposit" (PParams era) Coin,
-    HasField "_poolDeposit" (PParams era) Coin
+    EraUTxO era
   ) =>
   PParams era ->
   UTxO era ->
@@ -581,8 +568,7 @@ validateOutputBootAddrAttrsTooBig outputs =
 --
 -- > txsize tx ≤ maxTxSize pp
 validateMaxTxSizeUTxO ::
-  ( HasField "_maxTxSize" (PParams era) Natural,
-    EraTx era
+  ( EraTx era
   ) =>
   PParams era ->
   Tx era ->
@@ -590,7 +576,7 @@ validateMaxTxSizeUTxO ::
 validateMaxTxSizeUTxO pp tx =
   failureUnless (txSize <= maxTxSize) $ MaxTxSizeUTxO txSize maxTxSize
   where
-    maxTxSize = toInteger (getField @"_maxTxSize" pp)
+    maxTxSize = toInteger (pp ^. ppMaxTxSizeL)
     txSize = tx ^. sizeTxF
 
 updateUTxOState ::

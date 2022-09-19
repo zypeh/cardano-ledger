@@ -107,7 +107,10 @@ import Cardano.Protocol.TPraos.BHeader
     bhbody,
     bheaderSlotNo,
   )
+<<<<<<< HEAD
 import Cardano.Slotting.Slot (EpochNo (..))
+=======
+>>>>>>> cc40a1bcb (Added PParams classes and instances to each era.)
 import Control.Monad.Trans.Reader (ReaderT)
 import Control.SetAlgebra (dom, eval, (∩), (▷), (◁))
 import Control.State.Transition
@@ -134,7 +137,6 @@ import Data.UMap (View (Rewards), domain)
 import qualified Data.UMap as UM
 import qualified Data.VMap as VMap
 import Data.Word (Word64)
-import GHC.Records (HasField (..))
 import Lens.Micro hiding (ix)
 import Lens.Micro.Extras (view)
 import Test.Cardano.Ledger.Shelley.Generator.Block (tickChainState)
@@ -160,6 +162,7 @@ import qualified Test.Cardano.Ledger.Shelley.Rules.TestPool as TestPool
 import qualified Test.Cardano.Ledger.Shelley.Rules.TestPoolreap as TestPoolreap
 import Test.Cardano.Ledger.Shelley.Utils
   ( ChainProperty,
+    ShelleyTest,
     epochFromSlotNo,
     runShelleyBase,
     testGlobals,
@@ -376,8 +379,6 @@ checkPreservation ::
   forall era.
   ( EraSegWits era,
     ShelleyEraTxBody era,
-    HasField "_keyDeposit" (PParams era) Coin,
-    HasField "_poolDeposit" (PParams era) Coin,
     State (EraRule "PPUP" era) ~ PPUPState era
   ) =>
   (SourceSignalTarget (CHAIN era), Int) ->
@@ -430,7 +431,7 @@ checkPreservation (SourceSignalTarget {source, target, signal}, count) =
     targetTotal = totalAda target
 
     currPP = esPp . nesEs . chainNes $ source
-    prevPP = esPrevPp . nesEs . chainNes $ source
+    prevPP = view ppProtocolVersionL . esPrevPp . nesEs . chainNes $ source
 
     ru' = nesRu . chainNes $ source
     lsOld = esLState . nesEs . chainNes $ source
@@ -711,9 +712,7 @@ preserveBalanceRestricted ::
   ( ChainProperty era,
     TestingLedger era ledger,
     ShelleyEraTxBody era,
-    EraSegWits era,
-    HasField "_keyDeposit" (PParams era) Coin,
-    HasField "_poolDeposit" (PParams era) Coin
+    EraSegWits era
   ) =>
   SourceSignalTarget (CHAIN era) ->
   Property
@@ -1059,10 +1058,14 @@ poolProperties =
 poolRetirement ::
   ( ChainProperty era,
     EraSegWits era,
+<<<<<<< HEAD
     ShelleyEraTxBody era,
     HasField "_eMax" (PParams era) EpochNo,
     HasField "_minPoolCost" (PParams era) Coin,
     HasField "_poolDeposit" (PParams era) Coin
+=======
+    ShelleyEraTxBody era
+>>>>>>> cc40a1bcb (Added PParams classes and instances to each era.)
   ) =>
   SourceSignalTarget (CHAIN era) ->
   Property
@@ -1073,17 +1076,21 @@ poolRetirement SourceSignalTarget {source = chainSt, signal = block} =
     (chainSt', poolTr) = poolTraceFromBlock chainSt block
     bhb = bhbody $ bheader block
     currentEpoch = (epochFromSlotNo . bheaderSlotNo) bhb
-    maxEpoch = (getField @"_eMax" . esPp . nesEs . chainNes) chainSt'
+    maxEpoch = (view ppEMaxL . esPp . nesEs . chainNes) chainSt'
 
 -- | Check that a newly registered pool key is registered and not
 -- in the retiring map.
 poolRegistration ::
   ( ChainProperty era,
     EraSegWits era,
+<<<<<<< HEAD
     ShelleyEraTxBody era,
     HasField "_eMax" (PParams era) EpochNo,
     HasField "_minPoolCost" (PParams era) Coin,
     HasField "_poolDeposit" (PParams era) Coin
+=======
+    ShelleyEraTxBody era
+>>>>>>> cc40a1bcb (Added PParams classes and instances to each era.)
   ) =>
   SourceSignalTarget (CHAIN era) ->
   Property
@@ -1098,10 +1105,14 @@ poolRegistration (SourceSignalTarget {source = chainSt, signal = block}) =
 poolStateIsInternallyConsistent ::
   ( ChainProperty era,
     EraSegWits era,
+<<<<<<< HEAD
     ShelleyEraTxBody era,
     HasField "_eMax" (PParams era) EpochNo,
     HasField "_minPoolCost" (PParams era) Coin,
     HasField "_poolDeposit" (PParams era) Coin
+=======
+    ShelleyEraTxBody era
+>>>>>>> cc40a1bcb (Added PParams classes and instances to each era.)
   ) =>
   SourceSignalTarget (CHAIN era) ->
   Property
@@ -1120,9 +1131,9 @@ poolStateIsInternallyConsistent (SourceSignalTarget {source = chainSt, signal = 
 delegProperties ::
   forall era.
   ( EraGen era,
-    Default (State (EraRule "PPUP" era)),
     QC.HasTrace (CHAIN era) (GenEnv era),
-    ChainProperty era
+    ChainProperty era,
+    ShelleyTest era
   ) =>
   Property
 delegProperties =
@@ -1199,10 +1210,14 @@ poolTraceFromBlock ::
   forall era.
   ( ChainProperty era,
     ShelleyEraTxBody era,
+<<<<<<< HEAD
     EraSegWits era,
     HasField "_eMax" (PParams era) EpochNo,
     HasField "_minPoolCost" (PParams era) Coin,
     HasField "_poolDeposit" (PParams era) Coin
+=======
+    EraSegWits era
+>>>>>>> cc40a1bcb (Added PParams classes and instances to each era.)
   ) =>
   ChainState era ->
   Block (BHeader (EraCrypto era)) era ->

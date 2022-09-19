@@ -53,7 +53,6 @@ import Cardano.Ledger.CompactAddress (CompactAddr (..), decompactAddr)
 import Cardano.Ledger.Compactible (Compactible (..))
 import Cardano.Ledger.Core
   ( Era,
-    EraPParams (..),
     EraRule,
     EraScript (..),
     EraTx (..),
@@ -92,6 +91,7 @@ import Cardano.Ledger.Keys
   )
 import Cardano.Ledger.Keys.Bootstrap (BootstrapWitness (..), ChainCode (..))
 import Cardano.Ledger.MemoBytes (MemoBytes (..))
+import Cardano.Ledger.PParams
 import Cardano.Ledger.PoolDistr (IndividualPoolStake (..), PoolDistr (..))
 import Cardano.Ledger.SafeHash (SafeHash, extractHash)
 import Cardano.Ledger.Shelley.LedgerState

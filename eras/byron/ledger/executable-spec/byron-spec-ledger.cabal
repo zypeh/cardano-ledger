@@ -57,6 +57,7 @@ library
                      , microlens
                      , microlens-th
                      , nothunks
+                     , Unique >= 0.4.7.6
                      , small-steps
                      , small-steps-test
                      , Unique >= 0.4.7.6

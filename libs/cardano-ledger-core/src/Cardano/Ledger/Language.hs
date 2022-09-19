@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 -- | This module provides data structures and operations for talking about
 --     Non-native Script languages. It is expected that new languages (or new
@@ -9,7 +10,18 @@ module Cardano.Ledger.Language where
 import Cardano.Ledger.Binary (FromCBOR (..), ToCBOR (..), decodeInt, invalidKey)
 import Cardano.Ledger.TreeDiff (ToExpr (..))
 import Control.DeepSeq (NFData (..))
+import Data.Aeson
+  ( FromJSON (parseJSON),
+    FromJSONKey (fromJSONKey),
+    FromJSONKeyFunction (FromJSONKeyTextParser),
+    ToJSON (toJSON),
+    ToJSONKey (toJSONKey),
+    Value (String),
+    withText,
+  )
+import Data.Aeson.Types (toJSONKeyText)
 import Data.Ix (Ix)
+import Data.Text (Text)
 import GHC.Generics (Generic)
 import NoThunks.Class (NoThunks)
 
@@ -31,6 +43,27 @@ data Language
 instance NoThunks Language
 
 instance NFData Language
+
+instance FromJSON Language where
+  parseJSON = withText "Language" languageFromText
+
+instance ToJSON Language where
+  toJSON = String . languageToText
+
+instance ToJSONKey Language where
+  toJSONKey = toJSONKeyText languageToText
+
+instance FromJSONKey Language where
+  fromJSONKey = FromJSONKeyTextParser languageFromText
+
+languageToText :: Language -> Text
+languageToText PlutusV1 = "PlutusV1"
+languageToText PlutusV2 = "PlutusV2"
+
+languageFromText :: MonadFail m => Text -> m Language
+languageFromText "PlutusV1" = pure PlutusV1
+languageFromText "PlutusV2" = pure PlutusV2
+languageFromText lang = fail $ "Error decoding Language: " ++ show lang
 
 instance ToCBOR Language where
   toCBOR PlutusV1 = toCBOR (0 :: Int)

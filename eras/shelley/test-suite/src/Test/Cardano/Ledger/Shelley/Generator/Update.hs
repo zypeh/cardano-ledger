@@ -87,10 +87,12 @@ import Test.Cardano.Ledger.Shelley.Generator.EraGen (EraGen (..))
 import Test.Cardano.Ledger.Shelley.Utils
   ( GenesisKeyPair,
     epochFromSlotNo,
-    unsafeBoundRational,
+    unsafeBoundRational, ShelleyTest
   )
 import Test.QuickCheck (Gen, choose, frequency)
 import qualified Test.QuickCheck as QC
+import qualified Cardano.Ledger.Core as Core
+import Lens.Micro ((^.))
 
 -- ====================================
 
@@ -102,10 +104,9 @@ genIntervalInThousands :: (BoundedRational a, HasCallStack) => Integer -> Intege
 genIntervalInThousands lower upper =
   unsafeBoundRational <$> genRationalInThousands lower upper
 
-genPParams :: Constants -> Gen (ShelleyPParams era)
-genPParams c@Constants {maxMinFeeA, maxMinFeeB, minMajorPV} =
-  mkPParams
-    <$> genNatural 0 maxMinFeeA -- _minfeeA
+genPParams :: ShelleyTest era => Constants -> Gen (PParams era)
+genPParams c@Constants {maxMinFeeA, maxMinFeeB, minMajorPV} = fmap Core.PParams $
+  mkPParams <$> genNatural 0 maxMinFeeA -- _minfeeA
     <*> genNatural 0 maxMinFeeB -- _minfeeB
     <*> szGen -- (maxBBSize, maxBHSize, maxTxSize)
     <*> genKeyDeposit
@@ -209,11 +210,11 @@ genMinPoolCost = Coin <$> genInteger 10 50
 
 -- | Generate a possible next Protocol version based on the previous version.
 -- Increments the Major or Minor versions and possibly the Alt version.
-genNextProtocolVersion :: HasCallStack => ShelleyPParams era -> Gen ProtVer
+genNextProtocolVersion :: ShelleyTest era => HasCallStack => PParams era -> Gen ProtVer
 genNextProtocolVersion pp = do
   QC.elements $ ProtVer m (n + 1) : [ProtVer m' 0 | Just m' <- [succVersion m]]
   where
-    ProtVer m n = getField @"_protocolVersion" pp
+    ProtVer m n = pp ^. ppProtocolVersionL
 
 genM :: Gen a -> Gen (StrictMaybe a)
 genM gen = frequency [(1, SJust <$> gen), (2, pure SNothing)]
@@ -221,9 +222,10 @@ genM gen = frequency [(1, SJust <$> gen), (2, pure SNothing)]
 -- | This is only good in the Shelley Era, used to define the genShelleyEraPParamsUpdate method for (EraGen (ShelleyEra c))
 genShelleyPParamsUpdate ::
   forall era.
+  ShelleyTest era =>
   Constants ->
-  ShelleyPParams era ->
-  Gen (ShelleyPParamsUpdate era)
+  PParams era ->
+  Gen (Core.PParamsUpdate era)
 genShelleyPParamsUpdate c@Constants {maxMinFeeA, maxMinFeeB} pp = do
   -- TODO generate Maybe types so not all updates are full
   minFeeA <- genM $ genNatural 0 maxMinFeeA
@@ -244,9 +246,11 @@ genShelleyPParamsUpdate c@Constants {maxMinFeeA, maxMinFeeB} pp = do
   minUTxOValue <- genM $ genMinUTxOValue
   minPoolCost <- genM $ genMinPoolCost
   pure
-    ( ShelleyPParams
-        { _minfeeA = minFeeA,
-          _minfeeB = minFeeB,
+    ( emptyPParamsUpdate
+      & ppuMinFeeAL .~ minFeeA
+      & ppuMinFeeBL .~ minFeeB
+      & ppuMaxBBSizeL .~ maxBBSize
+      ...
           _maxBBSize = maxBBSize,
           _maxTxSize = maxTxSize,
           _maxBHSize = maxBHSize,
