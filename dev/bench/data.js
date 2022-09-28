@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1664295779711,
+  "lastUpdate": 1664384940599,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -17466,6 +17466,78 @@ window.BENCHMARK_DATA = {
             "value": 0.000014936722550746849,
             "unit": "Nanoseconds",
             "range": 0.0000011721605046338185
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "aniket.deshpande@iohk.io",
+            "name": "Aniket Deshpande",
+            "username": "aniketd"
+          },
+          "committer": {
+            "email": "jaredcorduan@gmail.com",
+            "name": "Jared Corduan",
+            "username": "JaredCorduan"
+          },
+          "distinct": true,
+          "id": "2ef8efde514d599f5ba3f7f03d4bdd947b0f9083",
+          "message": "Move Data.AbstractSize module into byron codebase\n\nThe cardano-data package contains Data.AbstractSize\nmodule, which is only used in byron era. We find a\nhome for it in eras/byron packages.\n\n- Move libs/cardano-data/src/Data/AbstractSize.hs ->\n  eras/byron/ledger/executable-spec/src/Data/AbstractSize.hs\n- Adjust .cabal files and dependencies\n- Add -Wunused-packages to byron-space-ledger.cabal",
+          "timestamp": "2022-09-28T13:04:11-04:00",
+          "tree_id": "5321a0fd9f7e547b1ba301f23420cf88790d6ac4",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/2ef8efde514d599f5ba3f7f03d4bdd947b0f9083"
+        },
+        "date": 1664384936900,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyEra C_Crypto",
+            "value": 0.00005426822752395286,
+            "unit": "Nanoseconds",
+            "range": 1.1004070875202007e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00005719731601656365,
+            "unit": "Nanoseconds",
+            "range": 5.182003685228355e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.000059309996266285666,
+            "unit": "Nanoseconds",
+            "range": 4.852719816381042e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/AlonzoEra C_Crypto",
+            "value": 0.0000803764129767023,
+            "unit": "Nanoseconds",
+            "range": 1.845978120009812e-7
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.000012910309879954492,
+            "unit": "Nanoseconds",
+            "range": 6.114556260258988e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00002347688229011399,
+            "unit": "Nanoseconds",
+            "range": 1.0496816143951983e-7
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00002351594660721948,
+            "unit": "Nanoseconds",
+            "range": 5.484322829439464e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/AlonzoEra C_Crypto",
+            "value": 0.00001214517660188201,
+            "unit": "Nanoseconds",
+            "range": 4.6884130716567815e-7
           }
         ]
       }
