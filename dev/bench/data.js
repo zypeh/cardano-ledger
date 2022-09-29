@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1664465548099,
+  "lastUpdate": 1664479411465,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -17610,6 +17610,78 @@ window.BENCHMARK_DATA = {
             "value": 0.000011815257226179734,
             "unit": "Nanoseconds",
             "range": 1.9193007638346816e-7
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "aniketd@users.noreply.github.com",
+            "name": "Aniket Deshpande",
+            "username": "aniketd"
+          },
+          "committer": {
+            "email": "jaredcorduan@gmail.com",
+            "name": "Jared Corduan",
+            "username": "JaredCorduan"
+          },
+          "distinct": true,
+          "id": "3dae90e864f2fa51cdb7f16f6346284231f7495f",
+          "message": "Update README.md\r\n\r\nAdd note about CARDANO_MAINNET_MIRROR\r\nenvironment variable being required only by byron tests\n\nCo-authored-by: Jared Corduan <jaredcorduan@gmail.com>",
+          "timestamp": "2022-09-29T15:18:28-04:00",
+          "tree_id": "9e8b428f5fbfb8082c19411e8153fc3f605e182c",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/3dae90e864f2fa51cdb7f16f6346284231f7495f"
+        },
+        "date": 1664479407401,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyEra C_Crypto",
+            "value": 0.0000591825049996166,
+            "unit": "Nanoseconds",
+            "range": 0.000003991555203730702
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00006601698861119444,
+            "unit": "Nanoseconds",
+            "range": 0.0000012183094503589514
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00006656223163535681,
+            "unit": "Nanoseconds",
+            "range": 0.0000028652211173112176
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/AlonzoEra C_Crypto",
+            "value": 0.00009314641671795903,
+            "unit": "Nanoseconds",
+            "range": 0.0000024125833075791153
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.000014748306605928655,
+            "unit": "Nanoseconds",
+            "range": 2.941442486655664e-7
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.000026555505006506606,
+            "unit": "Nanoseconds",
+            "range": 0.0000011782829401562775
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00002708050529441197,
+            "unit": "Nanoseconds",
+            "range": 4.214065813723893e-7
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/AlonzoEra C_Crypto",
+            "value": 0.000013654428652176488,
+            "unit": "Nanoseconds",
+            "range": 3.118778885361094e-7
           }
         ]
       }
