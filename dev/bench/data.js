@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1665445840397,
+  "lastUpdate": 1665487173488,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -17970,6 +17970,78 @@ window.BENCHMARK_DATA = {
             "value": 0.000015091151890019927,
             "unit": "Nanoseconds",
             "range": 6.165498570014197e-7
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "michael.peyton-jones@iohk.io",
+            "name": "Michael Peyton Jones",
+            "username": "michaelpj"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "aa8468ecfe0763ff967aa9ee79d8fbb7511c7369",
+          "message": "Purge `goblins` from the ledger (#3070)\n\nThis reduces the amount of testing of Byron, in particular it removes\r\ninvalid trace generation.\r\n\r\nI've tried to remove only the things that strictly relied on `goblins`,\r\nso in fact _some_ of the invalid trace generation survives! Please take\r\na careful look in case I've been too zealous.",
+          "timestamp": "2022-10-11T12:14:23+01:00",
+          "tree_id": "b730baebede6fd181241b95ffc665f07e7091b47",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/aa8468ecfe0763ff967aa9ee79d8fbb7511c7369"
+        },
+        "date": 1665487169686,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyEra C_Crypto",
+            "value": 0.0000536248045776397,
+            "unit": "Nanoseconds",
+            "range": 4.835156437133857e-8
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00005677830673088771,
+            "unit": "Nanoseconds",
+            "range": 2.1967958073722974e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.000058523624572108064,
+            "unit": "Nanoseconds",
+            "range": 8.384841312191405e-8
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/AlonzoEra C_Crypto",
+            "value": 0.00007973129777554038,
+            "unit": "Nanoseconds",
+            "range": 1.0502041697275267e-7
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.000012614871983338273,
+            "unit": "Nanoseconds",
+            "range": 1.0091504636475992e-7
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.000023233104190820535,
+            "unit": "Nanoseconds",
+            "range": 2.2465229708507673e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00002323655737254849,
+            "unit": "Nanoseconds",
+            "range": 1.9867639677597983e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/AlonzoEra C_Crypto",
+            "value": 0.000011291059754626317,
+            "unit": "Nanoseconds",
+            "range": 3.387442384318037e-8
           }
         ]
       }
