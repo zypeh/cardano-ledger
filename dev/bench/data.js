@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1665608326236,
+  "lastUpdate": 1665738895523,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -18186,6 +18186,78 @@ window.BENCHMARK_DATA = {
             "value": 0.00001159473453933616,
             "unit": "Nanoseconds",
             "range": 1.847048401611012e-8
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "michael.peyton-jones@iohk.io",
+            "name": "Michael Peyton Jones",
+            "username": "michaelpj"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "01b598bbed3626a34792d6452dcb565ddc357b33",
+          "message": "Move to get Haskell packages from CHaP (#3069)\n\nThis moves the `cardano-ledger` repository to use CHaP, murdering most\r\nof the `source-repository-package`s in the process.\r\n\r\nI tried to explain all the process differences, please let me know if\r\nit's clear enough!",
+          "timestamp": "2022-10-14T10:08:51+01:00",
+          "tree_id": "424596d376e7bbc554d9b947bb02e78647515e32",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/01b598bbed3626a34792d6452dcb565ddc357b33"
+        },
+        "date": 1665738889247,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyEra C_Crypto",
+            "value": 0.00007271722215799215,
+            "unit": "Nanoseconds",
+            "range": 0.000004886110863340005
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00007863362990277076,
+            "unit": "Nanoseconds",
+            "range": 0.000005043845918350675
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00008458849973561983,
+            "unit": "Nanoseconds",
+            "range": 0.000004497396637160588
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/AlonzoEra C_Crypto",
+            "value": 0.00011930429103309776,
+            "unit": "Nanoseconds",
+            "range": 0.000008877513808364263
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.000016527157016575106,
+            "unit": "Nanoseconds",
+            "range": 0.0000024246139433640043
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00003244616153891884,
+            "unit": "Nanoseconds",
+            "range": 0.000005329009648252564
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00003102716732431429,
+            "unit": "Nanoseconds",
+            "range": 0.000002069845956827167
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/AlonzoEra C_Crypto",
+            "value": 0.000016133098392344517,
+            "unit": "Nanoseconds",
+            "range": 0.00000213207056328516
           }
         ]
       }
