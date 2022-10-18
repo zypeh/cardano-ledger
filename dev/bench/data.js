@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1666003688594,
+  "lastUpdate": 1666117718512,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -18546,6 +18546,78 @@ window.BENCHMARK_DATA = {
             "value": 0.000011520974463142775,
             "unit": "Nanoseconds",
             "range": 2.8957915533501064e-8
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "andrea.bedini@tweag.io",
+            "name": "Andrea Bedini",
+            "username": "andreabedini"
+          },
+          "committer": {
+            "email": "jaredcorduan@gmail.com",
+            "name": "Jared Corduan",
+            "username": "JaredCorduan"
+          },
+          "distinct": true,
+          "id": "958a7012cf8220bd47f2b5b6b93402ec4a9a37be",
+          "message": "Bump CHaP, fix issues\n\nThe main issue was with the old version of `cardano-prelude` being\nforced by `cardano-ledger-byron`. But in fact the other packages had\nalready migrated for the `heapwords` change, so I just did that for\n`cardano-ledger-byron` also and dropped the constraint.",
+          "timestamp": "2022-10-18T14:23:23-04:00",
+          "tree_id": "206965351f6d79e8b70cc614a852cfbd45a17173",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/958a7012cf8220bd47f2b5b6b93402ec4a9a37be"
+        },
+        "date": 1666117714777,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyEra C_Crypto",
+            "value": 0.000053619792264690074,
+            "unit": "Nanoseconds",
+            "range": 6.379887229328954e-8
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.000056572239116723776,
+            "unit": "Nanoseconds",
+            "range": 2.2748060356508383e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.000058465306167340467,
+            "unit": "Nanoseconds",
+            "range": 4.576847403388745e-8
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/AlonzoEra C_Crypto",
+            "value": 0.00007947289092088282,
+            "unit": "Nanoseconds",
+            "range": 6.579170880819578e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.000012653310087014424,
+            "unit": "Nanoseconds",
+            "range": 4.306568786260236e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00002308877082484838,
+            "unit": "Nanoseconds",
+            "range": 3.4505185115540277e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.000022974816789290836,
+            "unit": "Nanoseconds",
+            "range": 3.733827239357372e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/AlonzoEra C_Crypto",
+            "value": 0.000011091673292398769,
+            "unit": "Nanoseconds",
+            "range": 2.8904287008487996e-8
           }
         ]
       }
