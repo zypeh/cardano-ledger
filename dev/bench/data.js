@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1666185872460,
+  "lastUpdate": 1666200237797,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -18690,6 +18690,78 @@ window.BENCHMARK_DATA = {
             "value": 0.000011561320524166046,
             "unit": "Nanoseconds",
             "range": 2.5260160619116608e-8
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jared.corduan@iohk.io",
+            "name": "Jared Corduan",
+            "username": "JaredCorduan"
+          },
+          "committer": {
+            "email": "jaredcorduan@gmail.com",
+            "name": "Jared Corduan",
+            "username": "JaredCorduan"
+          },
+          "distinct": true,
+          "id": "8e9b8371e6ecf4c74bbc798b0b628b9ba98dce9b",
+          "message": "increase trials in \"We are elected\" test\n\nThe property test \"We are elected as leader proportional to our stake\"\nfails fairly infrequently, but often enough to be a disturbance. There\ndoes not seem to be a problem with the test, just that the variance with\n500 trials is too high. I've increased the number of trials to 2,000. It\nstill runs quite fast (under a second).",
+          "timestamp": "2022-10-19T13:18:27-04:00",
+          "tree_id": "33d271835ca1b610c8d2466439f9bac2d328af22",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/8e9b8371e6ecf4c74bbc798b0b628b9ba98dce9b"
+        },
+        "date": 1666200233392,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyEra C_Crypto",
+            "value": 0.000053543437532565787,
+            "unit": "Nanoseconds",
+            "range": 1.4015021698703212e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00005647073025527967,
+            "unit": "Nanoseconds",
+            "range": 2.2925974603538492e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00005845866205975413,
+            "unit": "Nanoseconds",
+            "range": 5.0190704649345166e-8
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/AlonzoEra C_Crypto",
+            "value": 0.00007952644520880423,
+            "unit": "Nanoseconds",
+            "range": 4.2378411892503103e-7
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.000012657886889612497,
+            "unit": "Nanoseconds",
+            "range": 5.238453592391116e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.0000230675523292367,
+            "unit": "Nanoseconds",
+            "range": 3.982106718041702e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00002298442200071778,
+            "unit": "Nanoseconds",
+            "range": 3.4199268190859367e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/AlonzoEra C_Crypto",
+            "value": 0.000011182361841972228,
+            "unit": "Nanoseconds",
+            "range": 3.833191982385651e-8
           }
         ]
       }
