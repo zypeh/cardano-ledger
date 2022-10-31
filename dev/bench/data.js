@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1667059323406,
+  "lastUpdate": 1667247685132,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -19482,6 +19482,78 @@ window.BENCHMARK_DATA = {
             "value": 0.00001193012481589435,
             "unit": "Nanoseconds",
             "range": 6.157521878396784e-8
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "sheard@pdx.edu",
+            "name": "Tim Sheard",
+            "username": "TimSheard"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6c635400bf3fe6a0f56ab8f1acc657820ca64eed",
+          "message": "Move some modules to core Version 4 (#3109)\n\n* moved Orphans PoolParams EpochBoundary files to core\r\n\r\n* Added deprecated versions of the moved files, that export the new. Changed all the old imports, updated changelog",
+          "timestamp": "2022-10-31T13:15:06-07:00",
+          "tree_id": "b3b56cdce9810ac3554deaa656faa57c0e593f32",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/6c635400bf3fe6a0f56ab8f1acc657820ca64eed"
+        },
+        "date": 1667247678613,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyEra C_Crypto",
+            "value": 0.00008682223668411583,
+            "unit": "Nanoseconds",
+            "range": 0.00000516239004908376
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00009287336899454608,
+            "unit": "Nanoseconds",
+            "range": 0.000005337224139129949
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00009810594723273823,
+            "unit": "Nanoseconds",
+            "range": 0.000006907780574522662
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/AlonzoEra C_Crypto",
+            "value": 0.0001345326771886784,
+            "unit": "Nanoseconds",
+            "range": 0.000006543531120212688
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.00001820121527156191,
+            "unit": "Nanoseconds",
+            "range": 0.0000011585648719672326
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.000033623178963920865,
+            "unit": "Nanoseconds",
+            "range": 0.000002300745717547374
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00003387954674262405,
+            "unit": "Nanoseconds",
+            "range": 0.0000016075850284483106
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/AlonzoEra C_Crypto",
+            "value": 0.000015937983364821406,
+            "unit": "Nanoseconds",
+            "range": 9.043994645984117e-7
           }
         ]
       }
