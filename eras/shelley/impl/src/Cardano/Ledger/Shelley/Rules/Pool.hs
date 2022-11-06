@@ -196,7 +196,8 @@ poolDelegationTransition = do
       -- note that pattern match is used instead of cwitness, as in the spec
 
       when (HardForks.validatePoolRewardAccountNetID pp) $ do
-        actualNetID <- liftSTS $ asks networkId
+        let x = asks networkId
+        actualNetID <- liftSTS $ x
         let suppliedNetID = getRwdNetwork (_poolRAcnt poolParam)
         actualNetID == suppliedNetID
           ?! WrongNetworkPOOL actualNetID suppliedNetID (_poolId poolParam)
