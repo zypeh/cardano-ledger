@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1667585339094,
+  "lastUpdate": 1667838434384,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -20058,6 +20058,78 @@ window.BENCHMARK_DATA = {
             "value": 0.000012542243269491712,
             "unit": "Nanoseconds",
             "range": 9.3357632298309e-8
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "alexey.kuleshevich@iohk.io",
+            "name": "Alexey Kuleshevich",
+            "username": "lehins"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b7bb226c6015778a64505988fafb45f15c3eed9b",
+          "message": "Merge pull request #3120 from input-output-hk/aniketd/issue-3061-epochboundary-delegationcertificates\n\nRename SnapShot, SnapShots and Certificates.Delegation fields",
+          "timestamp": "2022-11-07T19:22:17+03:00",
+          "tree_id": "2f3d08b20365a2f24bc728039a17b3fddebd1660",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/b7bb226c6015778a64505988fafb45f15c3eed9b"
+        },
+        "date": 1667838430453,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyEra C_Crypto",
+            "value": 0.00006361170372123172,
+            "unit": "Nanoseconds",
+            "range": 2.504615338089027e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.0000697880186051255,
+            "unit": "Nanoseconds",
+            "range": 1.0722272031247994e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00007226988186396368,
+            "unit": "Nanoseconds",
+            "range": 1.9592030156676793e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/AlonzoEra C_Crypto",
+            "value": 0.00010257928399399756,
+            "unit": "Nanoseconds",
+            "range": 1.7084970242661082e-7
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.000012987429000151297,
+            "unit": "Nanoseconds",
+            "range": 1.7320722696467245e-7
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00002674005741283694,
+            "unit": "Nanoseconds",
+            "range": 1.6743766476879775e-7
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00002826267928385519,
+            "unit": "Nanoseconds",
+            "range": 7.276503866375308e-7
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/AlonzoEra C_Crypto",
+            "value": 0.000010780794144512839,
+            "unit": "Nanoseconds",
+            "range": 3.477611904978667e-8
           }
         ]
       }
