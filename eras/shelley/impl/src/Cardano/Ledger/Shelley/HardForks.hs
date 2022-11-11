@@ -83,6 +83,4 @@ allowOutsideForecastTTL ::
   (HasField "_protocolVersion" pp ProtVer) =>
   pp ->
   Bool
-allowOutsideForecastTTL pp =
-  let mv = pvMajor (getField @"_protocolVersion" pp)
-   in mv == 5 || mv == 6
+allowOutsideForecastTTL _ = True
