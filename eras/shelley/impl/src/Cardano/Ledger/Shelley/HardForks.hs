@@ -75,7 +75,7 @@ forgoRewardPrefilter ::
   (HasField "_protocolVersion" pp ProtVer) =>
   pp ->
   Bool
-forgoRewardPrefilter pp = pvMajor (getField @"_protocolVersion" pp) > 6
+forgoRewardPrefilter _ = True
 
 -- | In versions 5 and 6, we allow the ttl field to lie outside the stability
 -- window.
