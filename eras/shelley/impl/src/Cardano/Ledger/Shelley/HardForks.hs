@@ -66,7 +66,7 @@ missingScriptsSymmetricDifference ::
   (HasField "_protocolVersion" pp ProtVer) =>
   pp ->
   Bool
-missingScriptsSymmetricDifference pp = pvMajor (getField @"_protocolVersion" pp) > 6
+missingScriptsSymmetricDifference _ = True
 
 -- | Starting with protocol version 7, the reward calculation no longer
 -- filters out unregistered stake addresses at the moment the calculation begins.
