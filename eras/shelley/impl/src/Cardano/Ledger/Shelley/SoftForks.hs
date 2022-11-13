@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeApplications #-}
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 module Cardano.Ledger.Shelley.SoftForks
   ( validMetadata,
@@ -15,7 +16,7 @@ validMetadata ::
   (HasField "_protocolVersion" pp ProtVer) =>
   pp ->
   Bool
-validMetadata pp = getField @"_protocolVersion" pp > ProtVer 2 0
+validMetadata _ = True
 
 restrictPoolMetadataHash ::
   (HasField "_protocolVersion" pp ProtVer) =>
