@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1669646916762,
+  "lastUpdate": 1669674324408,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -20922,6 +20922,78 @@ window.BENCHMARK_DATA = {
             "value": 0.000014705133932060049,
             "unit": "Nanoseconds",
             "range": 1.050760527641687e-7
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "teodora.danciu@tweag.io",
+            "name": "teodanciu",
+            "username": "teodanciu"
+          },
+          "committer": {
+            "email": "teodora.danciu@tweag.io",
+            "name": "teodanciu",
+            "username": "teodanciu"
+          },
+          "distinct": true,
+          "id": "3c602e12b40ee91dc25eaa0e1b0ae70ddb72a4e1",
+          "message": "Remove `allowOutsideForecastTTL` hardfork switch\n\nsince it was verified that removing it creates the same ledger state,\nproving the switch unnecessary.",
+          "timestamp": "2022-11-29T00:20:00+02:00",
+          "tree_id": "f87b4c15dd710a6533e5968b4cdd7e4c9dd7e85b",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/3c602e12b40ee91dc25eaa0e1b0ae70ddb72a4e1"
+        },
+        "date": 1669674319700,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyEra C_Crypto",
+            "value": 0.000102493011098189,
+            "unit": "Nanoseconds",
+            "range": 0.000003936623419392197
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00011692174690351606,
+            "unit": "Nanoseconds",
+            "range": 0.000007605400416069018
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.0001190547649630137,
+            "unit": "Nanoseconds",
+            "range": 0.000003703196186266075
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/AlonzoEra C_Crypto",
+            "value": 0.00015849690127204085,
+            "unit": "Nanoseconds",
+            "range": 0.000006931840741170593
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.00002594485478138874,
+            "unit": "Nanoseconds",
+            "range": 0.0000010249095991421204
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.000046004498259339734,
+            "unit": "Nanoseconds",
+            "range": 0.0000024011447138817694
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00004655419825940956,
+            "unit": "Nanoseconds",
+            "range": 0.000002204110671367429
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/AlonzoEra C_Crypto",
+            "value": 0.000024117088965847594,
+            "unit": "Nanoseconds",
+            "range": 0.000001146345370455599
           }
         ]
       }
