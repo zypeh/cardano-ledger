@@ -82,10 +82,10 @@ data RewardAns c = RewardAns
 instance NoThunks (RewardAns c)
 
 instance CC.Crypto c => ToCBOR (RewardAns c) where
-  toCBOR (RewardAns accum recent) = encodeListLen 2 <> toCBOR accum <> toCBOR recent
+  toCBOR (RewardAns accum recent) = encodeListLen 2 <> toCBOR accum <> undefined recent
 
 instance CC.Crypto c => FromCBOR (RewardAns c) where
-  fromCBOR = decodeRecordNamed "RewardAns" (const 2) (RewardAns <$> fromCBOR <*> fromCBOR)
+  fromCBOR = decodeRecordNamed "RewardAns" (const 2) (RewardAns <$> fromCBOR <*> undefined)
 
 -- | The type of RewardPulser we pulse on.
 type Pulser c = RewardPulser c ShelleyBase (RewardAns c)
@@ -115,7 +115,7 @@ instance
     encodeListLen 5
       <> toCBOR dt
       <> toCBOR (invert dr) -- TODO change Coin serialization to use integers?
-      <> toCBOR rw
+      <> undefined rw
       <> toCBOR (invert df) -- TODO change Coin serialization to use integers?
       <> toCBOR nm
 
@@ -127,7 +127,7 @@ instance
     decodeRecordNamed "RewardUpdate" (const 5) $ do
       dt <- fromCBOR
       dr <- fromCBOR -- TODO change Coin serialization to use integers?
-      rw <- fromCBOR
+      rw <- undefined
       df <- fromCBOR -- TODO change Coin serialization to use integers?
       nm <- fromNotSharedCBOR
       pure $ RewardUpdate dt (invert dr) rw (invert df) nm
@@ -166,7 +166,7 @@ instance CC.Crypto c => ToCBOR (RewardSnapShot c) where
           !> To r
           !> To dt1
           !> mapEncode lhs
-          !> mapEncode lrs
+          !> undefined lrs
       )
 
 instance CC.Crypto c => FromCBOR (RewardSnapShot c) where
@@ -180,7 +180,7 @@ instance CC.Crypto c => FromCBOR (RewardSnapShot c) where
           <! From
           <! From
           <! mapDecode
-          <! mapDecode
+          <! undefined
       )
 
 -- | RewardSnapShot can act as a Proxy for PParams when only the protocol version is needed.

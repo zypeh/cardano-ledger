@@ -593,8 +593,8 @@ instance CC.Crypto c => Arbitrary (LeaderOnlyReward c) where
   shrink = genericShrink
 
 instance CC.Crypto c => Arbitrary (RewardUpdate c) where
-  arbitrary = genericArbitraryU
-  shrink = genericShrink
+  arbitrary = undefined {-genericArbitraryU-}
+  shrink = undefined {-genericShrink-}
 
 instance Arbitrary a => Arbitrary (StrictMaybe a) where
   arbitrary = genericArbitraryU
@@ -927,7 +927,7 @@ instance
       <*> arbitrary
       <*> arbitrary
       <*> arbitrary
-      <*> arbitrary
+      <*> undefined {-arbitrary-}
 
 instance
   Mock c =>
@@ -957,4 +957,4 @@ instance
   Mock c =>
   Arbitrary (Pulser c)
   where
-  arbitrary = RSLP <$> arbitrary <*> arbitrary <*> arbitrary <*> (RewardAns <$> arbitrary <*> arbitrary)
+  arbitrary = RSLP <$> arbitrary <*> arbitrary <*> arbitrary <*> (RewardAns <$> arbitrary <*> undefined {-arbitrary-})

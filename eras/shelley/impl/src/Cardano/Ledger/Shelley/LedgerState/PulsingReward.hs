@@ -209,7 +209,7 @@ startStep slotsPerEpoch b@(BlocksMade b') es@(EpochState acnt ss ls pr _ nm) max
          in if HardForks.forgoRewardPrefilter pr || rewardAcnt `UM.member` rewards ds
               then
                 Map.insertWith
-                  Set.union
+                  undefined --Set.union
                   rewardAcnt
                   (packageLeaderReward poolRI)
                   acc
@@ -292,14 +292,14 @@ completeRupd
     ) = do
     RewardAns rs_ events <- completeM pulser
     let rs' = Map.map Set.singleton rs_
-    let rs'' = Map.unionWith Set.union rs' lrewards
-    let !events' = Map.unionWith Set.union events lrewards
+    let rs'' = Map.unionWith undefined {-Set.union-} rs' lrewards
+    let !events' = Map.unionWith undefined {-Set.union-} events lrewards
 
     let deltaR2 = oldr <-> sumRewards rewsnap rs''
     let neverpulsed = Map.null prev
         !newevent =
           if neverpulsed -- If we have never pulsed then everything in the computed needs to added to the event
-            then Map.unionWith Set.union rs' events'
+            then Map.unionWith undefined {-Set.union-} rs' events'
             else events'
     pure
       ( RewardUpdate

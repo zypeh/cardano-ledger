@@ -75,10 +75,10 @@ data Reward c = Reward
 --  with the Allegra reward aggregation, as given by the
 --  function 'aggregateRewards' so that 'Set.findMax' returns
 --  the expected value.
-instance Ord (Reward c) where
-  compare (Reward MemberReward _ _) (Reward LeaderReward _ _) = GT
-  compare (Reward LeaderReward _ _) (Reward MemberReward _ _) = LT
-  compare (Reward _ pool1 _) (Reward _ pool2 _) = compare pool1 pool2
+--instance Ord (Reward c) where
+--  compare (Reward MemberReward _ _) (Reward LeaderReward _ _) = GT
+--  compare (Reward LeaderReward _ _) (Reward MemberReward _ _) = LT
+--  compare (Reward _ pool1 _) (Reward _ pool2 _) = compare pool1 pool2
 
 instance NoThunks (Reward c)
 
