@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1669798878117,
+  "lastUpdate": 1669884252416,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -21138,6 +21138,78 @@ window.BENCHMARK_DATA = {
             "value": 0.00001323197137217121,
             "unit": "Nanoseconds",
             "range": 5.0557445162310975e-8
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "robin.stumm@iohk.io",
+            "name": "Robin Stumm",
+            "username": "dermetfan"
+          },
+          "committer": {
+            "email": "dermetfan@users.noreply.github.com",
+            "name": "Robin Stumm",
+            "username": "dermetfan"
+          },
+          "distinct": true,
+          "id": "50addb0a3d4ab1163f7fac116623d5c29053a7f7",
+          "message": "modernize tullia setup\n\nonly one task that builds everything for faster invocation\n\nbuild for all platforms supported by nix\nand report a github status for each\n\nupdate tullia",
+          "timestamp": "2022-12-01T09:39:18+01:00",
+          "tree_id": "2b1c4459690e2c54c84495b90a5af53d7167f8c2",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/50addb0a3d4ab1163f7fac116623d5c29053a7f7"
+        },
+        "date": 1669884248114,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyEra C_Crypto",
+            "value": 0.000063631121805548,
+            "unit": "Nanoseconds",
+            "range": 1.2447753748064392e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00006873189829421758,
+            "unit": "Nanoseconds",
+            "range": 1.6738770370227546e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00007144909598276933,
+            "unit": "Nanoseconds",
+            "range": 2.1683036427490387e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/AlonzoEra C_Crypto",
+            "value": 0.00009836531738433626,
+            "unit": "Nanoseconds",
+            "range": 1.3997692096956922e-7
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.00001837481157889658,
+            "unit": "Nanoseconds",
+            "range": 5.430910783183886e-7
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Allegra C_Crypto",
+            "value": 0.00003029841101931214,
+            "unit": "Nanoseconds",
+            "range": 6.604113570013479e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyMAEra 'Mary C_Crypto",
+            "value": 0.00003107676716926454,
+            "unit": "Nanoseconds",
+            "range": 6.539170061852009e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/AlonzoEra C_Crypto",
+            "value": 0.000016350494659238816,
+            "unit": "Nanoseconds",
+            "range": 4.746709467223349e-8
           }
         ]
       }
