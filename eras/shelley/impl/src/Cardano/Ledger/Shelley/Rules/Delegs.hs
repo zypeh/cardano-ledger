@@ -36,7 +36,7 @@ import Cardano.Ledger.Binary
     decodeRecordSum,
     encodeListLen,
   )
-import Cardano.Ledger.Coin (Coin)
+import Cardano.Ledger.Coin (Coin, word64ToCoin)
 import Cardano.Ledger.Core
 import Cardano.Ledger.Credential (Credential)
 import Cardano.Ledger.Keys (KeyHash, KeyRole (..))

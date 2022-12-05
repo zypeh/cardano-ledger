@@ -196,16 +196,14 @@ genDelegsZero = GenDelegs Map.empty
 
 instantaneousRewardsZero :: InstantaneousRewards c
 instantaneousRewardsZero = InstantaneousRewards Map.empty Map.empty mempty mempty
-
 dStateZero :: DState c
+
 dStateZero =
   DState
     { dsUnified = UM.empty,
       dsFutureGenDelegs = Map.empty,
       dsGenDelegs = genDelegsZero,
       dsIRewards = instantaneousRewardsZero,
-      dsDeposits = Map.empty
-    }
 
 pStateZero :: PState c
 pStateZero =
