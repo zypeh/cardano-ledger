@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1670612111723,
+  "lastUpdate": 1670612114917,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -21786,6 +21786,78 @@ window.BENCHMARK_DATA = {
             "value": 0.00002199714311905006,
             "unit": "Nanoseconds",
             "range": 8.833907763396688e-7
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "jaredcorduan@gmail.com",
+            "name": "Jared Corduan",
+            "username": "JaredCorduan"
+          },
+          "distinct": true,
+          "id": "60b8717d1a59ffd585c46a5f1a409aa1c0c1edb1",
+          "message": "Bump certifi from 2022.6.15 to 2022.12.7 in /doc\n\nBumps [certifi](https://github.com/certifi/python-certifi) from 2022.6.15 to 2022.12.7.\n- [Release notes](https://github.com/certifi/python-certifi/releases)\n- [Commits](https://github.com/certifi/python-certifi/compare/2022.06.15...2022.12.07)\n\n---\nupdated-dependencies:\n- dependency-name: certifi\n  dependency-type: indirect\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>",
+          "timestamp": "2022-12-09T13:51:49-05:00",
+          "tree_id": "83a9c8016492d11c0ce285c065c41094a1382db2",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/60b8717d1a59ffd585c46a5f1a409aa1c0c1edb1"
+        },
+        "date": 1670612111039,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyEra C_Crypto",
+            "value": 0.00006344473535014546,
+            "unit": "Nanoseconds",
+            "range": 2.6233373506300463e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/AllegraEra C_Crypto",
+            "value": 0.00006549252967125498,
+            "unit": "Nanoseconds",
+            "range": 0.000001280842528449864
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/MaryEra C_Crypto",
+            "value": 0.00007536946796914285,
+            "unit": "Nanoseconds",
+            "range": 2.762219065697853e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/AlonzoEra C_Crypto",
+            "value": 0.00009948745395225356,
+            "unit": "Nanoseconds",
+            "range": 3.0984538422945786e-7
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.000018327161353116756,
+            "unit": "Nanoseconds",
+            "range": 3.859980865514123e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/AllegraEra C_Crypto",
+            "value": 0.00003053883270927381,
+            "unit": "Nanoseconds",
+            "range": 5.452927763824353e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/MaryEra C_Crypto",
+            "value": 0.000031113103260655965,
+            "unit": "Nanoseconds",
+            "range": 7.550457263924205e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/AlonzoEra C_Crypto",
+            "value": 0.00001630299351050928,
+            "unit": "Nanoseconds",
+            "range": 3.8140870715519616e-8
           }
         ]
       }
