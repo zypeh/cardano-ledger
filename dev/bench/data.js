@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1670612114917,
+  "lastUpdate": 1670856111218,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -21858,6 +21858,78 @@ window.BENCHMARK_DATA = {
             "value": 0.00001630299351050928,
             "unit": "Nanoseconds",
             "range": 3.8140870715519616e-8
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "sheard@pdx.edu",
+            "name": "Tim Sheard",
+            "username": "TimSheard"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "546b83dd5ff5e600e8f3a3aaf81e1ebfac55dc8d",
+          "message": "Redo how we manage deposits (#3127)\n\n* Added deposits (key deposits) to DState and (pool deposits) PState\r\nfunctions that computed deposits, obligation, and refunds (keyRefunds\r\nand totalDeposits, obigation etc) were changed to take DPState as input\r\nAdded DPState to UtxoEnv replacing pool stake. Incorporated TreeDiff\r\nto show differences in two NewEpochState's. Gathered all the TreeDiff\r\nstuff into one module Cardano.Ledger.TreeDiff in cardano-binary. This\r\nincludes all needed orphan instances from external types. Importing this module\r\nshould supply everything needed, and carry the orphan instances.\r\nAdded (.->>) as a version of (.->) that uses tree diff in small-steps-test\r\nAdded property tests that test the new invariants that must hold\r\n1) utxosDepoits == sum (dsDeposited) + sum (psDeposited)\r\n2) dom rewards == dom dsDeposited\r\nAdded Cardano.Ledger.Shelley.Internal, module to be used when debugging.\r\n\r\n* after rebasing on move DPstate to core",
+          "timestamp": "2022-12-12T06:37:36-08:00",
+          "tree_id": "7a8e6974ef507ac1bcd5398dd0ded2f8ec5e9093",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/546b83dd5ff5e600e8f3a3aaf81e1ebfac55dc8d"
+        },
+        "date": 1670856105900,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyEra C_Crypto",
+            "value": 0.00009988462670409259,
+            "unit": "Nanoseconds",
+            "range": 0.000007301564135940773
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/AllegraEra C_Crypto",
+            "value": 0.00011146667489983032,
+            "unit": "Nanoseconds",
+            "range": 0.000007414705034576434
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/MaryEra C_Crypto",
+            "value": 0.00011833209076480087,
+            "unit": "Nanoseconds",
+            "range": 0.0000035278520037727378
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/AlonzoEra C_Crypto",
+            "value": 0.00014908071270493245,
+            "unit": "Nanoseconds",
+            "range": 0.0000032439020675177658
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.000029043190212717792,
+            "unit": "Nanoseconds",
+            "range": 0.0000023608999177937263
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/AllegraEra C_Crypto",
+            "value": 0.000046995470987074326,
+            "unit": "Nanoseconds",
+            "range": 0.00000142544447534859
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/MaryEra C_Crypto",
+            "value": 0.000046949104944383086,
+            "unit": "Nanoseconds",
+            "range": 0.000001796280811581952
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/AlonzoEra C_Crypto",
+            "value": 0.000024322357368509377,
+            "unit": "Nanoseconds",
+            "range": 8.213528265244605e-7
           }
         ]
       }
