@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1670878560357,
+  "lastUpdate": 1670959515390,
   "repoUrl": "https://github.com/input-output-hk/cardano-ledger",
   "entries": {
     "Haskell Benchmark": [
@@ -22290,6 +22290,78 @@ window.BENCHMARK_DATA = {
             "value": 0.00002581506846094063,
             "unit": "Nanoseconds",
             "range": 0.0000011770997547130665
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "joosep.jaager@iohk.io",
+            "name": "Joosep Jääger",
+            "username": "Soupstraw"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "dc3dffc02cd213a58973401722a1cd3d40d277ed",
+          "message": "Add a TxBody to Conway (#3176)\n\n* Added votes and governance actions\r\n\r\n* Added conway CDDL file\r\n\r\n* Added ToCBOR and FromCBOR instances to Vote and GovernanceAction\r\n\r\n* Added proper memoization\r\n\r\n* Added protocol version constraints to lenses\r\n\r\n* Added conwayCert lens and made changes to make everything compile on GHC 8.10.7\r\n\r\n* Added certsTxBodyG and removed some constraints\r\n\r\n* Disabled some tests that require changes to Conway rules",
+          "timestamp": "2022-12-13T19:21:45Z",
+          "tree_id": "dac175f8b5cd263195ef9476cf4affbae6574e2c",
+          "url": "https://github.com/input-output-hk/cardano-ledger/commit/dc3dffc02cd213a58973401722a1cd3d40d277ed"
+        },
+        "date": 1670959511231,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/ShelleyEra C_Crypto",
+            "value": 0.00006741090827245713,
+            "unit": "Nanoseconds",
+            "range": 0.0000010292280398766628
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/AllegraEra C_Crypto",
+            "value": 0.00006780872738642275,
+            "unit": "Nanoseconds",
+            "range": 2.5530494686330346e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/MaryEra C_Crypto",
+            "value": 0.00007907038025298315,
+            "unit": "Nanoseconds",
+            "range": 1.7882675462461414e-7
+          },
+          {
+            "name": "applyTxBenchmarks/ApplyTxInEra/AlonzoEra C_Crypto",
+            "value": 0.00010648427267129801,
+            "unit": "Nanoseconds",
+            "range": 3.232431084009851e-7
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/ShelleyEra C_Crypto",
+            "value": 0.000018061672134134325,
+            "unit": "Nanoseconds",
+            "range": 6.03765380890397e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/AllegraEra C_Crypto",
+            "value": 0.000032714334177348796,
+            "unit": "Nanoseconds",
+            "range": 6.802091271643979e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/MaryEra C_Crypto",
+            "value": 0.00003409070893075072,
+            "unit": "Nanoseconds",
+            "range": 6.002280422199814e-8
+          },
+          {
+            "name": "applyTxBenchmarks/Deserialise Shelley Tx/AlonzoEra C_Crypto",
+            "value": 0.000013983434840814721,
+            "unit": "Nanoseconds",
+            "range": 8.581162530662383e-8
           }
         ]
       }
