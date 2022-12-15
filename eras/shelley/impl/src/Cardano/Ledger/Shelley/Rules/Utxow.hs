@@ -74,7 +74,7 @@ import Cardano.Ledger.Shelley.Delegation.Certificates
   )
 import Cardano.Ledger.Shelley.Era (ShelleyUTXOW)
 import qualified Cardano.Ledger.Shelley.HardForks as HardForks
-import Cardano.Ledger.Shelley.LedgerState.Types (UTxOState (..))
+import Cardano.Ledger.Shelley.LedgerState.Types (ShelleyUTxOState (..))
 import Cardano.Ledger.Shelley.PParams (ProposedPPUpdates (ProposedPPUpdates), Update (Update))
 import Cardano.Ledger.Shelley.Rules.Utxo
   ( ShelleyUTXO,
@@ -275,7 +275,7 @@ initialLedgerStateUTXOW ::
   forall era.
   ( Embed (EraRule "UTXO" era) (ShelleyUTXOW era),
     Environment (EraRule "UTXO" era) ~ UtxoEnv era,
-    State (EraRule "UTXO" era) ~ UTxOState era
+    State (EraRule "UTXO" era) ~ ShelleyUTxOState era
   ) =>
   InitialRule (ShelleyUTXOW era)
 initialLedgerStateUTXOW = do
@@ -294,10 +294,10 @@ transitionRulesUTXOW ::
     BaseM (utxow era) ~ ShelleyBase,
     Embed (EraRule "UTXO" era) (utxow era),
     Environment (EraRule "UTXO" era) ~ UtxoEnv era,
-    State (EraRule "UTXO" era) ~ UTxOState era,
+    State (EraRule "UTXO" era) ~ ShelleyUTxOState era,
     Signal (EraRule "UTXO" era) ~ Tx era,
     Environment (utxow era) ~ UtxoEnv era,
-    State (utxow era) ~ UTxOState era,
+    State (utxow era) ~ ShelleyUTxOState era,
     Signal (utxow era) ~ Tx era,
     PredicateFailure (utxow era) ~ ShelleyUtxowPredFailure era,
     STS (utxow era),
@@ -310,7 +310,7 @@ transitionRulesUTXOW = do
 
   {-  (utxo,_,_,_ ) := utxoSt  -}
   {-  witsKeyHashes := { hashKey vk | vk ∈ dom(txwitsVKey txw) }  -}
-  let utxo = utxosUtxo u
+  let utxo = sutxosUtxo u
       witsKeyHashes = witsFromTxWitnesses tx
 
   -- check scripts
@@ -366,7 +366,7 @@ instance
     -- Allow UTXOW to call UTXO
     Embed (EraRule "UTXO" era) (ShelleyUTXOW era),
     Environment (EraRule "UTXO" era) ~ UtxoEnv era,
-    State (EraRule "UTXO" era) ~ UTxOState era,
+    State (EraRule "UTXO" era) ~ ShelleyUTxOState era,
     Signal (EraRule "UTXO" era) ~ Tx era,
     HasField "_protocolVersion" (PParams era) ProtVer,
     DSignable (EraCrypto era) (Hash (EraCrypto era) EraIndependentTxBody),
@@ -374,7 +374,7 @@ instance
   ) =>
   STS (ShelleyUTXOW era)
   where
-  type State (ShelleyUTXOW era) = UTxOState era
+  type State (ShelleyUTXOW era) = ShelleyUTxOState era
   type Signal (ShelleyUTXOW era) = ShelleyTx era
   type Environment (ShelleyUTXOW era) = UtxoEnv era
   type BaseM (ShelleyUTXOW era) = ShelleyBase

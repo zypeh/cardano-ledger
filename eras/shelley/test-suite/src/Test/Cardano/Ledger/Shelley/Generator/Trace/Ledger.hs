@@ -23,8 +23,8 @@ import Cardano.Ledger.Shelley.LedgerState
   ( AccountState (..),
     DPState,
     LedgerState (..),
-    UTxOState,
-    genesisState,
+    ShelleyUTxOState,
+    genesisState, PPUPState,
   )
 import Cardano.Ledger.Shelley.Rules
   ( DelegsEnv,
@@ -87,12 +87,12 @@ instance
     Embed (Core.EraRule "DELEGS" era) (ShelleyLEDGER era),
     Embed (Core.EraRule "UTXOW" era) (ShelleyLEDGER era),
     Environment (Core.EraRule "UTXOW" era) ~ UtxoEnv era,
-    State (Core.EraRule "UTXOW" era) ~ UTxOState era,
+    State (Core.EraRule "UTXOW" era) ~ ShelleyUTxOState era,
     Signal (Core.EraRule "UTXOW" era) ~ Core.Tx era,
     Environment (Core.EraRule "DELEGS" era) ~ DelegsEnv era,
     State (Core.EraRule "DELEGS" era) ~ DPState (EraCrypto era),
     Signal (Core.EraRule "DELEGS" era) ~ Seq (DCert (EraCrypto era)),
-    Show (State (Core.EraRule "PPUP" era)),
+    Show (PPUPState era),
     ProtVerAtMost era 8
   ) =>
   TQC.HasTrace (ShelleyLEDGER era) (GenEnv era)
@@ -121,7 +121,7 @@ instance
     PredicateFailure (Core.EraRule "DELPL" era) ~ ShelleyDelplPredFailure era,
     Embed (Core.EraRule "DELEG" era) (ShelleyDELPL era),
     Embed (Core.EraRule "LEDGER" era) (ShelleyLEDGERS era),
-    Default (State (Core.EraRule "PPUP" era))
+    Default (PPUPState era)
   ) =>
   TQC.HasTrace (ShelleyLEDGERS era) (GenEnv era)
   where
@@ -173,7 +173,7 @@ instance
 -- and (2) always return Right (since this function does not raise predicate failures).
 mkGenesisLedgerState ::
   forall a era ledger.
-  (EraGen era, Default (State (Core.EraRule "PPUP" era))) =>
+  (EraGen era, Default (PPUPState era)) =>
   GenEnv era ->
   IRC ledger ->
   Gen (Either a (LedgerState era))

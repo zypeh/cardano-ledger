@@ -51,7 +51,6 @@ import Data.Set (Set)
 import GHC.Generics (Generic)
 import GHC.Records (HasField)
 import NoThunks.Class (NoThunks (..))
-
 data ShelleyNewEpochPredFailure era
   = EpochFailure (PredicateFailure (EraRule "EPOCH" era)) -- Subtransition Failures
   | CorruptRewardUpdate
@@ -101,7 +100,7 @@ instance
     Signal (EraRule "EPOCH" era) ~ EpochNo,
     Default (EpochState era),
     HasField "_protocolVersion" (PParams era) ProtVer,
-    Default (State (EraRule "PPUP" era)),
+    Default (PPUPState era),
     Default (PParams era),
     Default (StashedAVVMAddresses era)
   ) =>
@@ -143,7 +142,7 @@ newEpochTransition ::
     Environment (EraRule "EPOCH" era) ~ (),
     State (EraRule "EPOCH" era) ~ EpochState era,
     Signal (EraRule "EPOCH" era) ~ EpochNo,
-    Default (State (EraRule "PPUP" era)),
+    Default (PPUPState era),
     Default (PParams era),
     Default (StashedAVVMAddresses era),
     Event (EraRule "RUPD" era) ~ RupdEvent (EraCrypto era)

@@ -26,7 +26,7 @@ import Cardano.Ledger.Core
 import qualified Cardano.Ledger.Crypto as CC
 import Cardano.Ledger.Keys (GenDelegs (..))
 import Cardano.Ledger.SafeHash (hashAnnotated)
-import Cardano.Ledger.Shelley.LedgerState (IncrementalStake (..), UTxOState (..))
+import Cardano.Ledger.Shelley.LedgerState (IncrementalStake (..), ShelleyUTxOState (..), PPUPState)
 import Cardano.Ledger.Shelley.Rules (UtxoEnv (..))
 import Cardano.Ledger.Shelley.UTxO (EraUTxO (..), UTxO (..), makeWitnessVKey)
 import Cardano.Ledger.Val (Val (inject))
@@ -108,7 +108,7 @@ testExUnitCalculation ::
   forall era m.
   ( MonadFail m,
     BaseM (EraRule "UTXOS" era) ~ ShelleyBase,
-    State (EraRule "UTXOS" era) ~ UTxOState era,
+    State (EraRule "UTXOS" era) ~ ShelleyUTxOState era,
     Environment (EraRule "UTXOS" era) ~ UtxoEnv era,
     Signal (EraRule "UTXOS" era) ~ Tx era,
     AlonzoEraTx era,
@@ -121,7 +121,7 @@ testExUnitCalculation ::
   ) =>
   Proof era ->
   Tx era ->
-  UTxOState era ->
+  ShelleyUTxOState era ->
   UtxoEnv era ->
   EpochInfo (Either Text) ->
   SystemStart ->
@@ -136,12 +136,12 @@ testExUnitCalculation proof tx utxoState ue ei ss costmdls err = do
         applySTSTest @(EraRule "UTXOS" era) (TRC (ue, utxoState, tx'))
   pure ()
   where
-    utxo = utxosUtxo utxoState
+    utxo = sutxosUtxo utxoState
 
 exampleExUnitCalc ::
   forall era.
   ( BaseM (EraRule "UTXOS" era) ~ ShelleyBase,
-    State (EraRule "UTXOS" era) ~ UTxOState era,
+    State (EraRule "UTXOS" era) ~ ShelleyUTxOState era,
     Environment (EraRule "UTXOS" era) ~ UtxoEnv era,
     Signable (CC.DSIGN (EraCrypto era)) (Crypto.Hash (CC.HASH (EraCrypto era)) EraIndependentTxBody),
     Signal (EraRule "UTXOS" era) ~ Tx era,
@@ -152,7 +152,7 @@ exampleExUnitCalc ::
     PostShelley era,
     EraUTxO era,
     ScriptsNeeded era ~ AlonzoScriptsNeeded era,
-    Default (State (EraRule "PPUP" era)),
+    Default (PPUPState era),
     Script era ~ AlonzoScript era
   ) =>
   Proof era ->
@@ -255,16 +255,16 @@ costmodels :: Array Language CostModel
 costmodels = array (PlutusV1, PlutusV1) [(PlutusV1, testingCostModelV1)]
 
 ustate ::
-  (EraTxOut era, PostShelley era, Default (State (EraRule "PPUP" era))) =>
+  (EraTxOut era, PostShelley era, Default (PPUPState era)) =>
   Proof era ->
-  UTxOState era
+  ShelleyUTxOState era
 ustate pf =
-  UTxOState
-    { utxosUtxo = initUTxO pf,
-      utxosDeposited = Coin 0,
-      utxosFees = Coin 0,
-      utxosPpups = def,
-      utxosStakeDistr = IStake mempty mempty
+  ShelleyUTxOState
+    { sutxosUtxo = initUTxO pf,
+      sutxosDeposited = Coin 0,
+      sutxosFees = Coin 0,
+      sutxosPpups = def,
+      sutxosStakeDistr = IStake mempty mempty
     }
 
 updateTxExUnits ::

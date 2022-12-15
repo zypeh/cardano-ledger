@@ -47,7 +47,7 @@ import Cardano.Ledger.Shelley.LedgerState
     EpochState (..),
     LedgerState (..),
     NewEpochState (..),
-    UTxOState (..),
+    ShelleyUTxOState (..), PPUPState,
   )
 import Cardano.Ledger.Shelley.PParams (ShelleyPParamsHKD (..))
 import Cardano.Ledger.Shelley.Rewards (aggregateRewards)
@@ -65,7 +65,6 @@ import Cardano.Ledger.UTxO (EraUTxO (..), UTxO (..), coinBalance)
 import Cardano.Ledger.Val (Val (inject, (<+>), (<->)))
 import Cardano.Slotting.EpochInfo.API (epochInfoSize)
 import Control.Monad.Reader (runReader)
-import Control.State.Transition.Extended (STS (State))
 import Data.Default.Class (Default (def))
 import qualified Data.Foldable as Fold (foldl', toList)
 import qualified Data.List as List
@@ -248,7 +247,7 @@ getTxOutRefScript (Babbage _) (BabbageTxOut _ _ _ ms) = ms
 getTxOutRefScript _ _ = SNothing
 {-# NOINLINE getTxOutRefScript #-}
 
-emptyPPUPstate :: forall era. Proof era -> State (EraRule "PPUP" era)
+emptyPPUPstate :: forall era. Proof era -> PPUPState era
 emptyPPUPstate (Conway _) = def
 emptyPPUPstate (Babbage _) = def
 emptyPPUPstate (Alonzo _) = def
@@ -434,8 +433,8 @@ class TotalAda t where
 instance TotalAda AccountState where
   totalAda (AccountState treasury reserves) = treasury <+> reserves
 
-instance Reflect era => TotalAda (UTxOState era) where
-  totalAda (UTxOState utxo deposits fees _ _) = totalAda utxo <+> deposits <+> fees
+instance Reflect era => TotalAda (ShelleyUTxOState era) where
+  totalAda (ShelleyUTxOState utxo deposits fees _ _) = totalAda utxo <+> deposits <+> fees
 
 instance Reflect era => TotalAda (UTxO era) where
   totalAda (UTxO m) = Map.foldl' accum mempty m
@@ -454,7 +453,7 @@ instance TotalAda (DPState era) where
 -- In particular the psDeposits, because they are accounted for by the utxosDeposits
 
 instance Reflect era => TotalAda (LedgerState era) where
-  totalAda (LedgerState utxos dps) = totalAda utxos <+> totalAda dps
+  totalAda (LedgerState sutxos dps) = totalAda sutxos <+> totalAda dps
 
 instance Reflect era => TotalAda (EpochState era) where
   totalAda eps = totalAda (esLState eps) <+> totalAda (esAccountState eps)

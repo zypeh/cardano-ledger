@@ -44,7 +44,7 @@ import Cardano.Ledger.Shelley.LedgerState
     DState (..),
     KeyPairs,
     LedgerState (..),
-    UTxOState (..),
+    ShelleyUTxOState (..),
     dpsDState,
     ptrsMap,
     rewards,
@@ -152,7 +152,7 @@ genTx
          constants
        )
   (LedgerEnv slot txIx pparams reserves)
-  (LedgerState utxoSt@(UTxOState utxo _ _ _ _) dpState) =
+  (LedgerState utxoSt@(ShelleyUTxOState utxo _ _ _ _) dpState) =
     do
       -------------------------------------------------------------------------
       -- Generate the building blocks of a TxBody

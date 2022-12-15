@@ -339,14 +339,14 @@ utxoTransition ::
     -- In this function we we call the UTXOS rule, so we need some assumptions
     Embed (EraRule "UTXOS" era) (BabbageUTXO era),
     Environment (EraRule "UTXOS" era) ~ UtxoEnv era,
-    State (EraRule "UTXOS" era) ~ Shelley.UTxOState era,
+    State (EraRule "UTXOS" era) ~ Shelley.ShelleyUTxOState era,
     Signal (EraRule "UTXOS" era) ~ Tx era,
     Inject (PredicateFailure (EraRule "PPUP" era)) (PredicateFailure (EraRule "UTXOS" era))
   ) =>
   TransitionRule (BabbageUTXO era)
 utxoTransition = do
   TRC (Shelley.UtxoEnv slot pp dpstate _genDelegs, u, tx) <- judgmentContext
-  let Shelley.UTxOState utxo _deposits _fees _ppup _ = u
+  let Shelley.ShelleyUTxOState utxo _deposits _fees _ppup _ = u
 
   {-   txb := txbody tx   -}
   let txBody = body tx
@@ -436,7 +436,7 @@ instance
     -- instructions for calling UTXOS from BabbageUTXO
     Embed (EraRule "UTXOS" era) (BabbageUTXO era),
     Environment (EraRule "UTXOS" era) ~ UtxoEnv era,
-    State (EraRule "UTXOS" era) ~ Shelley.UTxOState era,
+    State (EraRule "UTXOS" era) ~ Shelley.ShelleyUTxOState era,
     Signal (EraRule "UTXOS" era) ~ Tx era,
     Inject (PredicateFailure (EraRule "PPUP" era)) (PredicateFailure (EraRule "UTXOS" era)),
     PredicateFailure (EraRule "UTXO" era) ~ BabbageUtxoPredFailure era,
@@ -444,7 +444,7 @@ instance
   ) =>
   STS (BabbageUTXO era)
   where
-  type State (BabbageUTXO era) = Shelley.UTxOState era
+  type State (BabbageUTXO era) = Shelley.ShelleyUTxOState era
   type Signal (BabbageUTXO era) = AlonzoTx era
   type Environment (BabbageUTXO era) = UtxoEnv era
   type BaseM (BabbageUTXO era) = ShelleyBase

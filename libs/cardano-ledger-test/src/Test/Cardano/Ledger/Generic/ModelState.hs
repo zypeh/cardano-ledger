@@ -74,12 +74,12 @@ import Cardano.Ledger.Shelley.LedgerState
     InstantaneousRewards (..),
     LedgerState (..),
     NewEpochState (..),
-    PPUPState (..),
+    ShelleyPPUPState (..),
     PState (..),
     StashedAVVMAddresses,
-    UTxOState (..),
+    ShelleyUTxOState (..),
     completeRupd,
-    smartUTxOState,
+    smartShelleyUTxOState, PPUPState,
   )
 import Cardano.Ledger.Shelley.PParams (ProposedPPUpdates (..))
 import Cardano.Ledger.Shelley.PoolRank (NonMyopic (..))
@@ -90,7 +90,6 @@ import Cardano.Ledger.TxIn (TxId (..), TxIn (..))
 import qualified Cardano.Ledger.UMapCompact as UM
 import Cardano.Ledger.UTxO (UTxO (..))
 import Control.Monad.Trans ()
-import Control.State.Transition (STS (State))
 import Data.Default.Class (Default (def))
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
@@ -228,13 +227,13 @@ proposedPPUpdatesZero = ProposedPPUpdates Map.empty
 nonMyopicZero :: NonMyopic c
 nonMyopicZero = NonMyopic Map.empty mempty
 
-pPUPStateZeroByProof :: Proof era -> State (Core.EraRule "PPUP" era)
-pPUPStateZeroByProof (Conway _) = PPUPState proposedPPUpdatesZero proposedPPUpdatesZero
-pPUPStateZeroByProof (Babbage _) = PPUPState proposedPPUpdatesZero proposedPPUpdatesZero
-pPUPStateZeroByProof (Alonzo _) = PPUPState proposedPPUpdatesZero proposedPPUpdatesZero
-pPUPStateZeroByProof (Mary _) = PPUPState proposedPPUpdatesZero proposedPPUpdatesZero
-pPUPStateZeroByProof (Allegra _) = PPUPState proposedPPUpdatesZero proposedPPUpdatesZero
-pPUPStateZeroByProof (Shelley _) = PPUPState proposedPPUpdatesZero proposedPPUpdatesZero
+pPUPStateZeroByProof :: Proof era -> PPUPState era
+pPUPStateZeroByProof (Conway _) = ()
+pPUPStateZeroByProof (Babbage _) = ShelleyPPUPState proposedPPUpdatesZero proposedPPUpdatesZero
+pPUPStateZeroByProof (Alonzo _) = ShelleyPPUPState proposedPPUpdatesZero proposedPPUpdatesZero
+pPUPStateZeroByProof (Mary _) = ShelleyPPUPState proposedPPUpdatesZero proposedPPUpdatesZero
+pPUPStateZeroByProof (Allegra _) = ShelleyPPUPState proposedPPUpdatesZero proposedPPUpdatesZero
+pPUPStateZeroByProof (Shelley _) = ShelleyPPUPState proposedPPUpdatesZero proposedPPUpdatesZero
 
 pParamsZeroByProof :: Proof era -> Core.PParams era
 pParamsZeroByProof (Conway _) = def
@@ -244,11 +243,11 @@ pParamsZeroByProof (Mary _) = def
 pParamsZeroByProof (Allegra _) = def
 pParamsZeroByProof (Shelley _) = def
 
-pPUPStateZero :: forall era. Reflect era => State (Core.EraRule "PPUP" era)
+pPUPStateZero :: forall era. Reflect era => PPUPState era
 pPUPStateZero = pPUPStateZeroByProof @era (reify :: Proof era)
 
-uTxOStateZero :: forall era. Reflect era => UTxOState era
-uTxOStateZero = smartUTxOState utxoZero mempty mempty (pPUPStateZero @era)
+uTxOStateZero :: forall era. Reflect era => ShelleyUTxOState era
+uTxOStateZero = smartShelleyUTxOState utxoZero mempty mempty (pPUPStateZero @era)
 
 pParamsZero :: Reflect era => Core.PParams era
 pParamsZero = lift pParamsZeroByProof
@@ -331,9 +330,9 @@ instance EraCrypto era ~ c => Extract (PState c) era where
 instance EraCrypto era ~ c => Extract (DPState c) era where
   extract x = DPState (extract x) (extract x)
 
-instance Reflect era => Extract (UTxOState era) era where
+instance Reflect era => Extract (ShelleyUTxOState era) era where
   extract x =
-    smartUTxOState
+    smartShelleyUTxOState
       (UTxO (mUTxO x))
       (mDeposited x)
       (mFees x)
@@ -371,13 +370,13 @@ abstract x =
       mKeyDeposits = (dsDeposits . dpsDState . lsDPState . esLState . nesEs) x,
       mRewards = (UM.rewView . dsUnified . dpsDState . lsDPState . esLState . nesEs) x,
       mDelegations = (UM.delView . dsUnified . dpsDState . lsDPState . esLState . nesEs) x,
-      mUTxO = (unUTxO . utxosUtxo . lsUTxOState . esLState . nesEs) x,
+      mUTxO = (unUTxO . sutxosUtxo . lsUTxOState . esLState . nesEs) x,
       mMutFee = Map.empty,
       mAccountState = (esAccountState . nesEs) x,
       mPoolDistr = (unPoolDistr . nesPd) x,
       mPParams = (esPp . nesEs) x,
-      mDeposited = (utxosDeposited . lsUTxOState . esLState . nesEs) x,
-      mFees = (utxosFees . lsUTxOState . esLState . nesEs) x,
+      mDeposited = (sutxosDeposited . lsUTxOState . esLState . nesEs) x,
+      mFees = (sutxosFees . lsUTxOState . esLState . nesEs) x,
       mCount = 0,
       mIndex = Map.empty,
       -- below here NO EFFECT until we model EpochBoundary

@@ -37,7 +37,7 @@ import Cardano.Ledger.Core
 import qualified Cardano.Ledger.Core as Core
 import Cardano.Ledger.Crypto (Crypto, DSIGN)
 import Cardano.Ledger.Shelley.API hiding (SignedDSIGN)
-import Cardano.Ledger.Shelley.LedgerState (FutureGenDeleg, StashedAVVMAddresses)
+import Cardano.Ledger.Shelley.LedgerState (FutureGenDeleg, StashedAVVMAddresses, PPUPState)
 import Cardano.Ledger.Shelley.PoolRank
   ( Likelihood (..),
     LogWeight (..),
@@ -65,7 +65,6 @@ import qualified Cardano.Protocol.TPraos.OCert as TP
 import qualified Cardano.Protocol.TPraos.Rules.Overlay as STS
 import qualified Cardano.Protocol.TPraos.Rules.Prtcl as STS (PrtclState)
 import qualified Cardano.Protocol.TPraos.Rules.Tickn as STS
-import Control.State.Transition (STS (State))
 import qualified Data.ListMap as LM
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
@@ -273,7 +272,7 @@ instance Crypto c => Arbitrary (DCert c) where
   arbitrary = genericArbitraryU
   shrink = genericShrink
 
-instance (Era era, Mock (EraCrypto era)) => Arbitrary (PPUPState era) where
+instance (Era era, Mock (EraCrypto era)) => Arbitrary (ShelleyPPUPState era) where
   arbitrary = genericArbitraryU
   shrink = genericShrink
 
@@ -285,9 +284,9 @@ instance
   ( Core.EraTxOut era,
     Mock (EraCrypto era),
     Arbitrary (Core.TxOut era),
-    Arbitrary (State (Core.EraRule "PPUP" era))
+    Arbitrary (PPUPState era)
   ) =>
-  Arbitrary (UTxOState era)
+  Arbitrary (ShelleyUTxOState era)
   where
   arbitrary = genericArbitraryU
   shrink = recursivelyShrink
@@ -298,7 +297,7 @@ instance Crypto c => Arbitrary (IncrementalStake c) where
 
 -- The 'genericShrink' function returns first the immediate subterms of a
 -- value (in case it is a recursive data-type), and then shrinks the value
--- itself. Since 'UTxOState' is not a recursive data-type, there are no
+-- itself. Since 'ShelleyUTxOState' is not a recursive data-type, there are no
 -- subterms, and we can use `recursivelyShrink` directly. This is particularly
 -- important when abstracting away the different fields of the ledger state,
 -- since the generic subterms instances will overlap due to GHC not having
@@ -312,7 +311,7 @@ instance
   ( Core.EraTxOut era,
     Mock (EraCrypto era),
     Arbitrary (Core.TxOut era),
-    Arbitrary (State (Core.EraRule "PPUP" era))
+    Arbitrary (PPUPState era)
   ) =>
   Arbitrary (LedgerState era)
   where
@@ -325,7 +324,7 @@ instance
     Arbitrary (Core.TxOut era),
     Arbitrary (Core.Value era),
     Arbitrary (Core.PParams era),
-    Arbitrary (State (Core.EraRule "PPUP" era)),
+    Arbitrary (PPUPState era),
     Arbitrary (StashedAVVMAddresses era)
   ) =>
   Arbitrary (NewEpochState era)
@@ -338,7 +337,7 @@ instance
     Arbitrary (Core.TxOut era),
     Arbitrary (Core.Value era),
     Arbitrary (Core.PParams era),
-    Arbitrary (State (Core.EraRule "PPUP" era))
+    Arbitrary (PPUPState era)
   ) =>
   Arbitrary (EpochState era)
   where

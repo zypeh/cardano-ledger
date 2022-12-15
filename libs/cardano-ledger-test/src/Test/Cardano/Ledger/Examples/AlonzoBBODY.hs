@@ -63,7 +63,7 @@ import Cardano.Ledger.Shelley.API
   )
 import Cardano.Ledger.Shelley.BlockChain (bBodySize)
 import Cardano.Ledger.Shelley.LedgerState
-  ( smartUTxOState,
+  ( smartShelleyUTxOState, PPUPState,
   )
 import Cardano.Ledger.Shelley.Rules
   ( ShelleyBbodyPredFailure (..),
@@ -88,7 +88,6 @@ import qualified Cardano.Ledger.UMapCompact as UM
 import Cardano.Ledger.UTxO (makeWitnessVKey)
 import Cardano.Ledger.Val (inject, (<+>))
 import Cardano.Slotting.Slot (SlotNo (..))
-import Control.State.Transition.Extended hiding (Assertion)
 import qualified Data.ByteString as BS (replicate)
 import Data.Default.Class (Default (..))
 import qualified Data.Map.Strict as Map
@@ -140,7 +139,7 @@ alonzoBBODYexamplesP ::
   forall era.
   ( GoodCrypto (EraCrypto era),
     HasTokens era,
-    Default (State (EraRule "PPUP" era)),
+    Default (PPUPState era),
     PostShelley era,
     Value era ~ MaryValue (EraCrypto era),
     EraSegWits era
@@ -167,7 +166,7 @@ alonzoBBODYexamplesP proof =
     ]
 
 initialBBodyState ::
-  ( Default (State (EraRule "PPUP" era)),
+  ( Default (PPUPState era),
     EraTxOut era,
     PostShelley era
   ) =>
@@ -177,7 +176,7 @@ initialBBodyState ::
 initialBBodyState pf utxo =
   BbodyState (LedgerState initialUtxoSt dpstate) (BlocksMade mempty)
   where
-    initialUtxoSt = smartUTxOState utxo (Coin 0) (Coin 0) def
+    initialUtxoSt = smartShelleyUTxOState utxo (Coin 0) (Coin 0) def
     dpstate =
       def
         { dpsDState =
@@ -575,7 +574,7 @@ testBBodyState ::
   ( GoodCrypto (EraCrypto era),
     HasTokens era,
     PostShelley era,
-    Default (State (EraRule "PPUP" era)),
+    Default (PPUPState era),
     EraTxBody era,
     Value era ~ MaryValue (EraCrypto era)
   ) =>
@@ -639,7 +638,7 @@ testBBodyState pf =
             DHash' [hashData $ someDatum @era]
           ]
       poolID = hashKey . vKey . coerceKeyRole $ coldKeys
-      example1UtxoSt = smartUTxOState utxo (Coin 0) (Coin 40) def
+      example1UtxoSt = smartShelleyUTxOState utxo (Coin 0) (Coin 40) def
    in BbodyState (LedgerState example1UtxoSt def) (BlocksMade $ Map.singleton poolID 1)
 
 -- ============================== Helper functions ===============================

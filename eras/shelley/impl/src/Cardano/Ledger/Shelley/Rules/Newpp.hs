@@ -24,9 +24,9 @@ import Cardano.Ledger.Shelley.Era (ShelleyNEWPP)
 import Cardano.Ledger.Shelley.LedgerState
   ( DPState (..),
     DState (..),
-    PPUPState (..),
+    ShelleyPPUPState (..),
     PState (..),
-    UTxOState (utxosDeposited),
+    ShelleyUTxOState (sutxosDeposited),
     obligationDPState,
     pvCanFollow,
   )
@@ -49,13 +49,13 @@ import GHC.Records (HasField (..))
 import NoThunks.Class (NoThunks (..))
 
 data ShelleyNewppState era
-  = NewppState (PParams era) (PPUPState era)
+  = NewppState (PParams era) (ShelleyPPUPState era)
 
 data NewppEnv era
   = NewppEnv
       (DState (EraCrypto era))
       (PState (EraCrypto era))
-      (UTxOState era)
+      (ShelleyUTxOState era)
 
 data ShelleyNewppPredFailure era
   = UnexpectedDepositPot
@@ -107,8 +107,8 @@ newPpTransition = do
     Just ppNew' -> do
       let Coin oblgCurr = obligationDPState (DPState dstate pstate)
       Coin oblgCurr
-        == utxosDeposited utxoSt
-        ?! UnexpectedDepositPot (Coin oblgCurr) (utxosDeposited utxoSt)
+        == sutxosDeposited utxoSt
+        ?! UnexpectedDepositPot (Coin oblgCurr) (sutxosDeposited utxoSt)
 
       if (getField @"_maxTxSize" ppNew' + getField @"_maxBHSize" ppNew')
         < getField @"_maxBBSize" ppNew'
@@ -123,10 +123,10 @@ updatePpup ::
   ( HasField "_protocolVersion" (PParams era) ProtVer,
     HasField "_protocolVersion" (PParamsUpdate era) (StrictMaybe ProtVer)
   ) =>
-  PPUPState era ->
+  ShelleyPPUPState era ->
   PParams era ->
-  PPUPState era
-updatePpup ppupSt pp = PPUPState ps emptyPPPUpdates
+  ShelleyPPUPState era
+updatePpup ppupSt pp = ShelleyPPUPState ps emptyPPPUpdates
   where
     ProposedPPUpdates newProposals = futureProposals ppupSt
     goodPV =

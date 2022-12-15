@@ -26,8 +26,8 @@ import Cardano.Ledger.Core
 import Cardano.Ledger.Shelley.Era (ShelleyUPEC)
 import Cardano.Ledger.Shelley.LedgerState
   ( EpochState,
-    PPUPState (..),
-    UTxOState (utxosPpups),
+    ShelleyPPUPState (..),
+    ShelleyUTxOState (sutxosPpups),
     UpecState (..),
     esLState,
     lsDPState,
@@ -53,6 +53,7 @@ import GHC.Generics (Generic)
 import GHC.Records (HasField)
 import NoThunks.Class (NoThunks (..))
 import Numeric.Natural (Natural)
+import Cardano.Ledger.Shelley.LedgerState.Types (PPUPState)
 
 newtype ShelleyUpecPredFailure era
   = NewPpFailure (PredicateFailure (ShelleyNEWPP era))
@@ -63,7 +64,7 @@ instance NoThunks (ShelleyUpecPredFailure era)
 instance
   ( EraPParams era,
     Default (PParams era),
-    State (EraRule "PPUP" era) ~ PPUPState era,
+    PPUPState era ~ ShelleyPPUPState era,
     HasField "_keyDeposit" (PParams era) Coin,
     HasField "_maxBBSize" (PParams era) Natural,
     HasField "_maxTxSize" (PParams era) Natural,
@@ -95,7 +96,7 @@ instance
 
         let utxoSt = lsUTxOState ls
             DPState dstate pstate = lsDPState ls
-            pup = proposals . utxosPpups $ utxoSt
+            pup = proposals . sutxosPpups $ utxoSt
             ppNew = votedValue pup pp (fromIntegral coreNodeQuorum)
         NewppState pp' ppupSt' <-
           trans @(ShelleyNEWPP era) $

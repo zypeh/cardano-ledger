@@ -60,7 +60,7 @@ import Cardano.Ledger.Shelley.API
   ( ProtVer (..),
   )
 import Cardano.Ledger.Shelley.LedgerState
-  ( UTxOState (..),
+  ( ShelleyUTxOState (..), PPUPState,
   )
 import Cardano.Ledger.Shelley.Rules as Shelley (ShelleyUtxowPredFailure (..))
 import Cardano.Ledger.Shelley.TxBody
@@ -128,10 +128,10 @@ tests =
 alonzoUTXOWTests ::
   forall era.
   ( AlonzoBased era (PredicateFailure (EraRule "UTXOW" era)),
-    State (EraRule "UTXOW" era) ~ UTxOState era,
+    State (EraRule "UTXOW" era) ~ ShelleyUTxOState era,
     GoodCrypto (EraCrypto era),
     HasTokens era,
-    Default (State (EraRule "PPUP" era)),
+    Default (PPUPState era),
     EraTx era,
     PostShelley era, -- MAYBE WE CAN REPLACE THIS BY GoodCrypto,
     Value era ~ MaryValue (EraCrypto era)
@@ -936,7 +936,7 @@ noCostModelTx pf =
 testU ::
   forall era.
   ( GoodCrypto (EraCrypto era),
-    Default (State (EraRule "PPUP" era)),
+    Default (PPUPState era),
     PostShelley era,
     EraTx era,
     HasCallStack

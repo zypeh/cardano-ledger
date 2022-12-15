@@ -24,13 +24,14 @@ module Cardano.Ledger.Shelley.LedgerState
     InstantaneousRewards (..),
     KeyPairs,
     LedgerState (..),
-    PPUPState (..),
+    ShelleyPPUPState (..),
     PState (..),
+    PPUPState,
     RewardAccounts,
     RewardUpdate (..),
     RewardSnapShot (..),
-    UTxOState (..),
-    smartUTxOState,
+    ShelleyUTxOState (..),
+    smartShelleyUTxOState,
     IncrementalStake (..),
     depositPoolChange,
     emptyRewardUpdate,
@@ -98,7 +99,7 @@ import Cardano.Ledger.Shelley.LedgerState.PulsingReward
 import Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits
 import Cardano.Ledger.Shelley.LedgerState.Types
 import Cardano.Ledger.Shelley.PParams
-  ( PPUPState (..),
+  ( ShelleyPPUPState (..),
     pvCanFollow,
   )
 import Cardano.Ledger.Shelley.RewardUpdate

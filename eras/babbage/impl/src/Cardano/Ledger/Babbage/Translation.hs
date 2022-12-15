@@ -145,25 +145,25 @@ instance Crypto c => TranslateEra (BabbageEra c) API.LedgerState where
           API.lsDPState = API.lsDPState ls
         }
 
-instance Crypto c => TranslateEra (BabbageEra c) API.UTxOState where
+instance Crypto c => TranslateEra (BabbageEra c) API.ShelleyUTxOState where
   translateEra ctxt us =
     pure
-      API.UTxOState
-        { API.utxosUtxo = translateEra' ctxt $ API.utxosUtxo us,
-          API.utxosDeposited = API.utxosDeposited us,
-          API.utxosFees = API.utxosFees us,
-          API.utxosPpups = translateEra' ctxt $ API.utxosPpups us,
-          API.utxosStakeDistr = API.utxosStakeDistr us
+      API.ShelleyUTxOState
+        { API.sutxosUtxo = translateEra' ctxt $ API.sutxosUtxo us,
+          API.sutxosDeposited = API.sutxosDeposited us,
+          API.sutxosFees = API.sutxosFees us,
+          API.sutxosPpups = translateEra' ctxt $ API.sutxosPpups us,
+          API.sutxosStakeDistr = API.sutxosStakeDistr us
         }
 
 instance Crypto c => TranslateEra (BabbageEra c) API.UTxO where
   translateEra _ctxt utxo =
     pure $ API.UTxO $ translateTxOut `Map.map` API.unUTxO utxo
 
-instance Crypto c => TranslateEra (BabbageEra c) API.PPUPState where
+instance Crypto c => TranslateEra (BabbageEra c) API.ShelleyPPUPState where
   translateEra ctxt ps =
     pure
-      API.PPUPState
+      API.ShelleyPPUPState
         { API.proposals = translateEra' ctxt $ API.proposals ps,
           API.futureProposals = translateEra' ctxt $ API.futureProposals ps
         }

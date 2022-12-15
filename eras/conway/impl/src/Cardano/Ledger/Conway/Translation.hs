@@ -38,7 +38,7 @@ import Cardano.Ledger.Shelley.API
     EpochState (..),
     NewEpochState (..),
     ShelleyGenesis,
-    StrictMaybe (..),
+    StrictMaybe (..), ShelleyUTxOState (..),
   )
 import qualified Cardano.Ledger.Shelley.API as API
 import Cardano.Ledger.Shelley.PParams (ShelleyPParamsHKD)
@@ -137,17 +137,32 @@ instance Crypto c => TranslateEra (ConwayEra c) EpochState where
           esNonMyopic = esNonMyopic es
         }
 
+instance Crypto c => TranslateEra (ConwayEra c) API.LedgerState where
+  translateEra ctxt@(ConwayGenesis newGenDelegs) ls =
+    pure
+      API.LedgerState
+        { API.lsUTxOState = translateEra' ctxt $ API.lsUTxOState ls,
+          API.lsDPState = updateGenesisKeys $ API.lsDPState ls
+        }
+    where
+      updateGenesisKeys (DPState dstate pstate) = DPState dstate' pstate
+        where
+          dstate' = dstate {dsGenDelegs = newGenDelegs}
+
+instance Crypto c => TranslateEra (ConwayEra c) ShelleyUTxOState where
+  translateEra ctxt us =
+    pure
+      ShelleyUTxOState
+        { API.sutxosUtxo = translateEra' ctxt $ API.sutxosUtxo us,
+          API.sutxosDeposited = API.sutxosDeposited us,
+          API.sutxosFees = API.sutxosFees us,
+          API.sutxosPpups = (),
+          API.sutxosStakeDistr = API.sutxosStakeDistr us
+        }
+
 instance Crypto c => TranslateEra (ConwayEra c) API.UTxO where
   translateEra _ctxt utxo =
     pure $ API.UTxO $ translateTxOut `Map.map` API.unUTxO utxo
-
-instance Crypto c => TranslateEra (ConwayEra c) API.PPUPState where
-  translateEra ctxt ps =
-    pure
-      API.PPUPState
-        { API.proposals = translateEra' ctxt $ API.proposals ps,
-          API.futureProposals = translateEra' ctxt $ API.futureProposals ps
-        }
 
 instance Crypto c => TranslateEra (ConwayEra c) API.ProposedPPUpdates where
   translateEra _ctxt (API.ProposedPPUpdates ppup) =

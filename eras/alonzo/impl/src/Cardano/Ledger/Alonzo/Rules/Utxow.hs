@@ -75,7 +75,7 @@ import Cardano.Ledger.Shelley.Delegation.Certificates
     requiresVKeyWitness,
   )
 import Cardano.Ledger.Shelley.LedgerState
-  ( UTxOState (..),
+  ( ShelleyUTxOState (..),
     witsFromTxWitnesses,
   )
 import Cardano.Ledger.Shelley.Rules
@@ -344,7 +344,7 @@ alonzoStyleWitness ::
     -- Allow UTXOW to call UTXO
     Embed (EraRule "UTXO" era) (AlonzoUTXOW era),
     Environment (EraRule "UTXO" era) ~ UtxoEnv era,
-    State (EraRule "UTXO" era) ~ UTxOState era,
+    State (EraRule "UTXO" era) ~ ShelleyUTxOState era,
     Signal (EraRule "UTXO" era) ~ Tx era,
     ProtVerAtMost era 8
   ) =>
@@ -356,7 +356,7 @@ alonzoStyleWitness = do
   {-  txb := txbody tx  -}
   {-  txw := txwits tx  -}
   {-  witsKeyHashes := { hashKey vk | vk ∈ dom(txwitsVKey txw) }  -}
-  let utxo = utxosUtxo u
+  let utxo = sutxosUtxo u
       txBody = tx ^. bodyTxL
       witsKeyHashes = witsFromTxWitnesses @era tx
 
@@ -514,13 +514,13 @@ instance
     -- Allow UTXOW to call UTXO
     Embed (EraRule "UTXO" era) (AlonzoUTXOW era),
     Environment (EraRule "UTXO" era) ~ UtxoEnv era,
-    State (EraRule "UTXO" era) ~ UTxOState era,
+    State (EraRule "UTXO" era) ~ ShelleyUTxOState era,
     Signal (EraRule "UTXO" era) ~ Tx era,
     ProtVerAtMost era 8
   ) =>
   STS (AlonzoUTXOW era)
   where
-  type State (AlonzoUTXOW era) = UTxOState era
+  type State (AlonzoUTXOW era) = ShelleyUTxOState era
   type Signal (AlonzoUTXOW era) = Tx era
   type Environment (AlonzoUTXOW era) = UtxoEnv era
   type BaseM (AlonzoUTXOW era) = ShelleyBase

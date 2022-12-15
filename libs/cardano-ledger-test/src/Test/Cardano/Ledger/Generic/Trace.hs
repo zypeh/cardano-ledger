@@ -51,7 +51,7 @@ import Cardano.Ledger.Shelley.LedgerState
     NewEpochState (..),
     PState (..),
     StashedAVVMAddresses,
-    UTxOState (..),
+    ShelleyUTxOState (..), PPUPState,
   )
 import qualified Cardano.Ledger.Shelley.PParams as Shelley (ShelleyPParamsHKD (..))
 import Cardano.Ledger.Shelley.Rules
@@ -220,7 +220,7 @@ makeEpochState gstate ledgerstate =
     }
 
 snaps :: EraTxOut era => LedgerState era -> SnapShots (EraCrypto era)
-snaps (LedgerState UTxOState {utxosUtxo = u, utxosFees = f} (DPState dstate pstate)) =
+snaps (LedgerState UTxOState {sutxosUtxo = u, sutxosFees = f} (DPState dstate pstate)) =
   SnapShots snap (calculatePoolDistr snap) snap snap f
   where
     snap = stakeDistr u dstate pstate
@@ -247,7 +247,7 @@ raiseMockError ::
   GenState era ->
   String
 raiseMockError slot (SlotNo next) epochstate pdfs txs GenState {..} =
-  let utxo = unUTxO $ (utxosUtxo . lsUTxOState . esLState) epochstate
+  let utxo = unUTxO $ (sutxosUtxo . lsUTxOState . esLState) epochstate
       _ssPoolParams = (psStakePoolParams . dpsPState . lsDPState . esLState) epochstate
       _pooldeposits = (psDeposits . dpsPState . lsDPState . esLState) epochstate
       _keydeposits = (dsDeposits . dpsDState . lsDPState . esLState) epochstate
@@ -548,7 +548,7 @@ chainTest ::
   forall era.
   ( Reflect era,
     HasTrace (MOCKCHAIN era) (Gen1 era),
-    Eq (State (EraRule "PPUP" era)),
+    Eq (PPUPState era),
     Eq (StashedAVVMAddresses era)
   ) =>
   Proof era ->

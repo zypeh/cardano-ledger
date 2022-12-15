@@ -19,7 +19,7 @@ import Cardano.Ledger.Alonzo.TxBody ()
 import Cardano.Ledger.BaseTypes (Globals)
 import Cardano.Ledger.Core
 import qualified Cardano.Ledger.Core as Core
-import Cardano.Ledger.Shelley.LedgerState (DPState (..), UTxOState)
+import Cardano.Ledger.Shelley.LedgerState (DPState (..), ShelleyUTxOState, PPUPState)
 import Cardano.Ledger.Shelley.Rules
   ( DelegsEnv,
     DelplEnv,
@@ -58,12 +58,12 @@ instance
     Embed (Core.EraRule "DELEGS" era) (AlonzoLEDGER era),
     Embed (Core.EraRule "UTXOW" era) (AlonzoLEDGER era),
     Environment (Core.EraRule "UTXOW" era) ~ UtxoEnv era,
-    State (Core.EraRule "UTXOW" era) ~ UTxOState era,
+    State (Core.EraRule "UTXOW" era) ~ ShelleyUTxOState era,
     Signal (Core.EraRule "UTXOW" era) ~ Core.Tx era,
     Environment (Core.EraRule "DELEGS" era) ~ DelegsEnv era,
     State (Core.EraRule "DELEGS" era) ~ DPState (EraCrypto era),
     Signal (Core.EraRule "DELEGS" era) ~ Seq (DCert (EraCrypto era)),
-    Show (State (Core.EraRule "PPUP" era)),
+    Show (PPUPState era),
     Core.Tx era ~ AlonzoTx era,
     ProtVerAtMost era 8
   ) =>

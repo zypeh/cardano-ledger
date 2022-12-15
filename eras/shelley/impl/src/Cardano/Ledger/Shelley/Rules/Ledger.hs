@@ -43,7 +43,7 @@ import Cardano.Ledger.Shelley.LedgerState
     DState (..),
     LedgerState (..),
     PState (..),
-    UTxOState (..),
+    ShelleyUTxOState (..),
     obligationDPState,
   )
 import Cardano.Ledger.Shelley.Rules.Delegs
@@ -77,6 +77,7 @@ import GHC.Generics (Generic)
 import GHC.Records (HasField (..))
 import Lens.Micro
 import NoThunks.Class (NoThunks (..))
+import Cardano.Ledger.Shelley.LedgerState.Types (PPUPState)
 
 -- ========================================================
 
@@ -159,14 +160,14 @@ epochFromSlot slot = do
 instance
   ( Show (PParams era),
     Show (TxOut era),
-    Show (State (EraRule "PPUP" era)),
+    Show (PPUPState era),
     DSignable (EraCrypto era) (Hash (EraCrypto era) EraIndependentTxBody),
     EraTx era,
     ShelleyEraTxBody era,
     Embed (EraRule "DELEGS" era) (ShelleyLEDGER era),
     Embed (EraRule "UTXOW" era) (ShelleyLEDGER era),
     Environment (EraRule "UTXOW" era) ~ UtxoEnv era,
-    State (EraRule "UTXOW" era) ~ UTxOState era,
+    State (EraRule "UTXOW" era) ~ ShelleyUTxOState era,
     Signal (EraRule "UTXOW" era) ~ Tx era,
     Environment (EraRule "DELEGS" era) ~ DelegsEnv era,
     State (EraRule "DELEGS" era) ~ DPState (EraCrypto era),
@@ -199,7 +200,7 @@ instance
       <> "\n"
       <> seq (show avState) "avState"
       <> "\n Deposits "
-      <> show (utxosDeposited <$> (lsUTxOState <$> avState))
+      <> show (sutxosDeposited <$> (lsUTxOState <$> avState))
       <> "\n dsDeposits\n"
       <> synopsisCoinMap (dsDeposits <$> (dpsDState <$> (lsDPState <$> avState)))
       <> "\n"
@@ -212,7 +213,7 @@ instance
         "Deposit pot must equal obligation"
         ( \(TRC (_, _, _))
            (LedgerState utxoSt dpstate) ->
-              obligationDPState dpstate == utxosDeposited utxoSt
+              obligationDPState dpstate == sutxosDeposited utxoSt
         )
     ]
 
@@ -226,7 +227,7 @@ ledgerTransition ::
     Signal (EraRule "DELEGS" era) ~ Seq (DCert (EraCrypto era)),
     Embed (EraRule "UTXOW" era) (ShelleyLEDGER era),
     Environment (EraRule "UTXOW" era) ~ UtxoEnv era,
-    State (EraRule "UTXOW" era) ~ UTxOState era,
+    State (EraRule "UTXOW" era) ~ ShelleyUTxOState era,
     Signal (EraRule "UTXOW" era) ~ Tx era,
     ProtVerAtMost era 8
   ) =>

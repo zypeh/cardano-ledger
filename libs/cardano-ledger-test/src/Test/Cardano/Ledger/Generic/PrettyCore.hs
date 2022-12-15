@@ -63,7 +63,7 @@ import Cardano.Ledger.Shelley.LedgerState
     LedgerState (..),
     NewEpochState (..),
     PState (..),
-    UTxOState (..),
+    ShelleyUTxOState (..), PPUPState,
   )
 import Cardano.Ledger.Shelley.Rules as Shelley
   ( ShelleyBbodyPredFailure (..),
@@ -806,7 +806,7 @@ instance PrettyA (ShelleyNewppPredFailure era) where prettyA = ppNewppPredicateF
 ppBbodyState ::
   ( PrettyA (TxOut era),
     PrettyA (PParams era),
-    PrettyA (State (EraRule "PPUP" era))
+    PrettyA (PPUPState era)
   ) =>
   ShelleyBbodyState era ->
   PDoc
@@ -820,7 +820,7 @@ ppBbodyState (BbodyState ls (BlocksMade mp)) =
 instance
   ( PrettyA (TxOut era),
     PrettyA (PParams era),
-    PrettyA (State (EraRule "PPUP" era))
+    PrettyA (PPUPState era)
   ) =>
   PrettyA (ShelleyBbodyState era)
   where
@@ -1330,10 +1330,10 @@ pcTxBody proof txbody = ppRecord "TxBody" pairs
     fields = abstractTxBody proof txbody
     pairs = concat (map (pcTxBodyField proof) fields)
 
-pcUTxOState :: Reflect era => Proof era -> UTxOState era -> PDoc
-pcUTxOState proof (UTxOState u dep fees _pups _stakedistro) =
+pcShelleyUTxOState :: Reflect era => Proof era -> ShelleyUTxOState era -> PDoc
+pcShelleyUTxOState proof (ShelleyUTxOState u dep fees _pups _stakedistro) =
   ppRecord
-    "UTxOState"
+    "ShelleyUTxOState"
     [ ("utxo", pcUTxO proof u),
       ("deposited", pcCoin dep),
       ("fees", pcCoin fees),
@@ -1341,7 +1341,7 @@ pcUTxOState proof (UTxOState u dep fees _pups _stakedistro) =
       ("stake distr", ppString "Stake Distr")
     ]
 
-instance Reflect era => PrettyC (UTxOState era) era where prettyC = pcUTxOState
+instance Reflect era => PrettyC (ShelleyUTxOState era) era where prettyC = pcShelleyUTxOState
 
 pcDPState :: p -> DPState era -> PDoc
 pcDPState _proof (DPState (DState {dsUnified = un}) (PState {psStakePoolParams = pool})) =
@@ -1358,7 +1358,7 @@ pcLedgerState :: Reflect era => Proof era -> LedgerState era -> PDoc
 pcLedgerState proof (LedgerState utstate dpstate) =
   ppRecord
     "LedgerState"
-    [ ("UTxOState", pcUTxOState proof utstate),
+    [ ("ShelleyUTxOState", pcShelleyUTxOState proof utstate),
       ("DPState", pcDPState proof dpstate)
     ]
 

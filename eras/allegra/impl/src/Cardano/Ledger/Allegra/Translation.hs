@@ -126,10 +126,10 @@ instance Crypto c => TranslateEra (AllegraEra c) ProposedPPUpdates where
   translateEra ctxt (ProposedPPUpdates ppup) =
     return $ ProposedPPUpdates $ Map.map (translateEra' ctxt) ppup
 
-instance Crypto c => TranslateEra (AllegraEra c) PPUPState where
+instance Crypto c => TranslateEra (AllegraEra c) ShelleyPPUPState where
   translateEra ctxt ps =
     return
-      PPUPState
+      ShelleyPPUPState
         { proposals = translateEra' ctxt $ proposals ps,
           futureProposals = translateEra' ctxt $ futureProposals ps
         }
@@ -142,15 +142,15 @@ instance Crypto c => TranslateEra (AllegraEra c) UTxO where
   translateEra ctxt utxo =
     return $ UTxO (translateEra' ctxt `Map.map` unUTxO utxo)
 
-instance Crypto c => TranslateEra (AllegraEra c) UTxOState where
+instance Crypto c => TranslateEra (AllegraEra c) ShelleyUTxOState where
   translateEra ctxt us =
     return
-      UTxOState
-        { utxosUtxo = translateEra' ctxt $ utxosUtxo us,
-          utxosDeposited = utxosDeposited us,
-          utxosFees = utxosFees us,
-          utxosPpups = translateEra' ctxt $ utxosPpups us,
-          utxosStakeDistr = utxosStakeDistr us
+      ShelleyUTxOState
+        { sutxosUtxo = translateEra' ctxt $ sutxosUtxo us,
+          sutxosDeposited = sutxosDeposited us,
+          sutxosFees = sutxosFees us,
+          sutxosPpups = translateEra' ctxt $ sutxosPpups us,
+          sutxosStakeDistr = sutxosStakeDistr us
         }
 
 instance Crypto c => TranslateEra (AllegraEra c) LedgerState where

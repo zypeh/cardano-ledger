@@ -44,8 +44,8 @@ import Cardano.Ledger.Shelley.API
     UTxO (..),
   )
 import Cardano.Ledger.Shelley.LedgerState
-  ( UTxOState (..),
-    smartUTxOState,
+  ( ShelleyUTxOState (..),
+    smartShelleyUTxOState, PPUPState,
   )
 import Cardano.Ledger.Shelley.TxBody
   ( DCert (..),
@@ -103,10 +103,10 @@ tests =
 
 alonzoUTXOWTests ::
   forall era.
-  ( State (EraRule "UTXOW" era) ~ UTxOState era,
+  ( State (EraRule "UTXOW" era) ~ ShelleyUTxOState era,
     GoodCrypto (EraCrypto era),
     HasTokens era,
-    Default (State (EraRule "PPUP" era)),
+    Default (PPUPState era),
     EraTx era,
     PostShelley era, -- MAYBE WE CAN REPLACE THIS BY GoodCrypto,
     Value era ~ MaryValue (EraCrypto era)
@@ -227,10 +227,10 @@ validatingTxOut pf = newTxOut pf [Address (someAddr pf), Amount (inject $ Coin 4
 
 validatingState ::
   forall era.
-  (Default (State (EraRule "PPUP" era)), EraTxBody era, PostShelley era) =>
+  (Default (PPUPState era), EraTxBody era, PostShelley era) =>
   Proof era ->
-  UTxOState era
-validatingState pf = smartUTxOState utxo (Coin 0) (Coin 5) def
+  ShelleyUTxOState era
+validatingState pf = smartShelleyUTxOState utxo (Coin 0) (Coin 5) def
   where
     utxo = expectedUTxO' pf (ExpectSuccess (validatingBody pf) (validatingTxOut pf)) 1
 
@@ -278,10 +278,10 @@ notValidatingTx pf =
         )
 
 notValidatingState ::
-  (Default (State (EraRule "PPUP" era)), EraTxBody era, PostShelley era) =>
+  (Default (PPUPState era), EraTxBody era, PostShelley era) =>
   Proof era ->
-  UTxOState era
-notValidatingState pf = smartUTxOState (expectedUTxO' pf ExpectFailure 2) (Coin 0) (Coin 5) def
+  ShelleyUTxOState era
+notValidatingState pf = smartShelleyUTxOState (expectedUTxO' pf ExpectFailure 2) (Coin 0) (Coin 5) def
 
 -- =========================================================================
 --  Example 3: Process a CERT transaction with a succeeding Plutus script.
@@ -327,10 +327,10 @@ validatingWithCertRedeemers =
     Map.singleton (RdmrPtr Tag.Cert 0) (Data (PV1.I 42), ExUnits 5000 5000)
 
 validatingWithCertState ::
-  (Default (State (EraRule "PPUP" era)), EraTxBody era, PostShelley era) =>
+  (Default (PPUPState era), EraTxBody era, PostShelley era) =>
   Proof era ->
-  UTxOState era
-validatingWithCertState pf = smartUTxOState utxo (Coin 0) (Coin 5) def
+  ShelleyUTxOState era
+validatingWithCertState pf = smartShelleyUTxOState utxo (Coin 0) (Coin 5) def
   where
     utxo = expectedUTxO' pf (ExpectSuccess (validatingWithCertBody pf) (validatingWithCertTxOut pf)) 3
 
@@ -372,10 +372,10 @@ notValidatingWithCertTx pf =
         Map.singleton (RdmrPtr Tag.Cert 0) (Data (PV1.I 0), ExUnits 5000 5000)
 
 notValidatingWithCertState ::
-  (Default (State (EraRule "PPUP" era)), EraTxBody era, PostShelley era) =>
+  (Default (PPUPState era), EraTxBody era, PostShelley era) =>
   Proof era ->
-  UTxOState era
-notValidatingWithCertState pf = smartUTxOState (expectedUTxO' pf ExpectFailure 4) (Coin 0) (Coin 5) def
+  ShelleyUTxOState era
+notValidatingWithCertState pf = smartShelleyUTxOState (expectedUTxO' pf ExpectFailure 4) (Coin 0) (Coin 5) def
 
 -- ==============================================================================
 --  Example 5: Process a WITHDRAWAL transaction with a succeeding Plutus script.
@@ -426,10 +426,10 @@ validatingWithWithdrawalTxOut :: EraTxOut era => Proof era -> TxOut era
 validatingWithWithdrawalTxOut pf = newTxOut pf [Address (someAddr pf), Amount (inject $ Coin 1995)]
 
 validatingWithWithdrawalState ::
-  (Default (State (EraRule "PPUP" era)), EraTxBody era, PostShelley era) =>
+  (Default (PPUPState era), EraTxBody era, PostShelley era) =>
   Proof era ->
-  UTxOState era
-validatingWithWithdrawalState pf = smartUTxOState utxo (Coin 0) (Coin 5) def
+  ShelleyUTxOState era
+validatingWithWithdrawalState pf = smartShelleyUTxOState utxo (Coin 0) (Coin 5) def
   where
     utxo = expectedUTxO' pf (ExpectSuccess (validatingWithWithdrawalBody pf) (validatingWithWithdrawalTxOut pf)) 5
 
@@ -475,10 +475,10 @@ notValidatingTxWithWithdrawal pf =
       Redeemers $ Map.singleton (RdmrPtr Tag.Rewrd 0) (Data (PV1.I 0), ExUnits 5000 5000)
 
 notValidatingWithWithdrawalState ::
-  (Default (State (EraRule "PPUP" era)), EraTxBody era, PostShelley era) =>
+  (Default (PPUPState era), EraTxBody era, PostShelley era) =>
   Proof era ->
-  UTxOState era
-notValidatingWithWithdrawalState pf = smartUTxOState (expectedUTxO' pf ExpectFailure 6) (Coin 0) (Coin 5) def
+  ShelleyUTxOState era
+notValidatingWithWithdrawalState pf = smartShelleyUTxOState (expectedUTxO' pf ExpectFailure 6) (Coin 0) (Coin 5) def
 
 -- =============================================================================
 --  Example 7: Process a MINT transaction with a succeeding Plutus script.
@@ -533,10 +533,10 @@ validatingWithMintTxOut pf = newTxOut pf [Address (someAddr pf), Amount (MaryVal
 
 validatingWithMintState ::
   forall era.
-  (Default (State (EraRule "PPUP" era)), PostShelley era, EraTxBody era, HasTokens era, Value era ~ MaryValue (EraCrypto era)) =>
+  (Default (PPUPState era), PostShelley era, EraTxBody era, HasTokens era, Value era ~ MaryValue (EraCrypto era)) =>
   Proof era ->
-  UTxOState era
-validatingWithMintState pf = smartUTxOState utxo (Coin 0) (Coin 5) def
+  ShelleyUTxOState era
+validatingWithMintState pf = smartShelleyUTxOState utxo (Coin 0) (Coin 5) def
   where
     utxo = expectedUTxO' pf (ExpectSuccess (validatingWithMintBody pf) (validatingWithMintTxOut pf)) 7
 
@@ -581,10 +581,10 @@ notValidatingWithMintTx pf =
     mint = forge @era 1 (never 1 pf)
 
 notValidatingWithMintState ::
-  (Default (State (EraRule "PPUP" era)), EraTxBody era, PostShelley era) =>
+  (Default (PPUPState era), EraTxBody era, PostShelley era) =>
   Proof era ->
-  UTxOState era
-notValidatingWithMintState pf = smartUTxOState utxo (Coin 0) (Coin 5) def
+  ShelleyUTxOState era
+notValidatingWithMintState pf = smartShelleyUTxOState utxo (Coin 0) (Coin 5) def
   where
     utxo = expectedUTxO' pf ExpectFailure 8
 
@@ -673,10 +673,10 @@ validatingManyScriptsTxOut pf =
 
 validatingManyScriptsState ::
   forall era.
-  (EraTxBody era, Default (State (EraRule "PPUP" era)), PostShelley era, HasTokens era, Value era ~ MaryValue (EraCrypto era)) =>
+  (EraTxBody era, Default (PPUPState era), PostShelley era, HasTokens era, Value era ~ MaryValue (EraCrypto era)) =>
   Proof era ->
-  UTxOState era
-validatingManyScriptsState pf = smartUTxOState (UTxO utxo) (Coin 0) (Coin 5) def
+  ShelleyUTxOState era
+validatingManyScriptsState pf = smartShelleyUTxOState (UTxO utxo) (Coin 0) (Coin 5) def
   where
     utxo =
       Map.insert (TxIn (txid (validatingManyScriptsBody pf)) minBound) (validatingManyScriptsTxOut pf) $
@@ -730,10 +730,10 @@ validatingSupplimentaryDatumTxOut pf =
 
 validatingSupplimentaryDatumState ::
   forall era.
-  (EraTxBody era, Default (State (EraRule "PPUP" era)), PostShelley era) =>
+  (EraTxBody era, Default (PPUPState era), PostShelley era) =>
   Proof era ->
-  UTxOState era
-validatingSupplimentaryDatumState pf = smartUTxOState utxo (Coin 0) (Coin 5) def
+  ShelleyUTxOState era
+validatingSupplimentaryDatumState pf = smartShelleyUTxOState utxo (Coin 0) (Coin 5) def
   where
     utxo = expectedUTxO' pf (ExpectSuccess (validatingSupplimentaryDatumBody pf) (validatingSupplimentaryDatumTxOut pf)) 3
 
@@ -786,10 +786,10 @@ validatingMultipleEqualCertsOut :: EraTxOut era => Proof era -> TxOut era
 validatingMultipleEqualCertsOut pf = newTxOut pf [Address (someAddr pf), Amount (inject $ Coin 995)]
 
 validatingMultipleEqualCertsState ::
-  (EraTxBody era, Default (State (EraRule "PPUP" era)), PostShelley era) =>
+  (EraTxBody era, Default (PPUPState era), PostShelley era) =>
   Proof era ->
-  UTxOState era
-validatingMultipleEqualCertsState pf = smartUTxOState utxo (Coin 0) (Coin 5) def
+  ShelleyUTxOState era
+validatingMultipleEqualCertsState pf = smartShelleyUTxOState utxo (Coin 0) (Coin 5) def
   where
     utxo = expectedUTxO' pf (ExpectSuccess (validatingMultipleEqualCertsBody pf) (validatingMultipleEqualCertsOut pf)) 3
 
@@ -831,13 +831,13 @@ validatingNonScriptOutWithDatumTxOut :: EraTxOut era => Proof era -> TxOut era
 validatingNonScriptOutWithDatumTxOut pf = newTxOut pf [Address (someAddr pf), Amount (inject $ Coin 1216)]
 
 validatingNonScriptOutWithDatumState ::
-  ( Default (State (EraRule "PPUP" era)),
+  ( Default (PPUPState era),
     PostShelley era,
     EraTxBody era
   ) =>
   Proof era ->
-  UTxOState era
-validatingNonScriptOutWithDatumState pf = smartUTxOState utxo (Coin 0) (Coin 5) def
+  ShelleyUTxOState era
+validatingNonScriptOutWithDatumState pf = smartShelleyUTxOState utxo (Coin 0) (Coin 5) def
   where
     utxo = expectedUTxO' pf (ExpectSuccess (validatingNonScriptOutWithDatumTxBody pf) (validatingNonScriptOutWithDatumTxOut pf)) 103
 
@@ -890,7 +890,7 @@ expectedUTxO' pf = expectedUTxO (initUTxO pf)
 testU ::
   forall era.
   ( GoodCrypto (EraCrypto era),
-    Default (State (EraRule "PPUP" era)),
+    Default (PPUPState era),
     PostShelley era,
     EraTx era,
     HasCallStack

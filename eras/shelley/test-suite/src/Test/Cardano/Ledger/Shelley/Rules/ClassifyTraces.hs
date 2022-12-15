@@ -39,7 +39,7 @@ import Cardano.Ledger.Shelley.Delegation.Certificates
     isRetirePool,
     isTreasuryMIRCert,
   )
-import Cardano.Ledger.Shelley.LedgerState (LedgerState)
+import Cardano.Ledger.Shelley.LedgerState (LedgerState, PPUPState)
 import Cardano.Ledger.Shelley.PParams
   ( Update (..),
     pattern ProposedPPUpdates,
@@ -98,7 +98,7 @@ import Test.QuickCheck
 relevantCasesAreCovered ::
   forall era.
   ( EraGen era,
-    Default (State (EraRule "PPUP" era)),
+    Default (PPUPState era),
     ChainProperty era,
     QC.HasTrace (CHAIN era) (GenEnv era),
     ProtVerAtMost era 8
@@ -279,7 +279,7 @@ onlyValidLedgerSignalsAreGenerated ::
   forall era ledger.
   ( EraGen era,
     QC.HasTrace ledger (GenEnv era),
-    Default (State (EraRule "PPUP" era)),
+    Default (PPUPState era),
     QC.BaseEnv ledger ~ Globals,
     State ledger ~ LedgerState era,
     Show (Environment ledger),
@@ -306,7 +306,7 @@ propAbstractSizeBoundsBytes ::
   forall era.
   ( EraGen era,
     QC.HasTrace (ShelleyLEDGER era) (GenEnv era),
-    Default (State (EraRule "PPUP" era))
+    Default (PPUPState era)
   ) =>
   Property
 propAbstractSizeBoundsBytes = property $ do
@@ -332,7 +332,7 @@ propAbstractSizeNotTooBig ::
   forall era.
   ( EraGen era,
     QC.HasTrace (ShelleyLEDGER era) (GenEnv era),
-    Default (State (EraRule "PPUP" era))
+    Default (PPUPState era)
   ) =>
   Property
 propAbstractSizeNotTooBig = property $ do
@@ -362,7 +362,7 @@ propAbstractSizeNotTooBig = property $ do
 onlyValidChainSignalsAreGenerated ::
   forall era.
   ( EraGen era,
-    Default (State (EraRule "PPUP" era)),
+    Default (PPUPState era),
     QC.HasTrace (CHAIN era) (GenEnv era)
   ) =>
   Property

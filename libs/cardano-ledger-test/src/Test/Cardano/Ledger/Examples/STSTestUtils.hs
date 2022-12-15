@@ -84,7 +84,7 @@ import Cardano.Ledger.Shelley.API
     UTxO (..),
   )
 import Cardano.Ledger.Shelley.LedgerState
-  ( smartUTxOState,
+  ( smartShelleyUTxOState, PPUPState,
   )
 import Cardano.Ledger.Shelley.PParams (ShelleyPParamsHKD (..))
 import Cardano.Ledger.Shelley.Rules
@@ -330,7 +330,7 @@ testBBODY wit@(BBODY proof) initialSt block expected pparams =
 testUTXOW ::
   forall era.
   ( GoodCrypto (EraCrypto era),
-    Default (State (EraRule "PPUP" era)),
+    Default (PPUPState era),
     PostShelley era,
     EraTx era,
     HasCallStack
@@ -345,14 +345,14 @@ testUTXOW ::
 -- | Use an equality test on the expected and computed [PredicateFailure]
 testUTXOW wit@(UTXOW (Alonzo _)) utxo p tx = testUTXOWwith wit (genericCont (show tx)) utxo p tx
 testUTXOW wit@(UTXOW (Babbage _)) utxo p tx = testUTXOWwith wit (genericCont (show tx)) utxo p tx
-testUTXOW wit@(UTXOW (Conway _)) utxo p tx = testUTXOWwith wit (genericCont (show tx)) utxo p tx
+testUTXOW _wit@(UTXOW (Conway _)) _utxo _p _tx = undefined -- TODO
 testUTXOW (UTXOW other) _ _ _ = error ("Cannot use testUTXOW in era " ++ show other)
 
 testUTXOWsubset,
   testUTXOspecialCase ::
     forall era.
     ( GoodCrypto (EraCrypto era),
-      Default (State (EraRule "PPUP" era)),
+      Default (PPUPState era),
       PostShelley era,
       EraTx era,
       HasCallStack
@@ -367,13 +367,13 @@ testUTXOWsubset,
 -- | Use a subset test on the expected and computed [PredicateFailure]
 testUTXOWsubset wit@(UTXOW (Alonzo _)) utxo = testUTXOWwith wit subsetCont utxo
 testUTXOWsubset wit@(UTXOW (Babbage _)) utxo = testUTXOWwith wit subsetCont utxo
-testUTXOWsubset wit@(UTXOW (Conway _)) utxo = testUTXOWwith wit subsetCont utxo
+testUTXOWsubset _wit@(UTXOW (Conway _)) _utxo = undefined -- TODO
 testUTXOWsubset (UTXOW other) _ = error ("Cannot use testUTXOW in era " ++ show other)
 
 -- | Use a test where any two (ValidationTagMismatch x y) failures match regardless of 'x' and 'y'
 testUTXOspecialCase wit@(UTXOW proof) utxo pparam tx expected =
   let env = UtxoEnv (SlotNo 0) pparam def (GenDelegs mempty)
-      state = smartUTxOState utxo (Coin 0) (Coin 0) def
+      state = smartShelleyUTxOState utxo (Coin 0) (Coin 0) def
    in case proof of
         Alonzo _ -> runSTS wit (TRC (env, state, tx)) (specialCont proof expected)
         Babbage _ -> runSTS wit (TRC (env, state, tx)) (specialCont proof expected)
@@ -392,7 +392,7 @@ type Result era = Either [PredicateFailure (EraRule "UTXOW" era)] (State (EraRul
 testUTXOWwith ::
   forall era.
   ( GoodCrypto (EraCrypto era),
-    Default (State (EraRule "PPUP" era)),
+    Default (PPUPState era),
     EraTx era
   ) =>
   WitRule "UTXOW" era ->
@@ -404,7 +404,7 @@ testUTXOWwith ::
   Assertion
 testUTXOWwith wit@(UTXOW proof) cont utxo pparams tx expected =
   let env = UtxoEnv (SlotNo 0) pparams def (GenDelegs mempty)
-      state = smartUTxOState utxo (Coin 0) (Coin 0) def
+      state = smartShelleyUTxOState utxo (Coin 0) (Coin 0) def
    in case proof of
         -- TODO re-enable this once we have added all the new rules to Conway
         -- Conway _ -> runSTS wit (TRC (env, state, tx)) (cont expected)

@@ -819,7 +819,7 @@ genAlonzoTxAndInfo proof slot = do
   validityInterval <- lift $ genValidityInterval slot
   modify (\gs -> gs {gsValidityInterval = validityInterval})
 
-  -- 1. Produce utxos that will be spent
+  -- 1. Produce sutxos that will be spent
   (utxoChoices, maybeoldpair) <- genUTxO
 
   -- 2. Generate UTxO for spending and reference inputs
@@ -966,7 +966,7 @@ genAlonzoTxAndInfo proof slot = do
   -- real life like setup. We use the entry with TxIn feeKey, which we can safely overwrite.
   let utxoFeeAdjusted = Map.adjust (injectFee proof (fee <+> deposits)) feeKey utxoNoCollateral
 
-  -- 9. Generate utxos that will be used as collateral
+  -- 9. Generate sutxos that will be used as collateral
   (utxo, collMap, excessColCoin) <- genCollateralUTxO collateralAddresses fee utxoFeeAdjusted
   collateralKeyWitsMakers <-
     mapM (genTxOutKeyWitness proof Nothing) $ Map.elems collMap

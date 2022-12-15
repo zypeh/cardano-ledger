@@ -48,7 +48,7 @@ import Cardano.Ledger.Shelley (ShelleyEra)
 import Cardano.Ledger.Shelley.API (ShelleyUTXOW)
 import Cardano.Ledger.Shelley.LedgerState
   ( LedgerState (..),
-    UTxOState,
+    ShelleyUTxOState,
     genesisState,
   )
 import Cardano.Ledger.Shelley.PParams
@@ -215,7 +215,7 @@ initPParams = emptyPParams {_maxTxSize = 1000}
 -- 'bobInitCoin' to spend. Then create and apply a transaction which, if
 -- 'aliceKeep' is greater than 0, gives that amount to Alice and creates outputs
 -- locked by a script for each pair of script, coin value in 'msigs'.
-initialUTxOState ::
+initialShelleyUTxOState ::
   forall c.
   (Mock c) =>
   Coin ->
@@ -223,9 +223,9 @@ initialUTxOState ::
   ( TxId c,
     Either
       [PredicateFailure (ShelleyUTXOW (ShelleyEra c))]
-      (UTxOState (ShelleyEra c))
+      (ShelleyUTxOState (ShelleyEra c))
   )
-initialUTxOState aliceKeep msigs =
+initialShelleyUTxOState aliceKeep msigs =
   let addresses =
         [(Cast.aliceAddr, aliceKeep) | Val.pointwise (>) aliceKeep mempty]
           ++ map
@@ -274,10 +274,10 @@ applyTxWithScript ::
   Wdrl c ->
   Coin ->
   [KeyPair 'Witness c] ->
-  Either [PredicateFailure (ShelleyUTXOW (ShelleyEra c))] (UTxOState (ShelleyEra c))
+  Either [PredicateFailure (ShelleyUTXOW (ShelleyEra c))] (ShelleyUTxOState (ShelleyEra c))
 applyTxWithScript lockScripts unlockScripts wdrl aliceKeep signers = utxoSt'
   where
-    (txId, initUtxo) = initialUTxOState aliceKeep lockScripts
+    (txId, initUtxo) = initialShelleyUTxOState aliceKeep lockScripts
     utxoSt = case initUtxo of
       Right utxoSt'' -> utxoSt''
       _ -> error $ "must fail test before: " ++ show initUtxo

@@ -72,8 +72,8 @@ import Cardano.Ledger.Shelley.LedgerState
     PState (..),
     StashedAVVMAddresses,
     dsGenDelegs,
-    smartUTxOState,
-    updateNES,
+    smartShelleyUTxOState,
+    updateNES, PPUPState,
   )
 import Cardano.Ledger.Shelley.Rules
   ( BbodyEnv (..),
@@ -193,7 +193,7 @@ instance
 -- | Creates a valid initial chain state
 initialShelleyState ::
   ( Core.EraTxOut era,
-    Default (State (Core.EraRule "PPUP" era)),
+    Default (PPUPState era),
     Default (StashedAVVMAddresses era)
   ) =>
   WithOrigin (LastAppliedBlock (EraCrypto era)) ->
@@ -214,7 +214,7 @@ initialShelleyState lab e utxo reserves genDelegs pp initNonce =
             (AccountState (Coin 0) reserves)
             emptySnapShots
             ( LedgerState
-                ( smartUTxOState
+                ( smartShelleyUTxOState
                     utxo
                     (Coin 0)
                     (Coin 0)
@@ -457,7 +457,7 @@ instance PP.CanPrettyPrintLedgerState era => PP.PrettyA (ChainState era) where
 instance
   ( ToExpr (Core.PParams era),
     ToExpr (Core.TxOut era),
-    ToExpr (State (Core.EraRule "PPUP" era)),
+    ToExpr (PPUPState era),
     ToExpr (StashedAVVMAddresses era)
   ) =>
   ToExpr (ChainState era)

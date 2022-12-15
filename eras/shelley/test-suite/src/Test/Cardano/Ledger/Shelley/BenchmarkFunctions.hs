@@ -50,7 +50,7 @@ import Cardano.Ledger.Shelley.Delegation.Certificates (DelegCert (..))
 import Cardano.Ledger.Shelley.LedgerState
   ( AccountState (..),
     LedgerState (..),
-    UTxOState (..),
+    ShelleyUTxOState (..),
   )
 import Cardano.Ledger.Shelley.PParams (ShelleyPParams, ShelleyPParamsHKD (..), emptyPParams)
 import Cardano.Ledger.Shelley.Rules (LedgerEnv (..), ShelleyLEDGER)
@@ -143,9 +143,9 @@ injcoins :: Integer -> [ShelleyTxOut B]
 injcoins n = fmap (\_ -> ShelleyTxOut aliceAddr (inject $ Coin 100)) [0 .. n]
 
 -- Cretae an initial UTxO set with n-many transaction outputs
-initUTxO :: Integer -> UTxOState B
+initUTxO :: Integer -> ShelleyUTxOState B
 initUTxO n =
-  UTxOState
+  ShelleyUTxOState
     (genesisCoins genesisId (injcoins n))
     (Coin 0)
     (Coin 0)
@@ -214,7 +214,7 @@ txSpendOneUTxO =
 ledgerSpendOneUTxO :: Integer -> ()
 ledgerSpendOneUTxO n = testLEDGER (initLedgerState n) txSpendOneUTxO ledgerEnv
 
-ledgerSpendOneGivenUTxO :: UTxOState B -> ()
+ledgerSpendOneGivenUTxO :: ShelleyUTxOState B -> ()
 ledgerSpendOneGivenUTxO state = testLEDGER (LedgerState state def) txSpendOneUTxO ledgerEnv
 
 -- ===========================================================================

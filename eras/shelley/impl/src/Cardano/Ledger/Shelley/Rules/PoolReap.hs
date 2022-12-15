@@ -32,7 +32,7 @@ import Cardano.Ledger.Shelley.LedgerState
     DPState (..),
     DState (..),
     PState (..),
-    UTxOState (..),
+    ShelleyUTxOState (..),
     obligationDPState,
     rewards,
   )
@@ -61,13 +61,13 @@ import GHC.Records
 import NoThunks.Class (NoThunks (..))
 
 data ShelleyPoolreapState era = PoolreapState
-  { prUTxOSt :: UTxOState era,
+  { prUTxOSt :: ShelleyUTxOState era,
     prAcnt :: AccountState,
     prDState :: DState (EraCrypto era),
     prPState :: PState (EraCrypto era)
   }
 
-deriving stock instance Show (UTxOState era) => Show (ShelleyPoolreapState era)
+deriving stock instance Show (ShelleyUTxOState era) => Show (ShelleyPoolreapState era)
 
 data ShelleyPoolreapPredFailure era -- No predicate failures
   deriving (Show, Eq, Generic)
@@ -80,7 +80,7 @@ data ShelleyPoolreapEvent era = RetiredPools
 
 instance NoThunks (ShelleyPoolreapPredFailure era)
 
-instance Default (UTxOState era) => Default (ShelleyPoolreapState era) where
+instance Default (ShelleyUTxOState era) => Default (ShelleyPoolreapState era) where
   def = PoolreapState def def def def
 
 instance
@@ -103,7 +103,7 @@ instance
     [ PostCondition
         "Deposit pot must equal obligation"
         ( \(TRC (_, _, _)) st ->
-            obligationDPState (DPState (prDState st) (prPState st)) == utxosDeposited (prUTxOSt st)
+            obligationDPState (DPState (prDState st) (prPState st)) == sutxosDeposited (prUTxOSt st)
         ),
       PostCondition
         "PoolReap may not create or remove reward accounts"
@@ -162,7 +162,7 @@ poolReapTransition = do
           }
   pure $
     PoolreapState
-      us {utxosDeposited = utxosDeposited us <-> (unclaimed <+> refunded)}
+      us {sutxosDeposited = sutxosDeposited us <-> (unclaimed <+> refunded)}
       a {asTreasury = asTreasury a <+> unclaimed}
       ( let u0 = dsUnified ds
             u1 = Rewards u0 UM.∪+ Map.map compactCoinOrError refunds

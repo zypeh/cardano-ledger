@@ -38,7 +38,7 @@ import Cardano.Ledger.Shelley.BlockChain (slotToNonce)
 import Cardano.Ledger.Shelley.LedgerState
   ( NewEpochState,
     StashedAVVMAddresses,
-    nesBcur,
+    nesBcur, PPUPState,
   )
 import Cardano.Protocol.TPraos.API
   ( ChainDepState (..),
@@ -55,7 +55,6 @@ import Cardano.Protocol.TPraos.Rules.Tickn (TicknState (..))
 import Cardano.Slotting.Slot (withOriginToMaybe)
 import Control.DeepSeq (NFData (rnf))
 import Control.Monad.Except ()
-import Control.State.Transition (STS (State))
 import qualified Control.State.Transition.Trace.Generator.QuickCheck as QC
 import qualified Data.Map.Strict as Map
 import Data.Proxy
@@ -124,7 +123,7 @@ applyBlock ::
     NFData (Core.TxOut era),
     API.ApplyBlock era,
     NFData (Core.PParams era),
-    NFData (State (Core.EraRule "PPUP" era)),
+    NFData (PPUPState era),
     NFData (StashedAVVMAddresses era)
   ) =>
   ValidateInput era ->

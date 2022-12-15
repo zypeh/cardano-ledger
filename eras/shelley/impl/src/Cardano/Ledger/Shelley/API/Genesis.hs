@@ -25,7 +25,7 @@ import Cardano.Ledger.Shelley.API.Types
     genesisUTxO,
     word64ToCoin,
   )
-import Cardano.Ledger.Shelley.LedgerState (StashedAVVMAddresses, smartUTxOState)
+import Cardano.Ledger.Shelley.LedgerState (StashedAVVMAddresses, smartShelleyUTxOState)
 import Cardano.Ledger.Shelley.PParams (ShelleyPParams)
 import Cardano.Ledger.UTxO (coinBalance)
 import Cardano.Ledger.Val (Val ((<->)))
@@ -33,6 +33,7 @@ import Control.State.Transition (STS (State))
 import Data.Default.Class (Default, def)
 import Data.Kind (Type)
 import qualified Data.Map.Strict as Map
+import Cardano.Ledger.Shelley.LedgerState.Types (PPUPState)
 
 -- | Indicates that this era may be bootstrapped from 'ShelleyGenesis'.
 class CanStartFromGenesis era where
@@ -59,7 +60,7 @@ instance
 -- | Helper function for constructing the initial state for any era
 initialStateFromGenesis ::
   ( EraTxOut era,
-    Default (State (EraRule "PPUP" era)),
+    Default (PPUPState era),
     Default (StashedAVVMAddresses era)
   ) =>
   -- | Function to extend ShelleyPParams into PParams for the specific era
@@ -77,7 +78,7 @@ initialStateFromGenesis extendPPWithGenesis' sg ag =
         (AccountState (Coin 0) reserves)
         emptySnapShots
         ( LedgerState
-            (smartUTxOState initialUtxo (Coin 0) (Coin 0) def)
+            (smartShelleyUTxOState initialUtxo (Coin 0) (Coin 0) def)
             (DPState (def {dsGenDelegs = GenDelegs genDelegs}) def)
         )
         (extendPPWithGenesis' pp ag)

@@ -49,14 +49,14 @@ import Cardano.Ledger.BaseTypes (ProtVer, ShelleyBase, epochInfo, strictMaybeToM
 import Cardano.Ledger.Binary (ToCBOR (..))
 import Cardano.Ledger.Coin (Coin)
 import Cardano.Ledger.Core
-import Cardano.Ledger.Shelley.LedgerState (PPUPState (..), UTxOState (..), keyTxRefunds, totalTxDeposits, updateStakeDistribution)
+import Cardano.Ledger.Shelley.LedgerState (PPUPState, ShelleyPPUPState (..), ShelleyUTxOState (..), keyTxRefunds, totalTxDeposits, updateStakeDistribution)
 import Cardano.Ledger.Shelley.PParams (Update)
 import Cardano.Ledger.Shelley.Rules
   ( PpupEnv (..),
     ShelleyPPUP,
     ShelleyPpupPredFailure,
     UtxoEnv (..),
-    updateUTxOState,
+    updateShelleyUTxOState,
   )
 import Cardano.Ledger.UTxO (EraUTxO (..), UTxO (..))
 import Cardano.Ledger.Val ((<->))
@@ -89,8 +89,9 @@ instance
     HasField "_protocolVersion" (PParams era) ProtVer,
     Embed (EraRule "PPUP" era) (BabbageUTXOS era),
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
-    State (EraRule "PPUP" era) ~ PPUPState era,
+    PPUPState era ~ ShelleyPPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
+    State (EraRule "PPUP" era) ~ ShelleyPPUPState era,
     ToCBOR (PredicateFailure (EraRule "PPUP" era)), -- Serializing the PredicateFailure
     ProtVerAtMost era 8
   ) =>
@@ -98,7 +99,7 @@ instance
   where
   type BaseM (BabbageUTXOS era) = ShelleyBase
   type Environment (BabbageUTXOS era) = UtxoEnv era
-  type State (BabbageUTXOS era) = UTxOState era
+  type State (BabbageUTXOS era) = ShelleyUTxOState era
   type Signal (BabbageUTXOS era) = AlonzoTx era
   type PredicateFailure (BabbageUTXOS era) = AlonzoUtxosPredFailure era
   type Event (BabbageUTXOS era) = AlonzoUtxosEvent era
@@ -131,8 +132,9 @@ utxosTransition ::
     HasField "_poolDeposit" (PParams era) Coin,
     HasField "_costmdls" (PParams era) CostModels,
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
-    State (EraRule "PPUP" era) ~ PPUPState era,
+    PPUPState era ~ ShelleyPPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
+    State (EraRule "PPUP" era) ~ ShelleyPPUPState era,
     Embed (EraRule "PPUP" era) (BabbageUTXOS era),
     ToCBOR (PredicateFailure (EraRule "PPUP" era)),
     ProtVerAtMost era 8
@@ -156,8 +158,9 @@ scriptsYes ::
     Script era ~ AlonzoScript era,
     STS (BabbageUTXOS era),
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
-    State (EraRule "PPUP" era) ~ PPUPState era,
+    PPUPState era ~ ShelleyPPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
+    State (EraRule "PPUP" era) ~ ShelleyPPUPState era,
     Embed (EraRule "PPUP" era) (BabbageUTXOS era),
     HasField "_poolDeposit" (PParams era) Coin,
     HasField "_keyDeposit" (PParams era) Coin,
@@ -166,7 +169,7 @@ scriptsYes ::
   ) =>
   TransitionRule (BabbageUTXOS era)
 scriptsYes = do
-  TRC (UtxoEnv slot pp dpstate genDelegs, u@(UTxOState utxo _ _ pup _), tx) <-
+  TRC (UtxoEnv slot pp dpstate genDelegs, u@(ShelleyUTxOState utxo _ _ pup _), tx) <-
     judgmentContext
   let txBody = body tx
       {- refunded := keyRefunds pp txb -}
@@ -204,7 +207,7 @@ scriptsYes = do
 
   let !_ = traceEvent validEnd ()
 
-  pure $! updateUTxOState u txBody depositChange ppup'
+  pure $! updateShelleyUTxOState u txBody depositChange ppup'
 
 scriptsNo ::
   forall era.
@@ -222,7 +225,7 @@ scriptsNo ::
   ) =>
   TransitionRule (BabbageUTXOS era)
 scriptsNo = do
-  TRC (UtxoEnv _ pp _ _, us@(UTxOState utxo _ fees _ _), tx) <- judgmentContext
+  TRC (UtxoEnv _ pp _ _, us@(ShelleyUTxOState utxo _ fees _ _), tx) <- judgmentContext
   {- txb := txbody tx -}
   let txBody = tx ^. bodyTxL
   sysSt <- liftSTS $ asks systemStart
@@ -251,8 +254,8 @@ scriptsNo = do
       collateralFees = collAdaBalance txBody utxoDel -- NEW to Babbage
   pure $!
     us {- (collInputs txb ⋪ utxo) ∪ collouts tx -}
-      { utxosUtxo = UTxO (Map.union utxoKeep collouts), -- NEW to Babbage
+      { sutxosUtxo = UTxO (Map.union utxoKeep collouts), -- NEW to Babbage
       {- fees + collateralFees -}
-        utxosFees = fees <> collateralFees, -- NEW to Babbage
-        utxosStakeDistr = updateStakeDistribution (utxosStakeDistr us) (UTxO utxoDel) (UTxO collouts)
+        sutxosFees = fees <> collateralFees, -- NEW to Babbage
+        sutxosStakeDistr = updateStakeDistribution (sutxosStakeDistr us) (UTxO utxoDel) (UTxO collouts)
       }

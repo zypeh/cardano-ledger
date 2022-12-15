@@ -99,7 +99,7 @@ deriving instance
     Eq (Core.Tx era),
     Eq (PredicateFailure (Core.EraRule "LEDGER" era)),
     Eq (Core.TxOut era),
-    Eq (State (Core.EraRule "PPUP" era)),
+    Eq (PPUPState era),
     Eq (StashedAVVMAddresses era),
     Eq (TranslationContext era),
     Era era
@@ -111,7 +111,7 @@ deriving instance
 -------------------------------------------------------------------------------}
 
 type ShelleyBasedEra' era =
-  ( Default (State (Core.EraRule "PPUP" era)),
+  ( Default (PPUPState era),
     PraosCrypto (EraCrypto era)
   )
 
@@ -338,18 +338,18 @@ exampleNewEpochState value ppp pp =
           esLState =
             LedgerState
               { lsUTxOState =
-                  UTxOState
-                    { utxosUtxo =
+                  ShelleyUTxOState
+                    { sutxosUtxo =
                         UTxO $
                           Map.fromList
                             [ ( TxIn (TxId (mkDummySafeHash Proxy 1)) minBound,
                                 Core.mkBasicTxOut addr value
                               )
                             ],
-                      utxosDeposited = Coin 1000,
-                      utxosFees = Coin 1,
-                      utxosPpups = def,
-                      utxosStakeDistr = mempty
+                      sutxosDeposited = Coin 1000,
+                      sutxosFees = Coin 1,
+                      sutxosPpups = def,
+                      sutxosStakeDistr = mempty
                     },
                 lsDPState = def
               },

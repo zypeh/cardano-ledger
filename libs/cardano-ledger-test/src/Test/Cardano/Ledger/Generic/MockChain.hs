@@ -30,7 +30,7 @@ import Cardano.Ledger.Shelley.LedgerState
   ( EpochState (..),
     LedgerState (..),
     NewEpochState (..),
-    StashedAVVMAddresses,
+    StashedAVVMAddresses, PPUPState,
   )
 import Cardano.Ledger.Shelley.RewardUpdate (PulsingRewUpdate)
 import Cardano.Ledger.Shelley.Rules
@@ -100,7 +100,7 @@ deriving instance
   ( CC.Crypto (EraCrypto era),
     Eq (Core.TxOut era),
     Eq (Core.PParams era),
-    Eq (State (Core.EraRule "PPUP" era)),
+    Eq (PPUPState era),
     Eq (StashedAVVMAddresses era)
   ) =>
   Eq (MockChainState era)
@@ -247,7 +247,7 @@ instance PrettyA (MockBlock era) where prettyA = ppMockBlock
 
 ppMockChainFailure :: Proof era -> MockChainFailure era -> PDoc
 ppMockChainFailure proof x = case proof of
-  (Conway _) -> help x
+  (Conway _) -> undefined
   (Babbage _) -> help x
   (Alonzo _) -> help x
   (Mary _) -> help x

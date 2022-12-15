@@ -54,7 +54,6 @@ import Cardano.Ledger.Compactible (Compactible (..))
 import Cardano.Ledger.Core
   ( Era,
     EraPParams (..),
-    EraRule,
     EraScript (..),
     EraTx (..),
     EraTxAuxData (..),
@@ -104,9 +103,9 @@ import Cardano.Ledger.Shelley.LedgerState
     InstantaneousRewards (..),
     LedgerState (..),
     NewEpochState (..),
-    PPUPState (..),
+    ShelleyPPUPState (..),
     PState (..),
-    UTxOState (..),
+    ShelleyUTxOState (..), PPUPState,
   )
 import Cardano.Ledger.Shelley.PParams
   ( PPUpdateEnv (..),
@@ -190,7 +189,6 @@ import Cardano.Protocol.TPraos.OCert
 import Cardano.Slotting.Slot (WithOrigin (..))
 import Cardano.Slotting.Time (SystemStart (SystemStart))
 import Codec.Binary.Bech32
-import Control.State.Transition (STS (State))
 import qualified Data.ByteString as Long (ByteString)
 import qualified Data.ByteString.Lazy as Lazy (ByteString, toStrict)
 import qualified Data.Hashable as Hashable
@@ -622,7 +620,7 @@ instance PrettyA (RewardUpdate c) where
 type CanPrettyPrintLedgerState era =
   ( PrettyA (TxOut era),
     PrettyA (PParams era),
-    PrettyA (State (EraRule "PPUP" era))
+    PrettyA (PPUPState era)
   )
 
 ppAccountState :: AccountState -> PDoc
@@ -665,10 +663,10 @@ ppInstantaneousRewards (InstantaneousRewards res treas dR dT) =
       ("deltaTreasury", ppDeltaCoin dT)
     ]
 
-ppPPUPState :: PrettyA (PParamsUpdate era) => PPUPState era -> PDoc
-ppPPUPState (PPUPState p fp) =
+ppPPUPState :: PrettyA (PParamsUpdate era) => ShelleyPPUPState era -> PDoc
+ppPPUPState (ShelleyPPUPState p fp) =
   ppRecord
-    "Proposed PPUPState"
+    "Proposed ShelleyPPUPState"
     [ ("proposals", ppProposedPPUpdates p),
       ("futureProposals", ppProposedPPUpdates fp)
     ]
@@ -715,13 +713,13 @@ ppIncrementalStake (IStake st dangle) =
       ("ptrMap", ppMap ppPtr ppCoin dangle)
     ]
 
-ppUTxOState ::
+ppShelleyUTxOState ::
   CanPrettyPrintLedgerState era =>
-  UTxOState era ->
+  ShelleyUTxOState era ->
   PDoc
-ppUTxOState (UTxOState u dep fee ppup sd) =
+ppShelleyUTxOState (ShelleyUTxOState u dep fee ppup sd) =
   ppRecord
-    "UTxOState"
+    "ShelleyUTxOState"
     [ ("utxo", ppUTxO u),
       ("deposited", ppCoin dep),
       ("fees", ppCoin fee),
@@ -760,7 +758,7 @@ ppLedgerState ::
 ppLedgerState (LedgerState u d) =
   ppRecord
     "LedgerState"
-    [ ("utxoState", ppUTxOState u),
+    [ ("utxoState", ppShelleyUTxOState u),
       ("delegationState", ppDPState d)
     ]
 
@@ -805,7 +803,7 @@ instance
 
 instance
   PrettyA (PParamsUpdate era) =>
-  PrettyA (PPUPState era)
+  PrettyA (ShelleyPPUPState era)
   where
   prettyA = ppPPUPState
 
@@ -816,9 +814,9 @@ instance
   ( Era era,
     CanPrettyPrintLedgerState era
   ) =>
-  PrettyA (UTxOState era)
+  PrettyA (ShelleyUTxOState era)
   where
-  prettyA = ppUTxOState
+  prettyA = ppShelleyUTxOState
 
 instance PrettyA (IncrementalStake c) where
   prettyA = ppIncrementalStake

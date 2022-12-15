@@ -49,14 +49,13 @@ import Cardano.Ledger.Shelley.LedgerState
     NewEpochState (..),
     PState (..),
     StashedAVVMAddresses,
-    UTxOState (..),
+    ShelleyUTxOState (..), PPUPState,
   )
 import Cardano.Ledger.Shelley.PParams (ProposedPPUpdates (..), ShelleyPParamsHKD)
 import Cardano.Ledger.Shelley.Tx (ShelleyTx (..))
 import Cardano.Ledger.Shelley.TxBody (ShelleyTxBody (..), ShelleyTxOut, Wdrl (..))
 import Cardano.Ledger.Shelley.TxWits (ShelleyTxWits (..))
 import Cardano.Ledger.UTxO (UTxO (..))
-import Control.State.Transition.Extended (STS (..), State)
 import Data.Foldable (toList)
 import Data.Maybe.Strict (StrictMaybe)
 import Prettyprinter (Doc, indent, viaShow, vsep)
@@ -142,27 +141,27 @@ sameUTxO (Babbage _) x y = eqByShow x y
 sameUTxO (Conway _) x y = eqByShow x y
 {-# NOINLINE sameUTxO #-}
 
-samePPUP :: Proof era -> State (Core.EraRule "PPUP" era) -> State (Core.EraRule "PPUP" era) -> Maybe PDoc
+samePPUP :: Proof era -> PPUPState era -> PPUPState era -> Maybe PDoc
 samePPUP (Shelley _) x y = eqByShow x y
 samePPUP (Allegra _) x y = eqByShow x y
 samePPUP (Mary _) x y = eqByShow x y
 samePPUP (Alonzo _) x y = eqByShow x y
 samePPUP (Babbage _) x y = eqByShow x y
-samePPUP (Conway _) x y = eqByShow x y
+samePPUP (Conway _) () () = Nothing
 {-# NOINLINE samePPUP #-}
 
-instance (Era era) => Same era (UTxOState era) where
+instance (Era era) => Same era (ShelleyUTxOState era) where
   same proof u1 u2 =
-    [ ("UTxO", sameUTxO proof (utxosUtxo u1) (utxosUtxo u2)),
-      ("Deposited", eqByShow (utxosDeposited u1) (utxosDeposited u2)),
-      ("Fees", eqByShow (utxosFees u1) (utxosFees u2)),
-      ("PPUpdates", samePPUP proof (utxosPpups u1) (utxosPpups u2)),
-      ("StakeDistr", eqByShow (utxosStakeDistr u1) (utxosStakeDistr u2))
+    [ ("UTxO", sameUTxO proof (sutxosUtxo u1) (sutxosUtxo u2)),
+      ("Deposited", eqByShow (sutxosDeposited u1) (sutxosDeposited u2)),
+      ("Fees", eqByShow (sutxosFees u1) (sutxosFees u2)),
+      ("PPUpdates", samePPUP proof (sutxosPpups u1) (sutxosPpups u2)),
+      ("StakeDistr", eqByShow (sutxosStakeDistr u1) (sutxosStakeDistr u2))
     ]
 
 instance (Era era) => Same era (LedgerState era) where
   same proof x1 x2 =
-    extendLabel "UTxOState " (same proof (lsUTxOState x1) (lsUTxOState x2))
+    extendLabel "ShelleyUTxOState " (same proof (lsUTxOState x1) (lsUTxOState x2))
       ++ extendLabel "DPState " (same proof (lsDPState x1) (lsDPState x2))
 
 instance (Era era) => Same era (EpochState era) where
@@ -305,7 +304,7 @@ sameLedgerFail (Allegra _) x y = eqByShow x y
 sameLedgerFail (Mary _) x y = eqByShow x y
 sameLedgerFail (Alonzo _) x y = eqByShow x y
 sameLedgerFail (Babbage _) x y = eqByShow x y
-sameLedgerFail (Conway _) x y = eqByShow x y
+sameLedgerFail (Conway _) _ _ = undefined
 {-# NOINLINE sameLedgerFail #-}
 
 sameTransCtx :: Proof era -> Core.TranslationContext era -> Core.TranslationContext era -> Maybe PDoc
