@@ -50,6 +50,7 @@ library
   other-modules:
     Cardano.Ledger.Conway.Era
     Cardano.Ledger.Conway.UTxO
+    Cardano.Ledger.Conway.Rules.Tally
     Cardano.Ledger.Conway.Rules.Utxo
     Cardano.Ledger.Conway.Rules.Utxos
   build-depends:

@@ -5,6 +5,7 @@ module Cardano.Ledger.Conway.Era
   ( ConwayEra,
     ConwayUTXO,
     ConwayUTXOS,
+    ConwayTALLY,
   )
 where
 
@@ -48,6 +49,10 @@ data ConwayUTXO era
 
 type instance EraRule "UTXO" (ConwayEra c) = ConwayUTXO (ConwayEra c)
 
+data ConwayTALLY era
+
+type instance EraRule "TALLY" (ConwayEra c) = ConwayTALLY (ConwayEra c)
+
 -- Rules inherited from Babbage
 
 type instance EraRule "UTXOW" (ConwayEra c) = BabbageUTXOW (ConwayEra c)
@@ -79,8 +84,6 @@ type instance EraRule "NEWPP" (ConwayEra c) = ShelleyNEWPP (ConwayEra c)
 type instance EraRule "POOL" (ConwayEra c) = API.ShelleyPOOL (ConwayEra c)
 
 type instance EraRule "POOLREAP" (ConwayEra c) = API.ShelleyPOOLREAP (ConwayEra c)
-
-type instance EraRule "PPUP" (ConwayEra c) = API.ShelleyPPUP (ConwayEra c)
 
 type instance EraRule "RUPD" (ConwayEra c) = ShelleyRUPD (ConwayEra c)
 

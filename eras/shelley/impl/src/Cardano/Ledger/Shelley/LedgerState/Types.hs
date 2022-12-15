@@ -245,7 +245,7 @@ instance Default (IncrementalStake c) where
 --   Given (UTxOState utxo _ _ _ istake) it must be the case that
 --   istake == (updateStakeDistribution (UTxO Map.empty) (UTxO Map.empty) utxo)
 --   Of course computing the RHS of the above equality can be very expensive, so we only
---   use this route in the testing function smartUTxO. But we are very carefull, wherever
+--   use this route in the testing function smartUTxO. But we are very careful, wherever
 --   we update the UTxO, we carefully make INCREMENTAL changes to istake to maintain
 --   this invariant. This happens in the UTxO rule.
 data UTxOState era = UTxOState

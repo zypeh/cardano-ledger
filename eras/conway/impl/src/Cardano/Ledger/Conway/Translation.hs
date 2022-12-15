@@ -137,29 +137,6 @@ instance Crypto c => TranslateEra (ConwayEra c) EpochState where
           esNonMyopic = esNonMyopic es
         }
 
-instance Crypto c => TranslateEra (ConwayEra c) API.LedgerState where
-  translateEra ctxt@(ConwayGenesis newGenDelegs) ls =
-    pure
-      API.LedgerState
-        { API.lsUTxOState = translateEra' ctxt $ API.lsUTxOState ls,
-          API.lsDPState = updateGenesisKeys $ API.lsDPState ls
-        }
-    where
-      updateGenesisKeys (DPState dstate pstate) = DPState dstate' pstate
-        where
-          dstate' = dstate {dsGenDelegs = newGenDelegs}
-
-instance Crypto c => TranslateEra (ConwayEra c) API.UTxOState where
-  translateEra ctxt us =
-    pure
-      API.UTxOState
-        { API.utxosUtxo = translateEra' ctxt $ API.utxosUtxo us,
-          API.utxosDeposited = API.utxosDeposited us,
-          API.utxosFees = API.utxosFees us,
-          API.utxosPpups = translateEra' ctxt $ API.utxosPpups us,
-          API.utxosStakeDistr = API.utxosStakeDistr us
-        }
-
 instance Crypto c => TranslateEra (ConwayEra c) API.UTxO where
   translateEra _ctxt utxo =
     pure $ API.UTxO $ translateTxOut `Map.map` API.unUTxO utxo
