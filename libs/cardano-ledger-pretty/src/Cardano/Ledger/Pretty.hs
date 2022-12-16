@@ -408,6 +408,9 @@ ppVMap pk pv = ppAssocList (text "VMap") pk pv . VMap.toList
 class PrettyA t where
   prettyA :: t -> PDoc
 
+instance PrettyA () where
+  prettyA = ppString . show
+
 -- =============================================================================
 -- END HELPER FUNCTIONS
 -- =============================================================================

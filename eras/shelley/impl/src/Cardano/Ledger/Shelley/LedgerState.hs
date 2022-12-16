@@ -27,6 +27,7 @@ module Cardano.Ledger.Shelley.LedgerState
     ShelleyPPUPState (..),
     PState (..),
     PPUPState,
+    PPUPPredFailure,
     RewardAccounts,
     RewardUpdate (..),
     RewardSnapShot (..),

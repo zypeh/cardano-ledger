@@ -70,6 +70,7 @@ import GHC.Generics (Generic)
 import Lens.Micro (_1, _2)
 import NoThunks.Class (NoThunks (..))
 import Cardano.Ledger.Shelley.PParams (ShelleyPPUPState(..))
+import Cardano.Ledger.Shelley.Rules.Ppup (ShelleyPpupPredFailure)
 
 -- ==================================
 
@@ -253,6 +254,19 @@ type family PPUPStatePV pv era where
   PPUPStatePV 7 era = ShelleyPPUPState era
   PPUPStatePV 8 era = ShelleyPPUPState era
   PPUPStatePV _ _ = ()
+
+type PPUPPredFailure era = PPUPPredFailurePV (ProtVerLow era) era
+
+type family PPUPPredFailurePV pv era where
+  PPUPPredFailurePV 1 era = ShelleyPpupPredFailure era
+  PPUPPredFailurePV 2 era = ShelleyPpupPredFailure era
+  PPUPPredFailurePV 3 era = ShelleyPpupPredFailure era
+  PPUPPredFailurePV 4 era = ShelleyPpupPredFailure era
+  PPUPPredFailurePV 5 era = ShelleyPpupPredFailure era
+  PPUPPredFailurePV 6 era = ShelleyPpupPredFailure era
+  PPUPPredFailurePV 7 era = ShelleyPpupPredFailure era
+  PPUPPredFailurePV 8 era = ShelleyPpupPredFailure era
+  PPUPPredFailurePV _ _ = ()
 
 -- | There is a serious invariant that we must maintain in the ShelleyUTxOState.
 --   Given (ShelleyUTxOState utxo _ _ _ istake) it must be the case that

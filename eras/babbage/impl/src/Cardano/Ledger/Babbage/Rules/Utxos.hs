@@ -49,14 +49,14 @@ import Cardano.Ledger.BaseTypes (ProtVer, ShelleyBase, epochInfo, strictMaybeToM
 import Cardano.Ledger.Binary (ToCBOR (..))
 import Cardano.Ledger.Coin (Coin)
 import Cardano.Ledger.Core
-import Cardano.Ledger.Shelley.LedgerState (PPUPState, ShelleyPPUPState (..), ShelleyUTxOState (..), keyTxRefunds, totalTxDeposits, updateStakeDistribution)
+import Cardano.Ledger.Shelley.LedgerState (PPUPState, ShelleyPPUPState (..), ShelleyUTxOState (..), keyTxRefunds, totalTxDeposits, updateStakeDistribution, PPUPPredFailure)
 import Cardano.Ledger.Shelley.PParams (Update)
 import Cardano.Ledger.Shelley.Rules
   ( PpupEnv (..),
     ShelleyPPUP,
     ShelleyPpupPredFailure,
     UtxoEnv (..),
-    updateShelleyUTxOState,
+    updateUTxOState,
   )
 import Cardano.Ledger.UTxO (EraUTxO (..), UTxO (..))
 import Cardano.Ledger.Val ((<->))
@@ -89,11 +89,13 @@ instance
     HasField "_protocolVersion" (PParams era) ProtVer,
     Embed (EraRule "PPUP" era) (BabbageUTXOS era),
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
+    State (EraRule "PPUP" era) ~ PPUPState era,
     PPUPState era ~ ShelleyPPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
-    State (EraRule "PPUP" era) ~ ShelleyPPUPState era,
-    ToCBOR (PredicateFailure (EraRule "PPUP" era)), -- Serializing the PredicateFailure
-    ProtVerAtMost era 8
+    ToCBOR (PPUPPredFailure era), -- Serializing the PredicateFailure
+    ProtVerAtMost era 8,
+    Eq (PPUPPredFailure era),
+    Show (PPUPPredFailure era)
   ) =>
   STS (BabbageUTXOS era)
   where
@@ -108,7 +110,7 @@ instance
 instance
   ( Era era,
     STS (ShelleyPPUP era),
-    PredicateFailure (EraRule "PPUP" era) ~ ShelleyPpupPredFailure era,
+    PPUPPredFailure era ~ ShelleyPpupPredFailure era,
     Event (EraRule "PPUP" era) ~ Event (ShelleyPPUP era)
   ) =>
   Embed (ShelleyPPUP era) (BabbageUTXOS era)
@@ -132,12 +134,14 @@ utxosTransition ::
     HasField "_poolDeposit" (PParams era) Coin,
     HasField "_costmdls" (PParams era) CostModels,
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
+    State (EraRule "PPUP" era) ~ PPUPState era,
     PPUPState era ~ ShelleyPPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
-    State (EraRule "PPUP" era) ~ ShelleyPPUPState era,
     Embed (EraRule "PPUP" era) (BabbageUTXOS era),
-    ToCBOR (PredicateFailure (EraRule "PPUP" era)),
-    ProtVerAtMost era 8
+    ToCBOR (PPUPPredFailure era),
+    ProtVerAtMost era 8,
+    Eq (PPUPPredFailure era),
+    Show (PPUPPredFailure era)
   ) =>
   TransitionRule (BabbageUTXOS era)
 utxosTransition =
@@ -160,7 +164,7 @@ scriptsYes ::
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
     PPUPState era ~ ShelleyPPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
-    State (EraRule "PPUP" era) ~ ShelleyPPUPState era,
+    State (EraRule "PPUP" era) ~ PPUPState era,
     Embed (EraRule "PPUP" era) (BabbageUTXOS era),
     HasField "_poolDeposit" (PParams era) Coin,
     HasField "_keyDeposit" (PParams era) Coin,
@@ -207,7 +211,7 @@ scriptsYes = do
 
   let !_ = traceEvent validEnd ()
 
-  pure $! updateShelleyUTxOState u txBody depositChange ppup'
+  pure $! updateUTxOState u txBody depositChange ppup'
 
 scriptsNo ::
   forall era.

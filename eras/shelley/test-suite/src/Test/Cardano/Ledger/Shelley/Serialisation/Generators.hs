@@ -22,6 +22,7 @@ import Test.QuickCheck
     arbitrary,
     shrink,
   )
+import Cardano.Ledger.Shelley.LedgerState (PPUPPredFailure)
 
 {-------------------------------------------------------------------------------
   ShelleyEra Generators
@@ -50,7 +51,7 @@ instance
     Mock (EraCrypto era),
     Arbitrary (Value era),
     Arbitrary (TxOut era),
-    Arbitrary (STS.PredicateFailure (EraRule "PPUP" era))
+    Arbitrary (PPUPPredFailure era)
   ) =>
   Arbitrary (STS.ShelleyUtxoPredFailure era)
   where

@@ -105,6 +105,7 @@ import GHC.Records (HasField (getField))
 import Lens.Micro
 import NoThunks.Class (InspectHeapNamed (..), NoThunks (..))
 import Validation (Validation, failureIf, failureUnless)
+import Cardano.Ledger.Shelley.LedgerState (PPUPPredFailure)
 
 -- ======================================================
 
@@ -150,13 +151,13 @@ instance Inject (BabbageUtxoPredFailure era) (BabbageUtxoPredFailure era) where
   inject = id
 
 instance
-  Inject (PredicateFailure (EraRule "PPUP" era)) (PredicateFailure (EraRule "UTXOS" era)) =>
+  Inject (PPUPPredFailure era) (PredicateFailure (EraRule "UTXOS" era)) =>
   Inject (AllegraUtxoPredFailure era) (BabbageUtxoPredFailure era)
   where
   inject = AlonzoInBabbageUtxoPredFailure . utxoPredFailMaToAlonzo
 
 instance
-  Inject (PredicateFailure (EraRule "PPUP" era)) (PredicateFailure (EraRule "UTXOS" era)) =>
+  Inject (PPUPPredFailure era) (PredicateFailure (EraRule "UTXOS" era)) =>
   Inject (ShelleyUtxoPredFailure era) (BabbageUtxoPredFailure era)
   where
   inject = AlonzoInBabbageUtxoPredFailure . utxoPredFailShelleyToAlonzo
@@ -341,7 +342,7 @@ utxoTransition ::
     Environment (EraRule "UTXOS" era) ~ UtxoEnv era,
     State (EraRule "UTXOS" era) ~ Shelley.ShelleyUTxOState era,
     Signal (EraRule "UTXOS" era) ~ Tx era,
-    Inject (PredicateFailure (EraRule "PPUP" era)) (PredicateFailure (EraRule "UTXOS" era))
+    Inject (PPUPPredFailure era) (PredicateFailure (EraRule "UTXOS" era))
   ) =>
   TransitionRule (BabbageUTXO era)
 utxoTransition = do
@@ -438,7 +439,7 @@ instance
     Environment (EraRule "UTXOS" era) ~ UtxoEnv era,
     State (EraRule "UTXOS" era) ~ Shelley.ShelleyUTxOState era,
     Signal (EraRule "UTXOS" era) ~ Tx era,
-    Inject (PredicateFailure (EraRule "PPUP" era)) (PredicateFailure (EraRule "UTXOS" era)),
+    Inject (PPUPPredFailure era) (PredicateFailure (EraRule "UTXOS" era)),
     PredicateFailure (EraRule "UTXO" era) ~ BabbageUtxoPredFailure era,
     ProtVerAtMost era 8
   ) =>

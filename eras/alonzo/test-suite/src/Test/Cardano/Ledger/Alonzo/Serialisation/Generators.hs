@@ -90,6 +90,7 @@ import Test.Cardano.Ledger.Shelley.ConcreteCryptoTypes (Mock)
 import Test.Cardano.Ledger.Shelley.Serialisation.EraIndepGenerators ()
 import Test.Cardano.Ledger.ShelleyMA.Serialisation.Generators (genMintValues)
 import Test.QuickCheck
+import Cardano.Ledger.Shelley.LedgerState (PPUPPredFailure)
 
 instance Era era => Arbitrary (Data era) where
   arbitrary = Data <$> arbitrary
@@ -312,7 +313,7 @@ instance Arbitrary TagMismatchDescription where
     oneof [pure PassedUnexpectedly, FailedUnexpectedly <$> ((:|) <$> arbitrary <*> arbitrary)]
 
 instance
-  (Era era, Mock (EraCrypto era), Arbitrary (PredicateFailure (EraRule "PPUP" era))) =>
+  (Era era, Mock (EraCrypto era), Arbitrary (PPUPPredFailure era)) =>
   Arbitrary (AlonzoUtxosPredFailure era)
   where
   arbitrary =

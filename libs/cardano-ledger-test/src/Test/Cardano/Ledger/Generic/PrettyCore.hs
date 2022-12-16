@@ -63,7 +63,7 @@ import Cardano.Ledger.Shelley.LedgerState
     LedgerState (..),
     NewEpochState (..),
     PState (..),
-    ShelleyUTxOState (..), PPUPState,
+    ShelleyUTxOState (..), PPUPState, PPUPPredFailure,
   )
 import Cardano.Ledger.Shelley.Rules as Shelley
   ( ShelleyBbodyPredFailure (..),
@@ -414,7 +414,7 @@ instance
 -- Predicate Failure for Alonzo UTXOS
 
 ppUtxosPredicateFailure ::
-  PrettyA (PredicateFailure (EraRule "PPUP" era)) =>
+  PrettyA (PPUPPredFailure era) =>
   AlonzoUtxosPredFailure era ->
   PDoc
 ppUtxosPredicateFailure (ValidationTagMismatch isvalid tag) =
@@ -427,7 +427,7 @@ ppUtxosPredicateFailure (CollectErrors es) =
   ppRecord' mempty [("When collecting inputs for twophase scripts, these went wrong.", ppList ppCollectError es)]
 ppUtxosPredicateFailure (Alonzo.UpdateFailure p) = prettyA p
 
-instance PrettyA (PredicateFailure (EraRule "PPUP" era)) => PrettyA (AlonzoUtxosPredFailure era) where
+instance PrettyA (PPUPPredFailure era) => PrettyA (AlonzoUtxosPredFailure era) where
   prettyA = ppUtxosPredicateFailure
 
 ppCollectError :: CollectError c -> PDoc
@@ -460,7 +460,7 @@ instance PrettyA FailureDescription where
 ppUtxoPFShelley ::
   forall era.
   ( PrettyCore era,
-    PrettyA (PredicateFailure (EraRule "PPUP" era))
+    PrettyA (PPUPPredFailure era)
   ) =>
   ShelleyUtxoPredFailure era ->
   PDoc
@@ -511,7 +511,7 @@ ppUtxoPFShelley (Shelley.OutputBootAddrAttrsTooBig xs) =
 
 instance
   ( PrettyCore era,
-    PrettyA (PredicateFailure (EraRule "PPUP" era))
+    PrettyA (PPUPPredFailure era)
   ) =>
   PrettyA (ShelleyUtxoPredFailure era)
   where
@@ -546,7 +546,7 @@ instance PrettyA (ShelleyPpupPredFailure era) where
 ppUtxoPFMary ::
   forall era.
   ( PrettyCore era,
-    PrettyA (PredicateFailure (EraRule "PPUP" era))
+    PrettyA (PPUPPredFailure era)
   ) =>
   AllegraUtxoPredFailure era ->
   PDoc
@@ -603,7 +603,7 @@ ppUtxoPFMary (Allegra.OutputTooBigUTxO outs) =
 
 instance
   ( PrettyCore era,
-    PrettyA (PredicateFailure (EraRule "PPUP" era))
+    PrettyA (PPUPPredFailure era)
   ) =>
   PrettyA (AllegraUtxoPredFailure era)
   where

@@ -21,7 +21,7 @@ module Cardano.Ledger.Shelley.Rules.Utxo
     ShelleyUtxoPredFailure (..),
     UtxoEvent (..),
     PredicateFailure,
-    updateShelleyUTxOState,
+    updateUTxOState,
 
     -- * Validations
     validateInputSetEmptyUTxO,
@@ -125,6 +125,7 @@ import Lens.Micro.Extras (view)
 import NoThunks.Class (NoThunks (..))
 import Numeric.Natural (Natural)
 import Validation (failureUnless)
+import Cardano.Ledger.Shelley.LedgerState (PPUPPredFailure)
 
 data UtxoEnv era
   = UtxoEnv
@@ -163,7 +164,7 @@ data ShelleyUtxoPredFailure era
       !(Set (RewardAcnt (EraCrypto era))) -- the set of reward addresses with incorrect network IDs
   | OutputTooSmallUTxO
       ![TxOut era] -- list of supplied transaction outputs that are too small
-  | UpdateFailure (PredicateFailure (EraRule "PPUP" era)) -- Subtransition Failures
+  | UpdateFailure (PPUPPredFailure era) -- Subtransition Failures
   | OutputBootAddrAttrsTooBig
       ![TxOut era] -- list of supplied bad transaction outputs
   deriving (Generic)
@@ -171,21 +172,21 @@ data ShelleyUtxoPredFailure era
 deriving stock instance
   ( Show (Value era),
     Show (TxOut era),
-    Show (PredicateFailure (EraRule "PPUP" era))
+    Show (PPUPPredFailure era)
   ) =>
   Show (ShelleyUtxoPredFailure era)
 
 deriving stock instance
   ( Eq (Value era),
     Eq (TxOut era),
-    Eq (PredicateFailure (EraRule "PPUP" era))
+    Eq (PPUPPredFailure era)
   ) =>
   Eq (ShelleyUtxoPredFailure era)
 
 instance
   ( NoThunks (Value era),
     NoThunks (TxOut era),
-    NoThunks (PredicateFailure (EraRule "PPUP" era))
+    NoThunks (PPUPPredFailure era)
   ) =>
   NoThunks (ShelleyUtxoPredFailure era)
 
@@ -194,7 +195,7 @@ instance
     CC.Crypto (EraCrypto era),
     ToCBOR (Value era),
     ToCBOR (TxOut era),
-    ToCBOR (PredicateFailure (EraRule "PPUP" era))
+    ToCBOR (PPUPPredFailure era)
   ) =>
   ToCBOR (ShelleyUtxoPredFailure era)
   where
@@ -247,7 +248,7 @@ instance
 
 instance
   ( EraTxOut era,
-    FromCBOR (PredicateFailure (EraRule "PPUP" era))
+    FromCBOR (PPUPPredFailure era)
   ) =>
   FromCBOR (ShelleyUtxoPredFailure era)
   where
@@ -309,7 +310,9 @@ instance
     PPUPState era ~ ShelleyPPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
     State (EraRule "PPUP" era) ~ ShelleyPPUPState era,
-    ProtVerAtMost era 8
+    ProtVerAtMost era 8,
+    Eq (PPUPPredFailure era),
+    Show (PPUPPredFailure era)
   ) =>
   STS (ShelleyUTXO era)
   where
@@ -379,9 +382,9 @@ utxoInductive ::
     PredicateFailure (utxo era) ~ ShelleyUtxoPredFailure era,
     Event (utxo era) ~ UtxoEvent era,
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
+    State (EraRule "PPUP" era) ~ ShelleyPPUPState era,
     PPUPState era ~ ShelleyPPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
-    State (EraRule "PPUP" era) ~ ShelleyPPUPState era,
     HasField "_keyDeposit" (PParams era) Coin,
     HasField "_poolDeposit" (PParams era) Coin,
     HasField "_maxTxSize" (PParams era) Natural,
@@ -433,7 +436,7 @@ utxoInductive = do
   let totalDeposits' = totalTxDeposits pp dpstate txb
   tellEvent $ TotalDeposits totalDeposits'
   let depositChange = totalDeposits' Val.<-> refunded
-  pure $! updateShelleyUTxOState u txb depositChange ppup'
+  pure $! updateUTxOState u txb depositChange ppup'
 
 -- | The ttl field marks the top of an open interval, so it must be strictly
 -- less than the slot, so fail if it is (>=).
@@ -597,7 +600,7 @@ validateMaxTxSizeUTxO pp tx =
     maxTxSize = toInteger (getField @"_maxTxSize" pp)
     txSize = tx ^. sizeTxF
 
-updateShelleyUTxOState ::
+updateUTxOState ::
   forall era.
   EraTxBody era =>
   ShelleyUTxOState era ->
@@ -605,7 +608,7 @@ updateShelleyUTxOState ::
   Coin ->
   PPUPState era ->
   ShelleyUTxOState era
-updateShelleyUTxOState ShelleyUTxOState {sutxosUtxo, sutxosDeposited, sutxosFees, sutxosStakeDistr} txb depositChange ppups =
+updateUTxOState ShelleyUTxOState {sutxosUtxo, sutxosDeposited, sutxosFees, sutxosStakeDistr} txb depositChange ppups =
   let UTxO utxo = sutxosUtxo
       !utxoAdd = txouts txb -- These will be inserted into the UTxO
       {- utxoDel  = txins txb ◁ utxo -}
@@ -624,7 +627,7 @@ updateShelleyUTxOState ShelleyUTxOState {sutxosUtxo, sutxosDeposited, sutxosFees
 instance
   ( Era era,
     STS (ShelleyPPUP era),
-    PredicateFailure (EraRule "PPUP" era) ~ ShelleyPpupPredFailure era,
+    PPUPPredFailure era ~ ShelleyPpupPredFailure era,
     Event (EraRule "PPUP" era) ~ PpupEvent era
   ) =>
   Embed (ShelleyPPUP era) (ShelleyUTXO era)
@@ -635,7 +638,7 @@ instance
 -- =================================
 
 instance
-  PredicateFailure (EraRule "PPUP" era) ~ ShelleyPpupPredFailure era =>
+  PPUPPredFailure era ~ ShelleyPpupPredFailure era =>
   Inject (ShelleyPpupPredFailure era) (ShelleyUtxoPredFailure era)
   where
   inject = UpdateFailure

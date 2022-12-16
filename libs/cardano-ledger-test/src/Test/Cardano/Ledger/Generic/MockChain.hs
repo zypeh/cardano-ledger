@@ -14,6 +14,7 @@
 module Test.Cardano.Ledger.Generic.MockChain where
 
 import Cardano.Ledger.BaseTypes (BlocksMade (..), ShelleyBase)
+import Cardano.Ledger.Conway.Rules ()
 import qualified Cardano.Ledger.Core as Core
 import qualified Cardano.Ledger.Crypto as CC
 import Cardano.Ledger.Era (Era (EraCrypto))
@@ -30,7 +31,8 @@ import Cardano.Ledger.Shelley.LedgerState
   ( EpochState (..),
     LedgerState (..),
     NewEpochState (..),
-    StashedAVVMAddresses, PPUPState,
+    PPUPState,
+    StashedAVVMAddresses,
   )
 import Cardano.Ledger.Shelley.RewardUpdate (PulsingRewUpdate)
 import Cardano.Ledger.Shelley.Rules
@@ -247,7 +249,7 @@ instance PrettyA (MockBlock era) where prettyA = ppMockBlock
 
 ppMockChainFailure :: Proof era -> MockChainFailure era -> PDoc
 ppMockChainFailure proof x = case proof of
-  (Conway _) -> undefined
+  (Conway _) -> help x
   (Babbage _) -> help x
   (Alonzo _) -> help x
   (Mary _) -> help x

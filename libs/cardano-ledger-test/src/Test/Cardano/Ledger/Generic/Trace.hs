@@ -1,3 +1,4 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -49,9 +50,10 @@ import Cardano.Ledger.Shelley.LedgerState
     EpochState (..),
     LedgerState (..),
     NewEpochState (..),
+    PPUPState,
     PState (..),
+    ShelleyUTxOState (..),
     StashedAVVMAddresses,
-    ShelleyUTxOState (..), PPUPState,
   )
 import qualified Cardano.Ledger.Shelley.PParams as Shelley (ShelleyPParamsHKD (..))
 import Cardano.Ledger.Shelley.Rules
@@ -505,9 +507,7 @@ forEachEpochTrace ::
 forEachEpochTrace proof tracelen genSize f = do
   let newEpoch tr1 tr2 = nesEL (mcsNes tr1) /= nesEL (mcsNes tr2)
   trc <- case proof of
-    -- TODO re-enable this once we have added all the new rules to Conway
-    -- Conway _ -> genTrace proof tracelen genSize (initStableFields proof)
-    Conway _ -> undefined
+    Conway _ -> undefined --genTrace proof tracelen genSize (initStableFields proof) TODO
     Babbage _ -> genTrace proof tracelen genSize (initStableFields proof)
     Alonzo _ -> genTrace proof tracelen genSize (initStableFields proof)
     Allegra _ -> genTrace proof tracelen genSize (initStableFields proof)

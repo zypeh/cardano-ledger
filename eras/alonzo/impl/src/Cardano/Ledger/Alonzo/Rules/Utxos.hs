@@ -66,7 +66,7 @@ import Cardano.Ledger.Binary.Coders
 import Cardano.Ledger.Coin
 import Cardano.Ledger.Core
 import Cardano.Ledger.Rules.ValidationMode (Inject (..), lblStatic)
-import Cardano.Ledger.Shelley.LedgerState (PPUPState, ShelleyPPUPState (..), ShelleyUTxOState (..), keyTxRefunds, totalTxDeposits, updateStakeDistribution)
+import Cardano.Ledger.Shelley.LedgerState (PPUPState, ShelleyPPUPState (..), ShelleyUTxOState (..), keyTxRefunds, totalTxDeposits, updateStakeDistribution, PPUPPredFailure)
 import qualified Cardano.Ledger.Shelley.LedgerState as Shelley
 import Cardano.Ledger.Shelley.PParams (Update)
 import Cardano.Ledger.Shelley.Rules
@@ -74,7 +74,7 @@ import Cardano.Ledger.Shelley.Rules
     ShelleyPPUP,
     ShelleyPpupPredFailure,
     UtxoEnv (..),
-    updateShelleyUTxOState,
+    updateUTxOState,
   )
 import Cardano.Ledger.UTxO (EraUTxO (..), UTxO (..), coinBalance)
 import Cardano.Ledger.Val ((<->))
@@ -110,14 +110,16 @@ instance
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
     PPUPState era ~ ShelleyPPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
+    State (EraRule "PPUP" era) ~ PPUPState era,
     HasField "_costmdls" (PParams era) CostModels,
     HasField "_protocolVersion" (PParams era) ProtVer,
     HasField "_keyDeposit" (PParams era) Coin,
     HasField "_poolDeposit" (PParams era) Coin,
-    ToCBOR (PredicateFailure (EraRule "PPUP" era)), -- Serializing the PredicateFailure,
+    ToCBOR (PPUPPredFailure era), -- Serializing the PredicateFailure,
     ProtVerAtMost era 8,
     ShelleyEraTxBody era,
-    State (EraRule "PPUP" era) ~ ShelleyPPUPState era
+    Eq (PPUPPredFailure era),
+    Show (PPUPPredFailure era)
   ) =>
   STS (AlonzoUTXOS era)
   where
@@ -137,7 +139,7 @@ data AlonzoUtxosEvent era
 instance
   ( Era era,
     STS (ShelleyPPUP era),
-    PredicateFailure (EraRule "PPUP" era) ~ ShelleyPpupPredFailure era,
+    PPUPPredFailure era ~ ShelleyPpupPredFailure era,
     Event (EraRule "PPUP" era) ~ Event (ShelleyPPUP era)
   ) =>
   Embed (ShelleyPPUP era) (AlonzoUTXOS era)
@@ -155,13 +157,15 @@ utxosTransition ::
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
     PPUPState era ~ ShelleyPPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
+    State (EraRule "PPUP" era) ~ PPUPState era,
     Embed (EraRule "PPUP" era) (AlonzoUTXOS era),
-    State (EraRule "PPUP" era) ~ ShelleyPPUPState era,
     HasField "_costmdls" (PParams era) CostModels,
     HasField "_keyDeposit" (PParams era) Coin,
     HasField "_poolDeposit" (PParams era) Coin,
-    ToCBOR (PredicateFailure (EraRule "PPUP" era)), -- Serializing the PredicateFailure
-    ProtVerAtMost era 8
+    ToCBOR (PPUPPredFailure era), -- Serializing the PredicateFailure
+    ProtVerAtMost era 8,
+    Eq (PPUPPredFailure era),
+    Show (PPUPPredFailure era)
   ) =>
   TransitionRule (AlonzoUTXOS era)
 utxosTransition =
@@ -218,8 +222,8 @@ scriptsValidateTransition ::
     STS (AlonzoUTXOS era),
     Script era ~ AlonzoScript era,
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
-    State (EraRule "PPUP" era) ~ PPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
+    State (EraRule "PPUP" era) ~ PPUPState era,
     Embed (EraRule "PPUP" era) (AlonzoUTXOS era),
     HasField "_keyDeposit" (PParams era) Coin,
     HasField "_poolDeposit" (PParams era) Coin,
@@ -252,7 +256,7 @@ scriptsValidateTransition = do
       TRC
         (PPUPEnv slot pp genDelegs, pup, strictMaybeToMaybe $ txBody ^. updateTxBodyL)
 
-  pure $! updateShelleyUTxOState u txBody depositChange ppup'
+  pure $! updateUTxOState u txBody depositChange ppup'
 
 scriptsNotValidateTransition ::
   forall era.
@@ -358,14 +362,14 @@ data AlonzoUtxosPredFailure era
     --         might validate that shouldn't. So we double check in the function
     --         collectTwoPhaseScriptInputs, it should find data for every Script.
     CollectErrors [CollectError (EraCrypto era)]
-  | UpdateFailure (PredicateFailure (EraRule "PPUP" era))
+  | UpdateFailure (PPUPPredFailure era)
   deriving
     (Generic)
 
 instance
   ( Era era,
-    ToCBOR (PredicateFailure (EraRule "PPUP" era)),
-    Show (TxOut era)
+    Show (TxOut era),
+    ToCBOR (PPUPPredFailure era)
   ) =>
   ToCBOR (AlonzoUtxosPredFailure era)
   where
@@ -376,7 +380,7 @@ instance
 
 instance
   ( Era era,
-    FromCBOR (PredicateFailure (EraRule "PPUP" era))
+    FromCBOR (PPUPPredFailure era)
   ) =>
   FromCBOR (AlonzoUtxosPredFailure era)
   where
@@ -389,13 +393,13 @@ instance
 
 deriving stock instance
   ( Show (Shelley.ShelleyUTxOState era),
-    Show (PredicateFailure (EraRule "PPUP" era))
+    Show (PPUPPredFailure era)
   ) =>
   Show (AlonzoUtxosPredFailure era)
 
 instance
   ( Eq (Shelley.ShelleyUTxOState era),
-    Eq (PredicateFailure (EraRule "PPUP" era))
+    Eq (PPUPPredFailure era)
   ) =>
   Eq (AlonzoUtxosPredFailure era)
   where
@@ -406,7 +410,7 @@ instance
 
 instance
   ( NoThunks (Shelley.ShelleyUTxOState era),
-    NoThunks (PredicateFailure (EraRule "PPUP" era))
+    NoThunks (PPUPPredFailure era)
   ) =>
   NoThunks (AlonzoUtxosPredFailure era)
 
@@ -437,7 +441,7 @@ when2Phase = labeled $ lblStatic NE.:| [lbl2Phase]
 -- Inject instances
 
 instance
-  PredicateFailure (EraRule "PPUP" era) ~ ShelleyPpupPredFailure era =>
+  PPUPPredFailure era ~ ShelleyPpupPredFailure era =>
   Inject (ShelleyPpupPredFailure era) (AlonzoUtxosPredFailure era)
   where
   inject = UpdateFailure

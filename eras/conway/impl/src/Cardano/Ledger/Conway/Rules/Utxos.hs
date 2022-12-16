@@ -11,30 +11,29 @@ import Cardano.Ledger.Alonzo.Scripts (AlonzoScript)
 import Cardano.Ledger.Alonzo.Tx (AlonzoTx (..))
 import Cardano.Ledger.BaseTypes (ShelleyBase)
 import Cardano.Ledger.Conway.Era (ConwayUTXOS)
-import Cardano.Ledger.Conway.PParams (BabbagePParamsUpdate)
 import Cardano.Ledger.Conway.TxOut (BabbageTxOut (..))
-import Cardano.Ledger.Core (Era (..), EraPParams (..), EraRule, EraScript (..), EraTxOut (..), Value)
+import Cardano.Ledger.Core (Era (..), EraScript (..), EraTxOut (..), Value)
 import Cardano.Ledger.Mary.Value (MaryValue (..))
-import Cardano.Ledger.Rules.ValidationMode (Inject)
-import Cardano.Ledger.Shelley.LedgerState (ShelleyPPUPState (..), ShelleyUTxOState (..), PPUPState)
-import Cardano.Ledger.Shelley.Rules (ShelleyPpupPredFailure, UtxoEnv (..))
+import Cardano.Ledger.Shelley.LedgerState (PPUPState, PPUPPredFailure)
+import Cardano.Ledger.Shelley.Rules (UtxoEnv (..))
 import Control.State.Transition.Extended (STS (..))
+import Cardano.Ledger.Conway.LedgerState.Types (ConwayUTxOState(..))
 
 instance
   ( EraScript era,
-    PredicateFailure (EraRule "PPUP" era) ~ ShelleyPpupPredFailure era,
+    Eq (PPUPState era),
+    Show (PPUPState era),
     TxOut era ~ BabbageTxOut era,
     Value era ~ MaryValue (EraCrypto era),
     Script era ~ AlonzoScript era,
-    PPUPState era ~ ShelleyPPUPState era,
-    PParamsUpdate era ~ BabbagePParamsUpdate era,
-    Inject (PredicateFailure (EraRule "PPUP" era)) (PredicateFailure (EraRule "UTXOS" era))
+    Eq (PPUPPredFailure era),
+    Show (PPUPPredFailure era)
   ) =>
   STS (ConwayUTXOS era)
   where
   type BaseM (ConwayUTXOS era) = ShelleyBase
   type Environment (ConwayUTXOS era) = UtxoEnv era
-  type State (ConwayUTXOS era) = ShelleyUTxOState era
+  type State (ConwayUTXOS era) = ConwayUTxOState era
   type Signal (ConwayUTXOS era) = AlonzoTx era
   type PredicateFailure (ConwayUTXOS era) = AlonzoUtxosPredFailure era
   type Event (ConwayUTXOS era) = AlonzoUtxosEvent era
