@@ -196,14 +196,15 @@ genDelegsZero = GenDelegs Map.empty
 
 instantaneousRewardsZero :: InstantaneousRewards c
 instantaneousRewardsZero = InstantaneousRewards Map.empty Map.empty mempty mempty
-dStateZero :: DState c
 
+dStateZero :: DState c
 dStateZero =
   DState
     { dsUnified = UM.empty,
       dsFutureGenDelegs = Map.empty,
       dsGenDelegs = genDelegsZero,
-      dsIRewards = instantaneousRewardsZero,
+      dsIRewards = instantaneousRewardsZero
+    }
 
 pStateZero :: PState c
 pStateZero =
@@ -317,11 +318,19 @@ class Extract t era where
 instance EraCrypto era ~ c => Extract (DState c) era where
   extract x =
     DState
-      (UM.unify (mRewards x) (mDelegations x) Map.empty)
+      (UM.unify (makeRewards x) (mDelegations x) Map.empty)
       Map.empty
       genDelegsZero
       instantaneousRewardsZero
-      (mKeyDeposits x)
+
+makeRewards :: ModelNewEpochState era -> Map.Map (Credential 'Staking (EraCrypto era)) UM.RDPair
+makeRewards mnes = Map.mapWithKey f credRewMap
+  where
+    credRewMap = mRewards mnes
+    credDepMap = mKeyDeposits mnes
+    f cred rew = case Map.lookup cred credDepMap of
+      Just dep -> UM.RDPair (UM.compactCoinOrError rew) (UM.compactCoinOrError dep)
+      Nothing -> error ("In makeRewards the reward and deposit maps are not in synch " ++ show cred)
 
 instance EraCrypto era ~ c => Extract (PState c) era where
   extract x = PState (mPoolParams x) (mFPoolParams x) (mRetiring x) Map.empty
@@ -366,9 +375,9 @@ abstract x =
   ModelNewEpochState
     { mPoolParams = (psStakePoolParams . dpsPState . lsDPState . esLState . nesEs) x,
       mPoolDeposits = (psDeposits . dpsPState . lsDPState . esLState . nesEs) x,
-      mKeyDeposits = (dsDeposits . dpsDState . lsDPState . esLState . nesEs) x,
       mRewards = (UM.rewView . dsUnified . dpsDState . lsDPState . esLState . nesEs) x,
       mDelegations = (UM.delView . dsUnified . dpsDState . lsDPState . esLState . nesEs) x,
+      mKeyDeposits = (UM.depositView . dsUnified . dpsDState . lsDPState . esLState . nesEs) x,
       mUTxO = (unUTxO . utxosUtxo . lsUTxOState . esLState . nesEs) x,
       mMutFee = Map.empty,
       mAccountState = (esAccountState . nesEs) x,

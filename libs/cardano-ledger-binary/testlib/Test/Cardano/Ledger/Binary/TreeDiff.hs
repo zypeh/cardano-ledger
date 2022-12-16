@@ -100,6 +100,8 @@ expectExprEqual x y = expectExprEqualWithMessage "Expected two values to be equa
 
 expectExprEqualWithMessage :: (ToExpr a, Eq a, HasCallStack) => [Char] -> a -> a -> Expectation
 expectExprEqualWithMessage message expected actual =
-  unless (actual == expected) (expectationFailure msg)
+  unless
+    (actual == expected)
+    (putStrLn msg >> expectationFailure "expectExprEqual fails (expected red, actual green)")
   where
     msg = (if null message then "" else message ++ "\n") ++ diffExpr expected actual

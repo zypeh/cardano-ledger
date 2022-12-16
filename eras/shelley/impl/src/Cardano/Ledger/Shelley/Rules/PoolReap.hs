@@ -101,7 +101,7 @@ instance
   transitionRules = [poolReapTransition]
   assertions =
     [ PostCondition
-        "Deposit pot must equal obligation"
+        "Deposit pot must equal obligation (PoolReap)"
         ( \(TRC (_, _, _)) st ->
             obligationDPState (DPState (prDState st) (prPState st)) == utxosDeposited (prUTxOSt st)
         ),

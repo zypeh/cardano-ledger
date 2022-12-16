@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
@@ -15,7 +16,7 @@
 --   and a fourth one in the inverse direction.
 --   The advantage of using 'UMap' is that 'UMap' stores all the information compactly, by exploiting the
 --   the large amount of sharing in the 2 maps.
-module Cardano.Ledger.UMapCompact {-
+module Cardano.Ledger.UMapCompact
   ( -- * Constructing 'UMap'
     -- $UMAP
     Trip (Triple),
@@ -32,8 +33,10 @@ module Cardano.Ledger.UMapCompact {-
     unUnify,
     viewToVMap,
     rewView,
+    compactRewView,
     delView,
     ptrView,
+    depositView,
     domRestrictedView,
     zero,
     zeroMaybe,
@@ -42,6 +45,8 @@ module Cardano.Ledger.UMapCompact {-
     fromCompact,
     addCompact,
     sumCompactCoin,
+    sumRewardsView,
+    sumDepositView,
     compactCoinOrError,
 
     -- * Set and Map operations on Views
@@ -53,6 +58,7 @@ module Cardano.Ledger.UMapCompact {-
     insertWith',
     insert,
     insert',
+    adjust,
     lookup,
     isNull,
     domain,
@@ -60,6 +66,7 @@ module Cardano.Ledger.UMapCompact {-
     (∪),
     (⨃),
     (∪+),
+    unionKeyDeposits,
     (⋪),
     (⋫),
     (◁),
@@ -71,7 +78,9 @@ module Cardano.Ledger.UMapCompact {-
     findWithDefault,
     size,
     unify,
-  ) -}
+    RDPair (..),
+    rdPair,
+  )
 where
 
 import Cardano.Ledger.Binary
@@ -100,12 +109,16 @@ import Prelude hiding (lookup)
 
 -- ================================================
 
--- A Reward-Deposit Pair, will be used to represent the reward 
+-- A Reward-Deposit Pair, will be used to represent the reward
 -- and the deposit for a given (Credential 'Staking c)
 data RDPair = RDPair
-  { rdReward ::  {-# UNPACK #-} !(CompactForm Coin),
-    rdDeposit :: {-# UNPACK #-} !(CompactForm Coin)  }
+  { rdReward :: {-# UNPACK #-} !(CompactForm Coin),
+    rdDeposit :: {-# UNPACK #-} !(CompactForm Coin)
+  }
   deriving (Show, Eq, Ord, Generic, NoThunks, NFData)
+
+rdPair :: Coin -> Coin -> RDPair
+rdPair rew dep = RDPair (compactCoinOrError rew) (compactCoinOrError dep)
 
 instance ToCBOR RDPair where
   toCBOR (RDPair (CompactCoin rew) (CompactCoin deposit)) =
@@ -118,7 +131,7 @@ instance FromCBOR RDPair where
         a <- fromCBOR
         b <- fromCBOR
         pure (RDPair (CompactCoin a) (CompactCoin b))
-        
+
 -- ===================================================================
 -- UMAP
 
@@ -164,7 +177,6 @@ viewTrip (TFEF x y) = (SJust x, Set.empty, SJust y)
 viewTrip (TFFE x y) = (SJust x, y, SNothing)
 viewTrip (TFFF x y z) = (SJust x, y, SJust z)
 
-
 -- | Extract a delegated Reward-Deposit Pair if it is present. We can tell that the pair
 --   is present and active when Txxx has an F in the 1st position (present) and 3rd
 --   position (delegated).  I.e. TFFF and TFEF
@@ -189,7 +201,6 @@ tripReward =
     TFEF c _ -> Just c
     TFEE c -> Just c
     _ -> Nothing
-
 
 -- | Extract the Delegation PoolParams, if present. We can tell that the PoolParams are
 --   present when Txxx has an F in the third position TFFF TFEF TEFF TEEF
@@ -222,7 +233,6 @@ pattern Triple a b c <-
 
 {-# COMPLETE Triple #-}
 
-
 instance Show (Trip c) where
   show (Triple a b c) = "(Triple " ++ show a ++ " " ++ show b ++ " " ++ show c ++ ")"
 
@@ -232,7 +242,6 @@ instance Show (Trip c) where
 --   keys and one more in the inverse direction with @Ptr@ for keys and @(Credential 'Staking c)@ for values.
 data UMap c = UMap !(Map (Credential 'Staking c) (Trip c)) !(Map Ptr (Credential 'Staking c))
   deriving (Show, Eq, Generic, NoThunks, NFData)
-
 
 -- | It is worthwhile stating the invariant that holds on a Unified Map
 --   The 'ptrmap' and the 'ptrT' field of the 'tripmap' are inverses.
@@ -256,7 +265,6 @@ umInvariant stake ptr (UMap tripmap ptrmap) = forwards && backwards
             Nothing -> False
             Just (Triple _ set _) -> Set.member ptr set
 
-
 -- =====================================================
 
 -- VIEW
@@ -273,7 +281,6 @@ data View c k v where
   Ptrs ::
     !(UMap c) ->
     View c Ptr (Credential 'Staking c)
-
 
 -- ==================================================
 -- short hand constructors and selectors
@@ -298,7 +305,6 @@ ptrs ::
   Map Ptr (Credential 'Staking c) ->
   View c Ptr (Credential 'Staking c)
 ptrs x y = Ptrs (UMap x y)
-
 
 -- | Extract the underlying 'UMap' from a 'View'
 unView :: View c k v -> UMap c
@@ -328,10 +334,12 @@ viewToVMap view =
     toReward (key, t) = (,) key <$> tripReward t
     toDelegation (key, t) = (,) key <$> tripDelegation t
 
-
 -- | Materialize the Rewards Map from a 'UMap'
 rewView :: UMap c -> Map.Map (Credential 'Staking c) Coin
 rewView x = Map.map (fromCompact . rdReward) $ unUnify (Rewards x)
+
+compactRewView :: UMap c -> Map.Map (Credential 'Staking c) (CompactForm Coin)
+compactRewView x = Map.map rdReward $ unUnify (Rewards x)
 
 -- | Materialize the Deposit  Map from a 'UMap'
 depositView :: UMap c -> Map.Map (Credential 'Staking c) Coin
@@ -385,13 +393,6 @@ instance Foldable (View c k) where
 
 -- =======================================================
 -- Operations on Triple
-
-addStrictMaybe :: StrictMaybe (CompactForm Coin) -> StrictMaybe (CompactForm Coin) -> StrictMaybe (CompactForm Coin)
-addStrictMaybe SNothing SNothing = SNothing
-addStrictMaybe (SJust w) SNothing = SJust w
-addStrictMaybe SNothing (SJust z) = SJust z
-addStrictMaybe (SJust (CompactCoin c1)) (SJust (CompactCoin c2)) = SJust (CompactCoin (c1 + c2))
-
 
 -- | Is there no information in a Triple? If so then we can delete it from the UnifedMap
 zero :: Trip c -> Bool
@@ -468,7 +469,7 @@ insertWith' comb stakeid newpoolid (Delegations (UMap tripmap ptrmap)) =
   where
     comb2 Nothing = Just (Triple SNothing Set.empty (SJust newpoolid))
     comb2 (Just (Triple x y (SJust old))) = Just (Triple x y (SJust (comb old newpoolid)))
-    comb2 (Just (Triple x y SNothing)) = Just (Triple x y (SJust newpoolid)) 
+    comb2 (Just (Triple x y SNothing)) = Just (Triple x y (SJust newpoolid))
 insertWith' comb ptr stake (Ptrs (UMap tripmap ptrmap)) =
   let (oldstake, newstake) =
         case Map.lookup ptr ptrmap of -- This is tricky, because we need to retract the oldstake
@@ -476,10 +477,12 @@ insertWith' comb ptr stake (Ptrs (UMap tripmap ptrmap)) =
           Just stake2 -> (stake2, comb stake2 stake)
       -- Delete old pointer from set in Triple, but also delete the whole triple if it goes to Zero.
       retract stakeid pointer m = Map.update ok stakeid m
-        where ok (Triple c set d) = zeroMaybe (Triple c (Set.delete pointer set) d)
+        where
+          ok (Triple c set d) = zeroMaybe (Triple c (Set.delete pointer set) d)
       -- Add the new pointer to the set in Triple
       tripmap2 = Map.update addPtr newstake (retract oldstake ptr tripmap)
-        where addPtr (Triple a set b) = Just (Triple a (Set.insert ptr set) b)
+        where
+          addPtr (Triple a set b) = Just (Triple a (Set.insert ptr set) b)
       ptrmap2 = Map.insert ptr newstake ptrmap
    in Ptrs (UMap tripmap2 ptrmap2)
 
@@ -505,6 +508,13 @@ insert ::
   UMap c
 insert k v m = unView (insert' k v m)
 
+adjust :: (RDPair -> RDPair) -> k -> View c k RDPair -> UMap c
+adjust f k (Rewards (UMap tripmap ptrmap)) = UMap (Map.adjust g k tripmap) ptrmap
+  where
+    g (Triple (SJust rdp) x y) = Triple (SJust (f rdp)) x y
+    g (Triple SNothing x y) = Triple SNothing x y
+
+-- ==================================================
 lookup :: k -> View c k v -> Maybe v
 lookup stakeid (Rewards (UMap tripmap _)) =
   Map.lookup stakeid tripmap >>= tripReward
@@ -555,11 +565,22 @@ view ∪ (k, v) = insertWith (\old _new -> old) k v view
 -- evalUnified  (delegations ds ⨃ singleton hk dpool) })
 -- evalUnified (rewards' ⨃ wdrls_')
 
--- | Union with right preference, so if 'k', already exists, then its value is overwritten with 'v'
+-- | Union with right preference, so if 'k', already exists, then old 'v' is overwritten with the new 'v'
+--   Special rules apply for the Rewards view, where only the 'rdReward' field of the RDPair is
+--   overwritten, and the old 'rdDeposit' value persists. In this case it is an invariant that
+--   the domain 'mp' is a subset of the domain of the Rewards View. See the single case in
+--   module Cardano.Ledger.Shelley.Rules.Delegs, in the dealing with Wdrl's where it is used at
+--   this type.
 (⨃) ::
   View c k v ->
   Map k v ->
   UMap c
+(Rewards (UMap tripmap ptrmap)) ⨃ mp = UMap (Map.foldlWithKey' accum tripmap mp) ptrmap
+  where
+    accum !ansTripmap k (RDPair ccoin _) = Map.adjust overwrite k ansTripmap
+      where
+        overwrite (Triple (SJust (RDPair _ deposit)) a b) = Triple (SJust (RDPair ccoin deposit)) a b
+        overwrite x = x
 view ⨃ mp = unView $ Map.foldlWithKey' accum view mp
   where
     accum ans k v = insertWith' (\_old new -> new) k v ans
@@ -569,34 +590,37 @@ view ⨃ mp = unView $ Map.foldlWithKey' accum view mp
 -- evalUnified (rewards' ∪+ update)
 -- evalUnified  (Rewards u0 ∪+ refunds)
 
+-- | Add the aggegated Coin from aggRewMap to the Rewards view of the UMap
+--   we assume the domain of aggRewMap is a subset of the domain of 'tripmap'
+--   The other Views (other than Rewards) are not reachable, since they do not have DPair as 3rd parameter
 (∪+) ::
   View c k RDPair ->
-  Map k RDPair ->
+  Map k (CompactForm Coin) ->
   UMap c
-(Rewards (UMap tm pm)) ∪+ mp = UMap (unionHelp tm mp) pm
+(Rewards (UMap tripmap ptrmap)) ∪+ aggRewMap = UMap (unionHelp tripmap aggRewMap) ptrmap
 
--- The other Views are not reachable, since they do not have DPair as 3rd parameter
-
--- | Add two RDPairs, always keep the older (original deposit)
-addPair:: StrictMaybe RDPair -> StrictMaybe RDPair -> StrictMaybe RDPair
-addPair SNothing SNothing = SNothing
-addPair (SJust w) SNothing = SJust w
-addPair SNothing (SJust z) = SJust z
-addPair (SJust (RDPair oldc oldDeposit)) (SJust (RDPair newc _)) = SJust (RDPair (addCompact oldc newc) oldDeposit)
+addPairAndCoin :: StrictMaybe RDPair -> CompactForm Coin -> StrictMaybe RDPair
+addPairAndCoin SNothing _ = SNothing
+addPairAndCoin (SJust (RDPair rew deposit)) delta = SJust (RDPair (addCompact rew delta) deposit)
 
 unionHelp ::
   Ord k =>
   Map k (Trip c) ->
-  Map k RDPair ->
+  Map k (CompactForm Coin) ->
   Map k (Trip c)
 unionHelp tm mm =
   Map.mergeWithKey
-    (\_k (Triple p1 s d) p2 -> Just (Triple (addPair p1 (SJust p2)) s d))
+    (\_k (Triple p1 s deposit) delta -> Just (Triple (addPairAndCoin p1 delta) s deposit))
     id
-    (Map.map (\ pair -> (Triple (SJust pair) Set.empty SNothing)))
+    (const Map.empty) -- because mm is a subset of tm, we never add anything here.
     tm
     mm
 
+unionKeyDeposits :: View c k RDPair -> Map k (CompactForm Coin) -> UMap c
+unionKeyDeposits view coinmap = unView (Map.foldlWithKey' accum view coinmap)
+  where
+    accum view1 k ccoin = insertWith' combine k (RDPair (CompactCoin 0) ccoin) view1
+    combine (RDPair rew dep) (RDPair _ delta) = RDPair rew (addCompact dep delta)
 
 -- ============================================
 -- evalUnified (setSingleton hk ⋪ Rewards u0)
@@ -642,7 +666,7 @@ Rewards (UMap tmap pmap) ⋫ coinset = UMap (Map.foldlWithKey' accum tmap tmap) 
         then Map.update ok key ans
         else ans
     accum ans _ _ = ans
-    
+
 -- =============================================
 
 -- eval (k ∈ dom (rewards dState))
@@ -756,9 +780,18 @@ compactCoinOrError c =
 addCompact :: CompactForm Coin -> CompactForm Coin -> CompactForm Coin
 addCompact (CompactCoin x) (CompactCoin y) = CompactCoin (x + y)
 
-
 sumCompactCoin :: Foldable t => t (CompactForm Coin) -> CompactForm Coin
 sumCompactCoin t = foldl' addCompact (CompactCoin 0) t
+
+sumRewardsView :: View c k RDPair -> CompactForm Coin
+sumRewardsView rewview = foldl' accum (CompactCoin 0) rewview
+  where
+    accum ans (RDPair c _) = addCompact ans c
+
+sumDepositView :: View c k RDPair -> CompactForm Coin
+sumDepositView rewview = foldl' accum (CompactCoin 0) rewview
+  where
+    accum ans (RDPair _ d) = addCompact ans d
 
 -- =================================================
 
@@ -767,4 +800,3 @@ instance ToExpr RDPair
 instance ToExpr (Trip c)
 
 instance ToExpr (UMap c)
-
