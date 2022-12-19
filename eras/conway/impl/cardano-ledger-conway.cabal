@@ -76,7 +76,6 @@ library
                 set-algebra,
                 small-steps,
                 cardano-strict-containers,
-                vector-map,
                 transformers,
   hs-source-dirs:
     src

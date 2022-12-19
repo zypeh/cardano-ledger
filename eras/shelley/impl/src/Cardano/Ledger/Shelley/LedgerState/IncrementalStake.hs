@@ -69,8 +69,6 @@ import Cardano.Ledger.UTxO
   ( UTxO (..),
   )
 import Control.DeepSeq (NFData (rnf), deepseq)
-import Control.State.Transition (STS (State))
-import Control.SetAlgebra (dom, eval, (∈))
 import Data.Foldable (fold)
 import Data.Group (invert)
 import Data.Map.Strict (Map)

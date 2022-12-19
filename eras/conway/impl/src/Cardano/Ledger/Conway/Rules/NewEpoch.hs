@@ -23,29 +23,22 @@ import Cardano.Ledger.BaseTypes
     ShelleyBase,
     StrictMaybe (SJust, SNothing),
   )
-import Cardano.Ledger.Coin (Coin (Coin), CompactForm (CompactCoin), toDeltaCoin)
+import Cardano.Ledger.Coin (toDeltaCoin)
 import Cardano.Ledger.Conway.Era (ConwayENACTMENT, ConwayNEWEPOCH)
 import Cardano.Ledger.Conway.Rules.Enactment ()
 import Cardano.Ledger.Core
-import Cardano.Ledger.Credential (Credential)
 import Cardano.Ledger.EpochBoundary
-import Cardano.Ledger.Keys (KeyHash, KeyRole (StakePool, Staking))
-import Cardano.Ledger.PoolDistr (IndividualPoolStake (..), PoolDistr (..))
+import Cardano.Ledger.PoolDistr (PoolDistr (..))
 import Cardano.Ledger.Shelley.AdaPots (totalAdaPotsES)
 import Cardano.Ledger.Shelley.LedgerState
 import Cardano.Ledger.Shelley.Rewards (sumRewards)
 import Cardano.Ledger.Shelley.Rules (RupdEvent (..), ShelleyNewEpochEvent (..), ShelleyNewEpochPredFailure (..))
-import Cardano.Ledger.Shelley.TxBody (PoolParams (ppVrf))
 import Cardano.Ledger.Slot (EpochNo (EpochNo))
 import qualified Cardano.Ledger.Val as Val
 import Control.State.Transition
 import Data.Default (Default (..))
 import qualified Data.Map.Strict as Map
-import Data.Ratio ((%))
-import Data.VMap (VB, VMap (..))
-import qualified Data.VMap as VMap
 import GHC.Records (HasField)
-import GHC.Word (Word64)
 
 instance
   ( EraTxOut era,
@@ -156,38 +149,6 @@ tellReward ::
   Rule (ConwayNEWEPOCH era) rtype ()
 tellReward (DeltaRewardEvent (RupdEvent _ m)) | Map.null m = pure ()
 tellReward x = tellEvent x
-
-calculatePoolDistr :: SnapShot c -> PoolDistr c
-calculatePoolDistr = calculatePoolDistr' (const True)
-
-calculatePoolDistr' :: forall c. (KeyHash 'StakePool c -> Bool) -> SnapShot c -> PoolDistr c
-calculatePoolDistr' includeHash (SnapShot stake delegs poolParams) =
-  let Coin total = sumAllStake stake
-      -- total could be zero (in particular when shrinking)
-      nonZeroTotal :: Integer
-      nonZeroTotal = if total == 0 then 1 else total
-      poolStakeMap :: Map.Map (KeyHash 'StakePool c) Word64
-      poolStakeMap = calculatePoolStake includeHash delegs stake
-   in PoolDistr $
-        Map.intersectionWith
-          (\word64 poolparam -> IndividualPoolStake (toInteger word64 % nonZeroTotal) (ppVrf poolparam))
-          poolStakeMap
-          (VMap.toMap poolParams)
-
--- | Sum up the Coin (as CompactForm Coin = Word64) for each StakePool
-calculatePoolStake ::
-  (KeyHash 'StakePool c -> Bool) ->
-  VMap VB VB (Credential 'Staking c) (KeyHash 'StakePool c) ->
-  Stake c ->
-  Map.Map (KeyHash 'StakePool c) Word64
-calculatePoolStake includeHash delegs stake = VMap.foldlWithKey accum Map.empty delegs
-  where
-    accum ans cred keyHash =
-      if includeHash keyHash
-        then case VMap.lookup cred (unStake stake) of
-          Nothing -> ans
-          Just (CompactCoin c) -> Map.insertWith (+) keyHash c ans
-        else ans
 
 -- ===========================================
 

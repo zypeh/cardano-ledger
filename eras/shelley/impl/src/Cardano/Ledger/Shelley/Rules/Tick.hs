@@ -40,10 +40,9 @@ import Cardano.Ledger.Shelley.LedgerState
     FutureGenDeleg (..),
     LedgerState (..),
     NewEpochState (..),
-    PPUPState (..),
+    PPUPState,
     PulsingRewUpdate,
-    UTxOState (..),
-    UpecState (..),
+    UpecState (..), ShelleyUTxOState (..),
   )
 import Cardano.Ledger.Shelley.Rules.NewEpoch
   ( ShelleyNEWEPOCH,
@@ -220,7 +219,7 @@ validatingTickTransitionFORECAST nes slot = do
       -- return value here was used to validate their headers.
 
       let pp = esPp es
-          updates = utxosPpups . lsUTxOState . esLState $ es
+          updates = sutxosPpups . lsUTxOState . esLState $ es
       UpecState pp' _ <-
         trans @(EraRule "UPEC" era) $
           TRC (es, UpecState pp updates, ())
