@@ -84,15 +84,16 @@ import Cardano.Ledger.Shelley.LedgerState
     InstantaneousRewards (..),
     LedgerState (..),
     NewEpochState (..),
-    ShelleyPPUPState (..),
+    PPUPState,
     PState (..),
     PulsingRewUpdate (..),
     RewardUpdate (..),
+    ShelleyPPUPState (..),
     ShelleyUTxOState (..),
     applyRUpd,
     delegations,
     rewards,
-    updateStakeDistribution, PPUPState,
+    updateStakeDistribution,
   )
 import Cardano.Ledger.Shelley.PParams (ProposedPPUpdates, ShelleyPParams, ShelleyPParamsHKD (..))
 import Cardano.Ledger.Shelley.Rules (emptyInstantaneousRewards)

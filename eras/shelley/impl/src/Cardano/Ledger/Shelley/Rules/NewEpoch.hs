@@ -51,6 +51,7 @@ import Data.Set (Set)
 import GHC.Generics (Generic)
 import GHC.Records (HasField)
 import NoThunks.Class (NoThunks (..))
+
 data ShelleyNewEpochPredFailure era
   = EpochFailure (PredicateFailure (EraRule "EPOCH" era)) -- Subtransition Failures
   | CorruptRewardUpdate

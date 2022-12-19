@@ -11,13 +11,13 @@ import Cardano.Ledger.Alonzo.Scripts (AlonzoScript)
 import Cardano.Ledger.Alonzo.Tx (AlonzoTx (..))
 import Cardano.Ledger.BaseTypes (ShelleyBase)
 import Cardano.Ledger.Conway.Era (ConwayUTXOS)
+import Cardano.Ledger.Conway.LedgerState.Types (ConwayUTxOState (..))
 import Cardano.Ledger.Conway.TxOut (BabbageTxOut (..))
 import Cardano.Ledger.Core (Era (..), EraScript (..), EraTxOut (..), Value)
 import Cardano.Ledger.Mary.Value (MaryValue (..))
-import Cardano.Ledger.Shelley.LedgerState (PPUPState, PPUPPredFailure)
+import Cardano.Ledger.Shelley.LedgerState (PPUPPredFailure, PPUPState)
 import Cardano.Ledger.Shelley.Rules (UtxoEnv (..))
 import Control.State.Transition.Extended (STS (..))
-import Cardano.Ledger.Conway.LedgerState.Types (ConwayUTxOState(..))
 
 instance
   ( EraScript era,

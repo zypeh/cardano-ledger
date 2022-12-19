@@ -50,12 +50,14 @@ import Cardano.Ledger.Keys
 import Cardano.Ledger.PoolDistr (PoolDistr (..))
 import Cardano.Ledger.SafeHash (HashAnnotated)
 import Cardano.Ledger.Shelley.Era (ShelleyEra)
+import Cardano.Ledger.Shelley.PParams (ShelleyPPUPState (..))
 import Cardano.Ledger.Shelley.PoolRank
   ( NonMyopic (..),
   )
 import Cardano.Ledger.Shelley.RewardUpdate
   ( PulsingRewUpdate (..),
   )
+import Cardano.Ledger.Shelley.Rules.Ppup (ShelleyPpupPredFailure)
 import Cardano.Ledger.Slot (EpochNo (..))
 import Cardano.Ledger.TreeDiff (ToExpr)
 import Cardano.Ledger.UTxO (UTxO (..))
@@ -69,8 +71,6 @@ import qualified Data.Map.Strict as Map
 import GHC.Generics (Generic)
 import Lens.Micro (_1, _2)
 import NoThunks.Class (NoThunks (..))
-import Cardano.Ledger.Shelley.PParams (ShelleyPPUPState(..))
-import Cardano.Ledger.Shelley.Rules.Ppup (ShelleyPpupPredFailure)
 
 -- ==================================
 

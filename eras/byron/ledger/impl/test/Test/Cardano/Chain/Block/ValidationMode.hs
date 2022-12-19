@@ -19,7 +19,7 @@ import Byron.Spec.Ledger.Delegation
     DState (..),
   )
 import Byron.Spec.Ledger.GlobalParams (lovelaceCap)
-import Byron.Spec.Ledger.STS.UTXO (UTxOEnv (..), ShelleyUTxOState (..))
+import Byron.Spec.Ledger.STS.UTXO (ShelleyUTxOState (..), UTxOEnv (..))
 import Byron.Spec.Ledger.STS.UTXOWS (UTXOWS)
 import qualified Byron.Spec.Ledger.UTxO as Abstract
 import Cardano.Chain.Block

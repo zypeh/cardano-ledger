@@ -63,7 +63,8 @@ import Cardano.Ledger.Shelley.API
   )
 import Cardano.Ledger.Shelley.BlockChain (bBodySize)
 import Cardano.Ledger.Shelley.LedgerState
-  ( smartShelleyUTxOState, PPUPState,
+  ( PPUPState,
+    smartShelleyUTxOState,
   )
 import Cardano.Ledger.Shelley.Rules
   ( ShelleyBbodyPredFailure (..),

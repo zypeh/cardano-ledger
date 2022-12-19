@@ -58,8 +58,9 @@ import Cardano.Ledger.Shelley.LedgerState
     IncrementalStake (..),
     LedgerState (..),
     NewEpochState (..),
-    ShelleyPPUPState (..),
+    PPUPState,
     PState (..),
+    ShelleyPPUPState (..),
     ShelleyUTxOState (..),
     completeRupd,
     credMap,
@@ -73,7 +74,7 @@ import Cardano.Ledger.Shelley.LedgerState
     ptrsMap,
     rewards,
     rs,
-    totalTxDeposits, PPUPState,
+    totalTxDeposits,
   )
 import Cardano.Ledger.Shelley.Rewards (sumRewards)
 import Cardano.Ledger.Shelley.Rules

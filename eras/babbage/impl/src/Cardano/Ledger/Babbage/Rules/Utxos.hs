@@ -49,7 +49,7 @@ import Cardano.Ledger.BaseTypes (ProtVer, ShelleyBase, epochInfo, strictMaybeToM
 import Cardano.Ledger.Binary (ToCBOR (..))
 import Cardano.Ledger.Coin (Coin)
 import Cardano.Ledger.Core
-import Cardano.Ledger.Shelley.LedgerState (PPUPState, ShelleyPPUPState (..), ShelleyUTxOState (..), keyTxRefunds, totalTxDeposits, updateStakeDistribution, PPUPPredFailure)
+import Cardano.Ledger.Shelley.LedgerState (PPUPPredFailure, PPUPState, ShelleyPPUPState (..), ShelleyUTxOState (..), keyTxRefunds, totalTxDeposits, updateStakeDistribution)
 import Cardano.Ledger.Shelley.PParams (Update)
 import Cardano.Ledger.Shelley.Rules
   ( PpupEnv (..),
@@ -93,9 +93,9 @@ instance
     PPUPState era ~ ShelleyPPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
     ToCBOR (PPUPPredFailure era), -- Serializing the PredicateFailure
-    ProtVerAtMost era 8,
     Eq (PPUPPredFailure era),
-    Show (PPUPPredFailure era)
+    Show (PPUPPredFailure era),
+    ProtVerAtMost era 8
   ) =>
   STS (BabbageUTXOS era)
   where
@@ -139,9 +139,9 @@ utxosTransition ::
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
     Embed (EraRule "PPUP" era) (BabbageUTXOS era),
     ToCBOR (PPUPPredFailure era),
-    ProtVerAtMost era 8,
     Eq (PPUPPredFailure era),
-    Show (PPUPPredFailure era)
+    Show (PPUPPredFailure era),
+    ProtVerAtMost era 8
   ) =>
   TransitionRule (BabbageUTXOS era)
 utxosTransition =

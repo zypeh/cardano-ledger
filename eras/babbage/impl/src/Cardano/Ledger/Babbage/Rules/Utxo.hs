@@ -73,6 +73,7 @@ import Cardano.Ledger.Rules.ValidationMode
     runTest,
     runTestOnSignal,
   )
+import Cardano.Ledger.Shelley.LedgerState (PPUPPredFailure)
 import qualified Cardano.Ledger.Shelley.LedgerState as Shelley
 import Cardano.Ledger.Shelley.Rules (ShelleyUtxoPredFailure, UtxoEnv)
 import qualified Cardano.Ledger.Shelley.Rules as Shelley
@@ -105,7 +106,6 @@ import GHC.Records (HasField (getField))
 import Lens.Micro
 import NoThunks.Class (InspectHeapNamed (..), NoThunks (..))
 import Validation (Validation, failureIf, failureUnless)
-import Cardano.Ledger.Shelley.LedgerState (PPUPPredFailure)
 
 -- ======================================================
 

@@ -26,7 +26,7 @@ import Cardano.Ledger.Core
 import qualified Cardano.Ledger.Crypto as CC
 import Cardano.Ledger.Keys (GenDelegs (..))
 import Cardano.Ledger.SafeHash (hashAnnotated)
-import Cardano.Ledger.Shelley.LedgerState (IncrementalStake (..), ShelleyUTxOState (..), PPUPState)
+import Cardano.Ledger.Shelley.LedgerState (IncrementalStake (..), PPUPState, ShelleyUTxOState (..))
 import Cardano.Ledger.Shelley.Rules (UtxoEnv (..))
 import Cardano.Ledger.Shelley.UTxO (EraUTxO (..), UTxO (..), makeWitnessVKey)
 import Cardano.Ledger.Val (Val (inject))

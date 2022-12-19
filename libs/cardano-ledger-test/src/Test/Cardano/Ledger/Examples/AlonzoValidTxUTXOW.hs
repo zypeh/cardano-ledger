@@ -44,8 +44,9 @@ import Cardano.Ledger.Shelley.API
     UTxO (..),
   )
 import Cardano.Ledger.Shelley.LedgerState
-  ( ShelleyUTxOState (..),
-    smartShelleyUTxOState, PPUPState,
+  ( PPUPState,
+    ShelleyUTxOState (..),
+    smartShelleyUTxOState,
   )
 import Cardano.Ledger.Shelley.TxBody
   ( DCert (..),

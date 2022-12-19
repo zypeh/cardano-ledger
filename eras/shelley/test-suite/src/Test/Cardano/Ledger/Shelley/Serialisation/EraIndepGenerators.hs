@@ -37,7 +37,7 @@ import Cardano.Ledger.Core
 import qualified Cardano.Ledger.Core as Core
 import Cardano.Ledger.Crypto (Crypto, DSIGN)
 import Cardano.Ledger.Shelley.API hiding (SignedDSIGN)
-import Cardano.Ledger.Shelley.LedgerState (FutureGenDeleg, StashedAVVMAddresses, PPUPState)
+import Cardano.Ledger.Shelley.LedgerState (FutureGenDeleg, PPUPState, StashedAVVMAddresses)
 import Cardano.Ledger.Shelley.PoolRank
   ( Likelihood (..),
     LogWeight (..),

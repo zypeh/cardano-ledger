@@ -60,9 +60,9 @@ import Cardano.Ledger.Keys (GenDelegs)
 import Cardano.Ledger.Rules.ValidationMode (Inject (..), Test, runTest)
 import Cardano.Ledger.Shelley.AdaPots (consumedTxBody, producedTxBody)
 import Cardano.Ledger.Shelley.Era (ShelleyEra, ShelleyUTXO)
-import Cardano.Ledger.Shelley.LedgerState (DPState (..), keyTxRefunds, totalTxDeposits)
+import Cardano.Ledger.Shelley.LedgerState (DPState (..), PPUPPredFailure, keyTxRefunds, totalTxDeposits)
 import Cardano.Ledger.Shelley.LedgerState.IncrementalStake
-import Cardano.Ledger.Shelley.LedgerState.Types (ShelleyUTxOState (..), PPUPState)
+import Cardano.Ledger.Shelley.LedgerState.Types (PPUPState, ShelleyUTxOState (..))
 import Cardano.Ledger.Shelley.PParams
   ( ShelleyPPUPState (..),
     ShelleyPParams,
@@ -125,7 +125,6 @@ import Lens.Micro.Extras (view)
 import NoThunks.Class (NoThunks (..))
 import Numeric.Natural (Natural)
 import Validation (failureUnless)
-import Cardano.Ledger.Shelley.LedgerState (PPUPPredFailure)
 
 data UtxoEnv era
   = UtxoEnv

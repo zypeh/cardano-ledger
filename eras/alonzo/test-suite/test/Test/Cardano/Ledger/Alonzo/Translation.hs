@@ -70,7 +70,7 @@ alonzoTranslationTests =
       testProperty "ProposedPPUpdates compatibility" (test @API.ProposedPPUpdates),
       testProperty "PPUPState compatibility" (test @API.ShelleyPPUPState),
       testProperty "UTxO compatibility" (test @API.UTxO),
-      testProperty "ShelleyUTxOState compatibility" (test @API.ShelleyUTxOState),
+      testProperty "UTxOState compatibility" (test @API.ShelleyUTxOState),
       testProperty "LedgerState compatibility" (test @API.LedgerState)
     ]
 

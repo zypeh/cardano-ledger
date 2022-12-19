@@ -22,10 +22,12 @@ where
 
 import Cardano.Ledger.BaseTypes (ShelleyBase)
 import Cardano.Ledger.Coin (Coin (..))
+import Cardano.Ledger.Conway.Era (ConwayEPOCH)
 import Cardano.Ledger.Core
 import Cardano.Ledger.EpochBoundary (SnapShots)
-import Cardano.Ledger.Shelley.LedgerState (EpochState, LedgerState, PState (..), ShelleyUTxOState (sutxosDeposited, sutxosPpups), UpecState (..), asReserves, esAccountState, esLState, esNonMyopic, esPp, esPrevPp, esSnapshots, lsDPState, lsUTxOState, obligationDPState, pattern DPState, pattern EpochState, PPUPState)
+import Cardano.Ledger.Shelley.LedgerState (EpochState, LedgerState, PPUPState, PState (..), ShelleyUTxOState (sutxosDeposited, sutxosPpups), UpecState (..), asReserves, esAccountState, esLState, esNonMyopic, esPp, esPrevPp, esSnapshots, lsDPState, lsUTxOState, obligationDPState, pattern DPState, pattern EpochState)
 import Cardano.Ledger.Shelley.Rewards ()
+import Cardano.Ledger.Shelley.Rules (ShelleyEpochEvent (..), ShelleyEpochPredFailure (..), ShelleyPOOLREAP, ShelleyPoolreapEvent, ShelleyPoolreapPredFailure, ShelleyPoolreapState (..), ShelleyUPEC, ShelleyUpecPredFailure)
 import Cardano.Ledger.Slot (EpochNo)
 import Control.SetAlgebra (eval, (⨃))
 import Control.State.Transition
@@ -40,8 +42,6 @@ import Data.Default.Class (Default)
 import qualified Data.Map.Strict as Map
 import Data.Void (Void)
 import GHC.Records (HasField)
-import Cardano.Ledger.Shelley.Rules (ShelleyPoolreapState (..), ShelleyPOOLREAP, ShelleyPoolreapPredFailure, ShelleyPoolreapEvent, ShelleyUPEC, ShelleyUpecPredFailure, ShelleyEpochPredFailure (..), ShelleyEpochEvent (..))
-import Cardano.Ledger.Conway.Era (ConwayEPOCH)
 
 instance
   ( EraTxOut era,

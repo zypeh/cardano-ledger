@@ -23,8 +23,9 @@ import Cardano.Ledger.Shelley.LedgerState
   ( AccountState (..),
     DPState,
     LedgerState (..),
+    PPUPState,
     ShelleyUTxOState,
-    genesisState, PPUPState,
+    genesisState,
   )
 import Cardano.Ledger.Shelley.Rules
   ( DelegsEnv,

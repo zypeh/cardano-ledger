@@ -64,6 +64,7 @@ import Cardano.Ledger.Core
 import Cardano.Ledger.Crypto
 import Cardano.Ledger.Keys (KeyHash)
 import Cardano.Ledger.Mary.Value (MultiAsset)
+import Cardano.Ledger.Shelley.LedgerState (PPUPPredFailure)
 import Cardano.Ledger.Shelley.PParams (Update)
 import Cardano.Ledger.Shelley.TxBody (DCert, Wdrl)
 import Cardano.Ledger.TxIn (TxIn)
@@ -90,7 +91,6 @@ import Test.Cardano.Ledger.Shelley.ConcreteCryptoTypes (Mock)
 import Test.Cardano.Ledger.Shelley.Serialisation.EraIndepGenerators ()
 import Test.Cardano.Ledger.ShelleyMA.Serialisation.Generators (genMintValues)
 import Test.QuickCheck
-import Cardano.Ledger.Shelley.LedgerState (PPUPPredFailure)
 
 instance Era era => Arbitrary (Data era) where
   arbitrary = Data <$> arbitrary

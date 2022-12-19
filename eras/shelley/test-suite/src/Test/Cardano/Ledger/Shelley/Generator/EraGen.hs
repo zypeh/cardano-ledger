@@ -51,7 +51,7 @@ import Cardano.Ledger.Shelley.API
     ShelleyLedgersEnv,
     StakeReference (StakeRefBase),
   )
-import Cardano.Ledger.Shelley.LedgerState (StashedAVVMAddresses, ShelleyUTxOState (..))
+import Cardano.Ledger.Shelley.LedgerState (ShelleyUTxOState (..), StashedAVVMAddresses)
 import Cardano.Ledger.Shelley.PParams (Update)
 import Cardano.Ledger.Shelley.Rules (UtxoEnv)
 import Cardano.Ledger.Shelley.TxBody (DCert, ShelleyEraTxBody, Wdrl, WitVKey)

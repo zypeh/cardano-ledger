@@ -13,7 +13,7 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module Cardano.Ledger.Conway.Rules.NewEpoch
-  ( ConwayNEWEPOCH
+  ( ConwayNEWEPOCH,
   )
 where
 

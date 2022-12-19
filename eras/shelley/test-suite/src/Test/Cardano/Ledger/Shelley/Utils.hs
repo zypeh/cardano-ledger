@@ -97,7 +97,7 @@ import Cardano.Ledger.Keys
   )
 import Cardano.Ledger.Shelley.API (ApplyBlock)
 import Cardano.Ledger.Shelley.BlockChain (ShelleyTxSeq)
-import Cardano.Ledger.Shelley.LedgerState (StashedAVVMAddresses, PPUPState)
+import Cardano.Ledger.Shelley.LedgerState (PPUPState, StashedAVVMAddresses)
 import Cardano.Ledger.Shelley.Tx (ShelleyTx, ShelleyTxOut)
 import Cardano.Ledger.Shelley.TxBody (ShelleyEraTxBody)
 import Cardano.Ledger.Shelley.TxWits (ShelleyTxWits)

@@ -62,8 +62,10 @@ import Cardano.Ledger.Shelley.LedgerState
     InstantaneousRewards (..),
     LedgerState (..),
     NewEpochState (..),
+    PPUPPredFailure,
+    PPUPState,
     PState (..),
-    ShelleyUTxOState (..), PPUPState, PPUPPredFailure,
+    ShelleyUTxOState (..),
   )
 import Cardano.Ledger.Shelley.Rules as Shelley
   ( ShelleyBbodyPredFailure (..),

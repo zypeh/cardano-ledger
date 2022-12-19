@@ -60,7 +60,8 @@ import Cardano.Ledger.Shelley.API
   ( ProtVer (..),
   )
 import Cardano.Ledger.Shelley.LedgerState
-  ( ShelleyUTxOState (..), PPUPState,
+  ( PPUPState,
+    ShelleyUTxOState (..),
   )
 import Cardano.Ledger.Shelley.Rules as Shelley (ShelleyUtxowPredFailure (..))
 import Cardano.Ledger.Shelley.TxBody

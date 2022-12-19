@@ -26,6 +26,7 @@ import Cardano.Ledger.Core
 import Cardano.Ledger.EpochBoundary (SnapShots)
 import Cardano.Ledger.Shelley.Era (ShelleyEPOCH)
 import Cardano.Ledger.Shelley.LedgerState (EpochState, LedgerState, PState (..), ShelleyUTxOState (sutxosDeposited, sutxosPpups), UpecState (..), asReserves, esAccountState, esLState, esNonMyopic, esPp, esPrevPp, esSnapshots, lsDPState, lsUTxOState, obligationDPState, pattern DPState, pattern EpochState)
+import Cardano.Ledger.Shelley.LedgerState.Types (PPUPState)
 import Cardano.Ledger.Shelley.Rewards ()
 import Cardano.Ledger.Shelley.Rules.PoolReap
   ( ShelleyPOOLREAP,
@@ -51,7 +52,6 @@ import Data.Void (Void)
 import GHC.Generics (Generic)
 import GHC.Records (HasField)
 import NoThunks.Class (NoThunks (..))
-import Cardano.Ledger.Shelley.LedgerState.Types (PPUPState)
 
 data ShelleyEpochPredFailure era
   = PoolReapFailure (PredicateFailure (EraRule "POOLREAP" era)) -- Subtransition Failures

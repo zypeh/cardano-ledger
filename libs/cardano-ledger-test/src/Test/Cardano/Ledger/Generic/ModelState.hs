@@ -74,12 +74,13 @@ import Cardano.Ledger.Shelley.LedgerState
     InstantaneousRewards (..),
     LedgerState (..),
     NewEpochState (..),
-    ShelleyPPUPState (..),
+    PPUPState,
     PState (..),
-    StashedAVVMAddresses,
+    ShelleyPPUPState (..),
     ShelleyUTxOState (..),
+    StashedAVVMAddresses,
     completeRupd,
-    smartShelleyUTxOState, PPUPState,
+    smartShelleyUTxOState,
   )
 import Cardano.Ledger.Shelley.PParams (ProposedPPUpdates (..))
 import Cardano.Ledger.Shelley.PoolRank (NonMyopic (..))

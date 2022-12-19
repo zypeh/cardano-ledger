@@ -66,7 +66,15 @@ import Cardano.Ledger.Binary.Coders
 import Cardano.Ledger.Coin
 import Cardano.Ledger.Core
 import Cardano.Ledger.Rules.ValidationMode (Inject (..), lblStatic)
-import Cardano.Ledger.Shelley.LedgerState (PPUPState, ShelleyPPUPState (..), ShelleyUTxOState (..), keyTxRefunds, totalTxDeposits, updateStakeDistribution, PPUPPredFailure)
+import Cardano.Ledger.Shelley.LedgerState
+  ( PPUPPredFailure,
+    PPUPState,
+    ShelleyPPUPState (..),
+    ShelleyUTxOState (..),
+    keyTxRefunds,
+    totalTxDeposits,
+    updateStakeDistribution,
+  )
 import qualified Cardano.Ledger.Shelley.LedgerState as Shelley
 import Cardano.Ledger.Shelley.PParams (Update)
 import Cardano.Ledger.Shelley.Rules

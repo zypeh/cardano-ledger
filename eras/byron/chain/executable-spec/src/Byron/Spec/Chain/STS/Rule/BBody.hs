@@ -19,7 +19,7 @@ import Byron.Spec.Ledger.Delegation
     _dSEnvK,
     _dSEnvSlot,
   )
-import Byron.Spec.Ledger.STS.UTXO (UTxOEnv (UTxOEnv, pps, utxo0), ShelleyUTxOState)
+import Byron.Spec.Ledger.STS.UTXO (ShelleyUTxOState, UTxOEnv (UTxOEnv, pps, utxo0))
 import Byron.Spec.Ledger.STS.UTXOWS (UTXOWS)
 import Byron.Spec.Ledger.UTxO (UTxO)
 import Byron.Spec.Ledger.Update (PParams, UPIState, maxBkSz)

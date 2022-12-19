@@ -38,7 +38,8 @@ import Cardano.Ledger.Shelley.API
     EpochState (..),
     NewEpochState (..),
     ShelleyGenesis,
-    StrictMaybe (..), ShelleyUTxOState (..),
+    ShelleyUTxOState (..),
+    StrictMaybe (..),
   )
 import qualified Cardano.Ledger.Shelley.API as API
 import Cardano.Ledger.Shelley.PParams (ShelleyPParamsHKD)

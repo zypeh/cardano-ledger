@@ -69,11 +69,12 @@ import Cardano.Ledger.Shelley.LedgerState
     EpochState (..),
     LedgerState (..),
     NewEpochState (..),
+    PPUPState,
     PState (..),
     StashedAVVMAddresses,
     dsGenDelegs,
     smartShelleyUTxOState,
-    updateNES, PPUPState,
+    updateNES,
   )
 import Cardano.Ledger.Shelley.Rules
   ( BbodyEnv (..),

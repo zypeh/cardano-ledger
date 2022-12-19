@@ -19,7 +19,7 @@ import Cardano.Ledger.Alonzo.TxBody ()
 import Cardano.Ledger.BaseTypes (Globals)
 import Cardano.Ledger.Core
 import qualified Cardano.Ledger.Core as Core
-import Cardano.Ledger.Shelley.LedgerState (DPState (..), ShelleyUTxOState, PPUPState)
+import Cardano.Ledger.Shelley.LedgerState (DPState (..), PPUPState, ShelleyUTxOState)
 import Cardano.Ledger.Shelley.Rules
   ( DelegsEnv,
     DelplEnv,

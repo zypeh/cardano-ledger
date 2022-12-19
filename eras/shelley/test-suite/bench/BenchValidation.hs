@@ -37,8 +37,9 @@ import Cardano.Ledger.Shelley.Bench.Gen (genBlock, genChainState)
 import Cardano.Ledger.Shelley.BlockChain (slotToNonce)
 import Cardano.Ledger.Shelley.LedgerState
   ( NewEpochState,
+    PPUPState,
     StashedAVVMAddresses,
-    nesBcur, PPUPState,
+    nesBcur,
   )
 import Cardano.Protocol.TPraos.API
   ( ChainDepState (..),

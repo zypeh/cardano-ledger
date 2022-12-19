@@ -47,9 +47,10 @@ import Cardano.Ledger.Shelley.LedgerState
     EpochState (..),
     LedgerState (..),
     NewEpochState (..),
+    PPUPState,
     PState (..),
+    ShelleyUTxOState (..),
     StashedAVVMAddresses,
-    ShelleyUTxOState (..), PPUPState,
   )
 import Cardano.Ledger.Shelley.PParams (ProposedPPUpdates (..), ShelleyPParamsHKD)
 import Cardano.Ledger.Shelley.Tx (ShelleyTx (..))

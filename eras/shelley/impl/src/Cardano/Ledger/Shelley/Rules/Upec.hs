@@ -35,6 +35,7 @@ import Cardano.Ledger.Shelley.LedgerState
     pattern DPState,
     pattern EpochState,
   )
+import Cardano.Ledger.Shelley.LedgerState.Types (PPUPState)
 import Cardano.Ledger.Shelley.PParams (ProposedPPUpdates (..))
 import Cardano.Ledger.Shelley.Rules.Newpp (NewppEnv (..), ShelleyNEWPP, ShelleyNewppState (..))
 import Control.Monad.Trans.Reader (asks)
@@ -53,7 +54,6 @@ import GHC.Generics (Generic)
 import GHC.Records (HasField)
 import NoThunks.Class (NoThunks (..))
 import Numeric.Natural (Natural)
-import Cardano.Ledger.Shelley.LedgerState.Types (PPUPState)
 
 newtype ShelleyUpecPredFailure era
   = NewPpFailure (PredicateFailure (ShelleyNEWPP era))

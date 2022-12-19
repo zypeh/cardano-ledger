@@ -21,7 +21,8 @@ import Cardano.Ledger.Shelley.LedgerState
   ( EpochState (..),
     LedgerState (..),
     NewEpochState (..),
-    obligationDPState, ShelleyUTxOState (..),
+    ShelleyUTxOState (..),
+    obligationDPState,
   )
 import Cardano.Ledger.Shelley.PParams (ShelleyPParamsHKD (..)) -- _maxTxSize getField
 import Cardano.Ledger.Shelley.RewardUpdate (PulsingRewUpdate (..), RewardUpdate (..))

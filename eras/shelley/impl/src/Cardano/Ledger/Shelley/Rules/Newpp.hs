@@ -24,8 +24,8 @@ import Cardano.Ledger.Shelley.Era (ShelleyNEWPP)
 import Cardano.Ledger.Shelley.LedgerState
   ( DPState (..),
     DState (..),
-    ShelleyPPUPState (..),
     PState (..),
+    ShelleyPPUPState (..),
     ShelleyUTxOState (sutxosDeposited),
     obligationDPState,
     pvCanFollow,

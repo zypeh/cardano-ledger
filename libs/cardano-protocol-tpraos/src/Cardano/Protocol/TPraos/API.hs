@@ -217,7 +217,7 @@ instance CC.Crypto c => GetLedgerView (BabbageEra c) where
 
 -- Note that although we do not use TPraos in the Conway era, we include this
 -- because it makes it simpler to get the ledger view for Praos.
---instance CC.Crypto c => GetLedgerView (ConwayEra c) where
+-- instance CC.Crypto c => GetLedgerView (ConwayEra c) where
 --  currentLedgerView
 --    NewEpochState {nesPd = pd, nesEs = es} =
 --      LedgerView

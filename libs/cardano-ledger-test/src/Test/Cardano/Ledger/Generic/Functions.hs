@@ -47,7 +47,8 @@ import Cardano.Ledger.Shelley.LedgerState
     EpochState (..),
     LedgerState (..),
     NewEpochState (..),
-    ShelleyUTxOState (..), PPUPState,
+    PPUPState,
+    ShelleyUTxOState (..),
   )
 import Cardano.Ledger.Shelley.PParams (ShelleyPParamsHKD (..))
 import Cardano.Ledger.Shelley.Rewards (aggregateRewards)

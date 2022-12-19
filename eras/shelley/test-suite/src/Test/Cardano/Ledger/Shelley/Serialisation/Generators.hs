@@ -12,6 +12,7 @@ module Test.Cardano.Ledger.Shelley.Serialisation.Generators () where
 
 import Cardano.Ledger.Core
 import Cardano.Ledger.Shelley.API (ShelleyTxBody (ShelleyTxBody))
+import Cardano.Ledger.Shelley.LedgerState (PPUPPredFailure)
 import Cardano.Ledger.Shelley.PParams (ShelleyPParams)
 import qualified Cardano.Ledger.Shelley.Rules as STS
 import Generic.Random (genericArbitraryU)
@@ -22,7 +23,6 @@ import Test.QuickCheck
     arbitrary,
     shrink,
   )
-import Cardano.Ledger.Shelley.LedgerState (PPUPPredFailure)
 
 {-------------------------------------------------------------------------------
   ShelleyEra Generators

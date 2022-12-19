@@ -103,9 +103,10 @@ import Cardano.Ledger.Shelley.LedgerState
     InstantaneousRewards (..),
     LedgerState (..),
     NewEpochState (..),
-    ShelleyPPUPState (..),
+    PPUPState,
     PState (..),
-    ShelleyUTxOState (..), PPUPState,
+    ShelleyPPUPState (..),
+    ShelleyUTxOState (..),
   )
 import Cardano.Ledger.Shelley.PParams
   ( PPUpdateEnv (..),

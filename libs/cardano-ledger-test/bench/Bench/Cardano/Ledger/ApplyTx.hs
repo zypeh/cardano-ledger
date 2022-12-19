@@ -35,7 +35,7 @@ import Cardano.Ledger.Shelley.API
     LedgerState,
     applyTxsTransition,
   )
-import Cardano.Ledger.Shelley.LedgerState (DPState, ShelleyUTxOState, PPUPState)
+import Cardano.Ledger.Shelley.LedgerState (DPState, PPUPState, ShelleyUTxOState)
 import Cardano.Ledger.Shelley.PParams (ShelleyPParamsHKD (..))
 import Control.DeepSeq (NFData (..))
 import Control.State.Transition (Environment, Signal, State)

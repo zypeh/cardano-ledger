@@ -46,6 +46,7 @@ import Cardano.Ledger.Shelley.LedgerState
     ShelleyUTxOState (..),
     obligationDPState,
   )
+import Cardano.Ledger.Shelley.LedgerState.Types (PPUPState)
 import Cardano.Ledger.Shelley.Rules.Delegs
   ( DelegsEnv (..),
     ShelleyDELEGS,
@@ -77,7 +78,6 @@ import GHC.Generics (Generic)
 import GHC.Records (HasField (..))
 import Lens.Micro
 import NoThunks.Class (NoThunks (..))
-import Cardano.Ledger.Shelley.LedgerState.Types (PPUPState)
 
 -- ========================================================
 

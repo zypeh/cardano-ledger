@@ -12,7 +12,7 @@
 -- the UTxO part of the ledger state.
 module Byron.Spec.Ledger.STS.UTXOWS where
 
-import Byron.Spec.Ledger.STS.UTXO (UTxOEnv, ShelleyUTxOState)
+import Byron.Spec.Ledger.STS.UTXO (ShelleyUTxOState, UTxOEnv)
 import Byron.Spec.Ledger.STS.UTXOW (UTXOW)
 import Byron.Spec.Ledger.UTxO (Tx)
 import Control.State.Transition

@@ -26,6 +26,7 @@ import Cardano.Ledger.Shelley.API.Types
     word64ToCoin,
   )
 import Cardano.Ledger.Shelley.LedgerState (StashedAVVMAddresses, smartShelleyUTxOState)
+import Cardano.Ledger.Shelley.LedgerState.Types (PPUPState)
 import Cardano.Ledger.Shelley.PParams (ShelleyPParams)
 import Cardano.Ledger.UTxO (coinBalance)
 import Cardano.Ledger.Val (Val ((<->)))
@@ -33,7 +34,6 @@ import Control.State.Transition (STS (State))
 import Data.Default.Class (Default, def)
 import Data.Kind (Type)
 import qualified Data.Map.Strict as Map
-import Cardano.Ledger.Shelley.LedgerState.Types (PPUPState)
 
 -- | Indicates that this era may be bootstrapped from 'ShelleyGenesis'.
 class CanStartFromGenesis era where

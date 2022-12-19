@@ -80,7 +80,10 @@ import Cardano.Ledger.Rules.ValidationMode
     runTest,
     runTestOnSignal,
   )
-import Cardano.Ledger.Shelley.LedgerState (ShelleyUTxOState (ShelleyUTxOState), PPUPPredFailure)
+import Cardano.Ledger.Shelley.LedgerState
+  ( PPUPPredFailure,
+    ShelleyUTxOState (ShelleyUTxOState),
+  )
 import Cardano.Ledger.Shelley.Rules (ShelleyUtxoPredFailure, UtxoEnv (..))
 import qualified Cardano.Ledger.Shelley.Rules as Shelley
 import Cardano.Ledger.Shelley.Tx (TxIn)
