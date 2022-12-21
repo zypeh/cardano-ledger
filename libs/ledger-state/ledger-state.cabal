@@ -134,7 +134,7 @@ benchmark address
     cardano-slotting,
     criterion,
     deepseq,
-    strict-containers,
+    cardano-strict-containers,
     text
   ghc-options:
       -threaded

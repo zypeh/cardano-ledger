@@ -92,7 +92,7 @@ library
     non-integral,
     primitive,
     small-steps,
-    strict-containers,
+    cardano-strict-containers,
     text,
     time,
     transformers,
