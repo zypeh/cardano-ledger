@@ -32,7 +32,7 @@ import Cardano.Ledger.Shelley.LedgerState
     DPState (..),
     DState (..),
     PState (..),
-    ShelleyUTxOState (..),
+    UTxOState (..),
     obligationDPState,
     rewards,
   )
@@ -61,13 +61,13 @@ import GHC.Records
 import NoThunks.Class (NoThunks (..))
 
 data ShelleyPoolreapState era = PoolreapState
-  { prUTxOSt :: ShelleyUTxOState era,
+  { prUTxOSt :: UTxOState era,
     prAcnt :: AccountState,
     prDState :: DState (EraCrypto era),
     prPState :: PState (EraCrypto era)
   }
 
-deriving stock instance Show (ShelleyUTxOState era) => Show (ShelleyPoolreapState era)
+deriving stock instance Show (UTxOState era) => Show (ShelleyPoolreapState era)
 
 data ShelleyPoolreapPredFailure era -- No predicate failures
   deriving (Show, Eq, Generic)
@@ -80,7 +80,7 @@ data ShelleyPoolreapEvent era = RetiredPools
 
 instance NoThunks (ShelleyPoolreapPredFailure era)
 
-instance Default (ShelleyUTxOState era) => Default (ShelleyPoolreapState era) where
+instance Default (UTxOState era) => Default (ShelleyPoolreapState era) where
   def = PoolreapState def def def def
 
 instance

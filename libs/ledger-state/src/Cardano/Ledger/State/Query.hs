@@ -49,11 +49,11 @@ insertGetKey ::
   ReaderT backend m (Key record)
 insertGetKey = fmap (either entityKey id) . insertBy
 
-insertShelleyUTxOState ::
+insertUTxOState ::
   MonadIO m =>
-  Shelley.ShelleyUTxOState CurrentEra ->
+  Shelley.UTxOState CurrentEra ->
   ReaderT SqlBackend m (Key UtxoState)
-insertShelleyUTxOState Shelley.ShelleyUTxOState {..} = do
+insertUTxOState Shelley.UTxOState {..} = do
   insert $
     UtxoState
       { utxoStateDeposited = sutxosDeposited,
@@ -113,7 +113,7 @@ insertDState Shelley.DState {..} = do
 insertLedgerState ::
   MonadIO m => EpochStateId -> Shelley.LedgerState CurrentEra -> ReaderT SqlBackend m ()
 insertLedgerState epochStateKey Shelley.LedgerState {..} = do
-  stateKey <- insertShelleyUTxOState lsUTxOState
+  stateKey <- insertUTxOState lsUTxOState
   insertUTxO (Shelley.sutxosUtxo lsUTxOState) stateKey
   dstateKey <- insertDState $ Shelley.dpsDState lsDPState
   insert_
@@ -513,7 +513,7 @@ getLedgerState utxo LedgerState {..} dstate = do
   pure
     Shelley.LedgerState
       { Shelley.lsUTxOState =
-          Shelley.smartShelleyUTxOState utxo utxoStateDeposited utxoStateFees utxoStatePpups, -- Maintain invariant
+          Shelley.smartUTxOState utxo utxoStateDeposited utxoStateFees utxoStatePpups, -- Maintain invariant
         Shelley.lsDPState =
           Shelley.DPState
             { Shelley.dpsDState = dstate,

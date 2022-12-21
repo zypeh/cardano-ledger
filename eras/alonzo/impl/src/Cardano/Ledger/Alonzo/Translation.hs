@@ -138,10 +138,10 @@ instance Crypto c => TranslateEra (AlonzoEra c) API.LedgerState where
           API.lsDPState = API.lsDPState ls
         }
 
-instance Crypto c => TranslateEra (AlonzoEra c) API.ShelleyUTxOState where
+instance Crypto c => TranslateEra (AlonzoEra c) API.UTxOState where
   translateEra ctxt us =
     return
-      API.ShelleyUTxOState
+      API.UTxOState
         { API.sutxosUtxo = translateEra' ctxt $ API.sutxosUtxo us,
           API.sutxosDeposited = API.sutxosDeposited us,
           API.sutxosFees = API.sutxosFees us,
@@ -153,10 +153,10 @@ instance Crypto c => TranslateEra (AlonzoEra c) API.UTxO where
   translateEra _ctxt utxo =
     return $ API.UTxO $ translateTxOut `Map.map` API.unUTxO utxo
 
-instance Crypto c => TranslateEra (AlonzoEra c) API.ShelleyPPUPState where
+instance Crypto c => TranslateEra (AlonzoEra c) API.PPUPState where
   translateEra ctxt ps =
     return
-      API.ShelleyPPUPState
+      API.PPUPState
         { API.proposals = translateEra' ctxt $ API.proposals ps,
           API.futureProposals = translateEra' ctxt $ API.futureProposals ps
         }

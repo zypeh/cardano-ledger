@@ -82,7 +82,7 @@ import Cardano.Ledger.Rules.ValidationMode
   )
 import Cardano.Ledger.Shelley.LedgerState
   ( PPUPPredFailure,
-    ShelleyUTxOState (ShelleyUTxOState),
+    UTxOState (UTxOState),
   )
 import Cardano.Ledger.Shelley.Rules (ShelleyUtxoPredFailure, UtxoEnv (..))
 import qualified Cardano.Ledger.Shelley.Rules as Shelley
@@ -465,7 +465,7 @@ utxoTransition ::
     -- instructions for calling UTXOS from AlonzoUTXO
     Embed (EraRule "UTXOS" era) (AlonzoUTXO era),
     Environment (EraRule "UTXOS" era) ~ UtxoEnv era,
-    State (EraRule "UTXOS" era) ~ ShelleyUTxOState era,
+    State (EraRule "UTXOS" era) ~ UTxOState era,
     Signal (EraRule "UTXOS" era) ~ Tx era,
     HasField "_poolDeposit" (PParams era) Coin,
     HasField "_keyDeposit" (PParams era) Coin,
@@ -478,7 +478,7 @@ utxoTransition ::
   TransitionRule (AlonzoUTXO era)
 utxoTransition = do
   TRC (UtxoEnv slot pp dpstate _genDelegs, u, tx) <- judgmentContext
-  let ShelleyUTxOState utxo _deposits _fees _ppup _ = u
+  let UTxOState utxo _deposits _fees _ppup _ = u
 
   {-   txb := txbody tx   -}
   let txBody = tx ^. bodyTxL
@@ -554,7 +554,7 @@ instance
     AlonzoEraTx era,
     Embed (EraRule "UTXOS" era) (AlonzoUTXO era),
     Environment (EraRule "UTXOS" era) ~ UtxoEnv era,
-    State (EraRule "UTXOS" era) ~ ShelleyUTxOState era,
+    State (EraRule "UTXOS" era) ~ UTxOState era,
     Signal (EraRule "UTXOS" era) ~ Tx era,
     HasField "_poolDeposit" (PParams era) Coin,
     HasField "_minfeeA" (PParams era) Natural,
@@ -573,7 +573,7 @@ instance
   ) =>
   STS (AlonzoUTXO era)
   where
-  type State (AlonzoUTXO era) = ShelleyUTxOState era
+  type State (AlonzoUTXO era) = UTxOState era
   type Signal (AlonzoUTXO era) = Tx era
   type Environment (AlonzoUTXO era) = UtxoEnv era
   type BaseM (AlonzoUTXO era) = ShelleyBase

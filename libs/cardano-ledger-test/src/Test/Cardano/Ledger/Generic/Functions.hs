@@ -48,7 +48,7 @@ import Cardano.Ledger.Shelley.LedgerState
     LedgerState (..),
     NewEpochState (..),
     PPUPState,
-    ShelleyUTxOState (..),
+    UTxOState (..),
   )
 import Cardano.Ledger.Shelley.PParams (ShelleyPParamsHKD (..))
 import Cardano.Ledger.Shelley.Rewards (aggregateRewards)
@@ -434,8 +434,8 @@ class TotalAda t where
 instance TotalAda AccountState where
   totalAda (AccountState treasury reserves) = treasury <+> reserves
 
-instance Reflect era => TotalAda (ShelleyUTxOState era) where
-  totalAda (ShelleyUTxOState utxo deposits fees _ _) = totalAda utxo <+> deposits <+> fees
+instance Reflect era => TotalAda (UTxOState era) where
+  totalAda (UTxOState utxo deposits fees _ _) = totalAda utxo <+> deposits <+> fees
 
 instance Reflect era => TotalAda (UTxO era) where
   totalAda (UTxO m) = Map.foldl' accum mempty m

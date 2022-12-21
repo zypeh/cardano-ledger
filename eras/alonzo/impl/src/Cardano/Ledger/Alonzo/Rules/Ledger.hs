@@ -29,8 +29,7 @@ import Cardano.Ledger.Shelley.LedgerState
   ( DPState (..),
     DState (..),
     LedgerState (..),
-    PPUPState,
-    ShelleyUTxOState (..),
+    UTxOState (..),
     obligationDPState,
   )
 import Cardano.Ledger.Shelley.Rules
@@ -80,7 +79,7 @@ ledgerTransition ::
     State (EraRule "DELEGS" era) ~ DPState (EraCrypto era),
     Signal (EraRule "DELEGS" era) ~ Seq (DCert (EraCrypto era)),
     Environment (EraRule "UTXOW" era) ~ UtxoEnv era,
-    State (EraRule "UTXOW" era) ~ ShelleyUTxOState era,
+    State (EraRule "UTXOW" era) ~ UTxOState era,
     Signal (EraRule "UTXOW" era) ~ Tx era,
     AlonzoEraTx era
   ) =>
@@ -113,14 +112,13 @@ ledgerTransition = do
   pure $ LedgerState utxoSt' dpstate'
 
 instance
-  ( Show (PPUPState era),
-    DSignable (EraCrypto era) (Hash (EraCrypto era) EraIndependentTxBody),
+  ( DSignable (EraCrypto era) (Hash (EraCrypto era) EraIndependentTxBody),
     AlonzoEraTx era,
     Tx era ~ AlonzoTx era,
     Embed (EraRule "DELEGS" era) (AlonzoLEDGER era),
     Embed (EraRule "UTXOW" era) (AlonzoLEDGER era),
     Environment (EraRule "UTXOW" era) ~ UtxoEnv era,
-    State (EraRule "UTXOW" era) ~ ShelleyUTxOState era,
+    State (EraRule "UTXOW" era) ~ UTxOState era,
     Signal (EraRule "UTXOW" era) ~ AlonzoTx era,
     Environment (EraRule "DELEGS" era) ~ DelegsEnv era,
     State (EraRule "DELEGS" era) ~ DPState (EraCrypto era),

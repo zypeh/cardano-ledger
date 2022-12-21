@@ -49,7 +49,7 @@ import Cardano.Ledger.Shelley.LedgerState
     NewEpochState (..),
     PPUPState,
     PState (..),
-    ShelleyUTxOState (..),
+    UTxOState (..),
     StashedAVVMAddresses,
   )
 import Cardano.Ledger.Shelley.PParams (ProposedPPUpdates (..), ShelleyPParamsHKD)
@@ -151,7 +151,7 @@ samePPUP (Babbage _) x y = eqByShow x y
 samePPUP (Conway _) () () = Nothing
 {-# NOINLINE samePPUP #-}
 
-instance (Era era) => Same era (ShelleyUTxOState era) where
+instance (Era era) => Same era (UTxOState era) where
   same proof u1 u2 =
     [ ("UTxO", sameUTxO proof (sutxosUtxo u1) (sutxosUtxo u2)),
       ("Deposited", eqByShow (sutxosDeposited u1) (sutxosDeposited u2)),
@@ -162,7 +162,7 @@ instance (Era era) => Same era (ShelleyUTxOState era) where
 
 instance (Era era) => Same era (LedgerState era) where
   same proof x1 x2 =
-    extendLabel "ShelleyUTxOState " (same proof (lsUTxOState x1) (lsUTxOState x2))
+    extendLabel "UTxOState " (same proof (lsUTxOState x1) (lsUTxOState x2))
       ++ extendLabel "DPState " (same proof (lsDPState x1) (lsDPState x2))
 
 instance (Era era) => Same era (EpochState era) where

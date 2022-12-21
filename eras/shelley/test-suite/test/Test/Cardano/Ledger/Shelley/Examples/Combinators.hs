@@ -89,7 +89,7 @@ import Cardano.Ledger.Shelley.LedgerState
     PulsingRewUpdate (..),
     RewardUpdate (..),
     ShelleyPPUPState (..),
-    ShelleyUTxOState (..),
+    UTxOState (..),
     applyRUpd,
     delegations,
     rewards,

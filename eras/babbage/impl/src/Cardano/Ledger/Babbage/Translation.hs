@@ -145,10 +145,10 @@ instance Crypto c => TranslateEra (BabbageEra c) API.LedgerState where
           API.lsDPState = API.lsDPState ls
         }
 
-instance Crypto c => TranslateEra (BabbageEra c) API.ShelleyUTxOState where
+instance Crypto c => TranslateEra (BabbageEra c) API.UTxOState where
   translateEra ctxt us =
     pure
-      API.ShelleyUTxOState
+      API.UTxOState
         { API.sutxosUtxo = translateEra' ctxt $ API.sutxosUtxo us,
           API.sutxosDeposited = API.sutxosDeposited us,
           API.sutxosFees = API.sutxosFees us,

@@ -61,7 +61,7 @@ import Cardano.Ledger.Shelley.API
   )
 import Cardano.Ledger.Shelley.LedgerState
   ( PPUPState,
-    ShelleyUTxOState (..),
+    UTxOState (..),
   )
 import Cardano.Ledger.Shelley.Rules as Shelley (ShelleyUtxowPredFailure (..))
 import Cardano.Ledger.Shelley.TxBody
@@ -129,7 +129,7 @@ tests =
 alonzoUTXOWTests ::
   forall era.
   ( AlonzoBased era (PredicateFailure (EraRule "UTXOW" era)),
-    State (EraRule "UTXOW" era) ~ ShelleyUTxOState era,
+    State (EraRule "UTXOW" era) ~ UTxOState era,
     GoodCrypto (EraCrypto era),
     HasTokens era,
     Default (PPUPState era),

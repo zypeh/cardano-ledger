@@ -45,11 +45,24 @@ import Cardano.Ledger.Babbage.TxBody
     BabbageTxOut,
     ShelleyEraTxBody (..),
   )
-import Cardano.Ledger.BaseTypes (ProtVer, ShelleyBase, epochInfo, strictMaybeToMaybe, systemStart)
+import Cardano.Ledger.BaseTypes
+  ( ProtVer,
+    ShelleyBase,
+    epochInfo,
+    strictMaybeToMaybe,
+    systemStart,
+  )
 import Cardano.Ledger.Binary (ToCBOR (..))
 import Cardano.Ledger.Coin (Coin)
 import Cardano.Ledger.Core
-import Cardano.Ledger.Shelley.LedgerState (PPUPPredFailure, PPUPState, ShelleyPPUPState (..), ShelleyUTxOState (..), keyTxRefunds, totalTxDeposits, updateStakeDistribution)
+import Cardano.Ledger.Shelley.LedgerState
+  ( PPUPPredFailure,
+    PPUPState,
+    UTxOState (..),
+    keyTxRefunds,
+    totalTxDeposits,
+    updateStakeDistribution,
+  )
 import Cardano.Ledger.Shelley.PParams (Update)
 import Cardano.Ledger.Shelley.Rules
   ( PpupEnv (..),
@@ -62,6 +75,7 @@ import Cardano.Ledger.UTxO (EraUTxO (..), UTxO (..))
 import Cardano.Ledger.Val ((<->))
 import Control.Monad.Trans.Reader (asks)
 import Control.State.Transition.Extended
+import Data.Default (Default)
 import Data.List.NonEmpty (nonEmpty)
 import qualified Data.Map.Strict as Map
 import Data.MapExtras (extractKeys)
@@ -80,7 +94,6 @@ instance
     ScriptsNeeded era ~ AlonzoScriptsNeeded era,
     Tx era ~ AlonzoTx era,
     TxOut era ~ BabbageTxOut era,
-    TxBody era ~ BabbageTxBody era,
     TxWits era ~ AlonzoTxWits era,
     Script era ~ AlonzoScript era,
     HasField "_keyDeposit" (PParams era) Coin,
@@ -90,18 +103,19 @@ instance
     Embed (EraRule "PPUP" era) (BabbageUTXOS era),
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
     State (EraRule "PPUP" era) ~ PPUPState era,
-    PPUPState era ~ ShelleyPPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
     ToCBOR (PPUPPredFailure era), -- Serializing the PredicateFailure
     Eq (PPUPPredFailure era),
     Show (PPUPPredFailure era),
-    ProtVerAtMost era 8
+    Eq (PPUPState era),
+    Show (PPUPState era),
+    Default (PPUPState era)
   ) =>
   STS (BabbageUTXOS era)
   where
   type BaseM (BabbageUTXOS era) = ShelleyBase
   type Environment (BabbageUTXOS era) = UtxoEnv era
-  type State (BabbageUTXOS era) = ShelleyUTxOState era
+  type State (BabbageUTXOS era) = UTxOState era
   type Signal (BabbageUTXOS era) = AlonzoTx era
   type PredicateFailure (BabbageUTXOS era) = AlonzoUtxosPredFailure era
   type Event (BabbageUTXOS era) = AlonzoUtxosEvent era
@@ -127,7 +141,6 @@ utxosTransition ::
     ScriptsNeeded era ~ AlonzoScriptsNeeded era,
     Tx era ~ AlonzoTx era,
     TxOut era ~ BabbageTxOut era,
-    TxBody era ~ BabbageTxBody era,
     TxWits era ~ AlonzoTxWits era,
     Script era ~ AlonzoScript era,
     HasField "_keyDeposit" (PParams era) Coin,
@@ -135,13 +148,14 @@ utxosTransition ::
     HasField "_costmdls" (PParams era) CostModels,
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
     State (EraRule "PPUP" era) ~ PPUPState era,
-    PPUPState era ~ ShelleyPPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
     Embed (EraRule "PPUP" era) (BabbageUTXOS era),
     ToCBOR (PPUPPredFailure era),
     Eq (PPUPPredFailure era),
     Show (PPUPPredFailure era),
-    ProtVerAtMost era 8
+    Eq (PPUPState era),
+    Show (PPUPState era),
+    Default (PPUPState era)
   ) =>
   TransitionRule (BabbageUTXOS era)
 utxosTransition =
@@ -162,18 +176,16 @@ scriptsYes ::
     Script era ~ AlonzoScript era,
     STS (BabbageUTXOS era),
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
-    PPUPState era ~ ShelleyPPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
     State (EraRule "PPUP" era) ~ PPUPState era,
     Embed (EraRule "PPUP" era) (BabbageUTXOS era),
     HasField "_poolDeposit" (PParams era) Coin,
     HasField "_keyDeposit" (PParams era) Coin,
-    HasField "_costmdls" (PParams era) CostModels,
-    ProtVerAtMost era 8
+    HasField "_costmdls" (PParams era) CostModels
   ) =>
   TransitionRule (BabbageUTXOS era)
 scriptsYes = do
-  TRC (UtxoEnv slot pp dpstate genDelegs, u@(ShelleyUTxOState utxo _ _ pup _), tx) <-
+  TRC (UtxoEnv slot pp dpstate genDelegs, u@(UTxOState utxo _ _ pup _), tx) <-
     judgmentContext
   let txBody = body tx
       {- refunded := keyRefunds pp txb -}
@@ -190,7 +202,7 @@ scriptsYes = do
   ppup' <-
     trans @(EraRule "PPUP" era) $
       TRC
-        (PPUPEnv slot pp genDelegs, pup, strictMaybeToMaybe $ txBody ^. updateTxBodyL)
+        (PPUPEnv slot pp genDelegs, pup, strictMaybeToMaybe $ txBody ^. updateTxBodyG)
 
   let !_ = traceEvent validBegin ()
 
@@ -223,13 +235,12 @@ scriptsNo ::
     BabbageEraTxBody era,
     Tx era ~ AlonzoTx era,
     TxOut era ~ BabbageTxOut era,
-    TxBody era ~ BabbageTxBody era,
     Script era ~ AlonzoScript era,
     HasField "_costmdls" (PParams era) CostModels
   ) =>
   TransitionRule (BabbageUTXOS era)
 scriptsNo = do
-  TRC (UtxoEnv _ pp _ _, us@(ShelleyUTxOState utxo _ fees _ _), tx) <- judgmentContext
+  TRC (UtxoEnv _ pp _ _, us@(UTxOState utxo _ fees _ _), tx) <- judgmentContext
   {- txb := txbody tx -}
   let txBody = tx ^. bodyTxL
   sysSt <- liftSTS $ asks systemStart

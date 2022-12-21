@@ -27,7 +27,7 @@ import Cardano.Ledger.Shelley.Era (ShelleyUPEC)
 import Cardano.Ledger.Shelley.LedgerState
   ( EpochState,
     ShelleyPPUPState (..),
-    ShelleyUTxOState (sutxosPpups),
+    UTxOState (sutxosPpups),
     UpecState (..),
     esLState,
     lsDPState,

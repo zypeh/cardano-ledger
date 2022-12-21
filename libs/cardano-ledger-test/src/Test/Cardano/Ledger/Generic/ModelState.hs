@@ -77,10 +77,10 @@ import Cardano.Ledger.Shelley.LedgerState
     PPUPState,
     PState (..),
     ShelleyPPUPState (..),
-    ShelleyUTxOState (..),
+    UTxOState (..),
     StashedAVVMAddresses,
     completeRupd,
-    smartShelleyUTxOState,
+    smartUTxOState,
   )
 import Cardano.Ledger.Shelley.PParams (ProposedPPUpdates (..))
 import Cardano.Ledger.Shelley.PoolRank (NonMyopic (..))
@@ -247,8 +247,8 @@ pParamsZeroByProof (Shelley _) = def
 pPUPStateZero :: forall era. Reflect era => PPUPState era
 pPUPStateZero = pPUPStateZeroByProof @era (reify :: Proof era)
 
-uTxOStateZero :: forall era. Reflect era => ShelleyUTxOState era
-uTxOStateZero = smartShelleyUTxOState utxoZero mempty mempty (pPUPStateZero @era)
+uTxOStateZero :: forall era. Reflect era => UTxOState era
+uTxOStateZero = smartUTxOState utxoZero mempty mempty (pPUPStateZero @era)
 
 pParamsZero :: Reflect era => Core.PParams era
 pParamsZero = lift pParamsZeroByProof
@@ -331,9 +331,9 @@ instance EraCrypto era ~ c => Extract (PState c) era where
 instance EraCrypto era ~ c => Extract (DPState c) era where
   extract x = DPState (extract x) (extract x)
 
-instance Reflect era => Extract (ShelleyUTxOState era) era where
+instance Reflect era => Extract (UTxOState era) era where
   extract x =
-    smartShelleyUTxOState
+    smartUTxOState
       (UTxO (mUTxO x))
       (mDeposited x)
       (mFees x)

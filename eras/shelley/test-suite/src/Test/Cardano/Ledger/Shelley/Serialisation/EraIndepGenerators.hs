@@ -286,7 +286,7 @@ instance
     Arbitrary (Core.TxOut era),
     Arbitrary (PPUPState era)
   ) =>
-  Arbitrary (ShelleyUTxOState era)
+  Arbitrary (UTxOState era)
   where
   arbitrary = genericArbitraryU
   shrink = recursivelyShrink
@@ -297,7 +297,7 @@ instance Crypto c => Arbitrary (IncrementalStake c) where
 
 -- The 'genericShrink' function returns first the immediate subterms of a
 -- value (in case it is a recursive data-type), and then shrinks the value
--- itself. Since 'ShelleyUTxOState' is not a recursive data-type, there are no
+-- itself. Since 'UTxOState' is not a recursive data-type, there are no
 -- subterms, and we can use `recursivelyShrink` directly. This is particularly
 -- important when abstracting away the different fields of the ledger state,
 -- since the generic subterms instances will overlap due to GHC not having

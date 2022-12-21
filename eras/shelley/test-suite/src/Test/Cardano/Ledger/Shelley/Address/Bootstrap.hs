@@ -41,7 +41,7 @@ import Cardano.Ledger.Keys
 import Cardano.Ledger.Keys.Bootstrap
 import Cardano.Ledger.SafeHash (extractHash, hashAnnotated)
 import Cardano.Ledger.Shelley (ShelleyEra)
-import Cardano.Ledger.Shelley.LedgerState (IncrementalStake (..), ShelleyPPUPState (..), ShelleyUTxOState (..))
+import Cardano.Ledger.Shelley.LedgerState (IncrementalStake (..), ShelleyPPUPState (..), UTxOState (..))
 -- def instance for DPState
 import Cardano.Ledger.Shelley.PParams
   ( ProposedPPUpdates (..),
@@ -135,9 +135,9 @@ utxo0 =
       (TxIn genesisId minBound)
       (ShelleyTxOut aliceAddr aliceInitCoin)
 
-utxoState0 :: ShelleyUTxOState C
+utxoState0 :: UTxOState C
 utxoState0 =
-  ShelleyUTxOState
+  UTxOState
     { sutxosUtxo = utxo0,
       sutxosDeposited = Coin 0,
       sutxosFees = Coin 0,
@@ -151,9 +151,9 @@ tx = ShelleyTx txBody mempty {bootWits = Set.fromList [aliceWitness]} SNothing
 txBad :: ShelleyTx C
 txBad = ShelleyTx txBody mempty {bootWits = Set.fromList [aliceBadWitness]} SNothing
 
-utxoState1 :: ShelleyUTxOState C
+utxoState1 :: UTxOState C
 utxoState1 =
-  ShelleyUTxOState
+  UTxOState
     { sutxosUtxo = UTxO $ Map.fromList [bobResult, aliceResult],
       sutxosDeposited = Coin 0,
       sutxosFees = Coin 10,

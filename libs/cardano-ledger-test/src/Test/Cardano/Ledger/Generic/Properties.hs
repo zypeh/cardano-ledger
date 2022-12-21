@@ -24,7 +24,7 @@ import Cardano.Ledger.Shelley.LedgerState
     EpochState (..),
     LedgerState (..),
     NewEpochState (..),
-    ShelleyUTxOState (..),
+    UTxOState (..),
     updateStakeDistribution,
   )
 import qualified Cardano.Ledger.Shelley.PParams as Shelley (ShelleyPParamsHKD (..))
@@ -139,7 +139,7 @@ testTxValidForLEDGER proof (Box _ trc@(TRC (_, ledgerState, vtx)) _genstate) =
   -- trc encodes the initial (generated) state, vtx is the transaction
   case applySTSByProof proof trc of
     Right ledgerState' ->
-      -- ShelleyUTxOState and DPState after applying the transaction $$$
+      -- UTxOState and DPState after applying the transaction $$$
       classify (coerce (isValid' proof vtx)) "TxValid" $
         totalAda ledgerState' === totalAda ledgerState
     Left errs ->
@@ -267,7 +267,7 @@ adaIsPreservedBabbage numTx gensize = adaIsPreserved (Babbage Mock) numTx gensiz
 stakeInvariant :: EraTxOut era => MockChainState era -> MockChainState era -> Property
 stakeInvariant (MockChainState _ _ _) (MockChainState nes _ _) =
   case (lsUTxOState . esLState . nesEs) nes of
-    (ShelleyUTxOState utxo _ _ _ istake) -> istake === updateStakeDistribution mempty mempty utxo
+    (UTxOState utxo _ _ _ istake) -> istake === updateStakeDistribution mempty mempty utxo
 
 incrementStakeInvariant :: (Reflect era, HasTrace (MOCKCHAIN era) (Gen1 era)) => Proof era -> GenSize -> TestTree
 incrementStakeInvariant proof gensize =

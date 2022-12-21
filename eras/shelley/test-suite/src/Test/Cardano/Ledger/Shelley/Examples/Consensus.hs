@@ -338,7 +338,7 @@ exampleNewEpochState value ppp pp =
           esLState =
             LedgerState
               { lsUTxOState =
-                  ShelleyUTxOState
+                  UTxOState
                     { sutxosUtxo =
                         UTxO $
                           Map.fromList

@@ -14,7 +14,6 @@
 
 module Cardano.Ledger.Conway.Rules.Epoch
   ( ConwayEPOCH,
-    ShelleyEpochPredFailure (..),
     ShelleyEpochEvent (..),
     PredicateFailure,
   )
@@ -25,9 +24,33 @@ import Cardano.Ledger.Coin (Coin (..))
 import Cardano.Ledger.Conway.Era (ConwayEPOCH)
 import Cardano.Ledger.Core
 import Cardano.Ledger.EpochBoundary (SnapShots)
-import Cardano.Ledger.Shelley.LedgerState (EpochState, LedgerState, PPUPState, PState (..), ShelleyUTxOState (sutxosDeposited, sutxosPpups), UpecState (..), asReserves, esAccountState, esLState, esNonMyopic, esPp, esPrevPp, esSnapshots, lsDPState, lsUTxOState, obligationDPState, pattern DPState, pattern EpochState)
+import Cardano.Ledger.Shelley.LedgerState
+  ( EpochState,
+    LedgerState,
+    PPUPState,
+    PState (..),
+    UTxOState (..),
+    asReserves,
+    esAccountState,
+    esLState,
+    esNonMyopic,
+    esPp,
+    esPrevPp,
+    esSnapshots,
+    lsDPState,
+    lsUTxOState,
+    obligationDPState,
+    pattern DPState,
+    pattern EpochState,
+  )
 import Cardano.Ledger.Shelley.Rewards ()
-import Cardano.Ledger.Shelley.Rules (ShelleyEpochEvent (..), ShelleyEpochPredFailure (..), ShelleyPOOLREAP, ShelleyPoolreapEvent, ShelleyPoolreapPredFailure, ShelleyPoolreapState (..), ShelleyUPEC, ShelleyUpecPredFailure)
+import Cardano.Ledger.Shelley.Rules
+  ( ShelleyEpochEvent (..),
+    ShelleyPOOLREAP,
+    ShelleyPoolreapEvent,
+    ShelleyPoolreapPredFailure,
+    ShelleyPoolreapState (..), ShelleyEpochPredFailure (..), UpecPredFailure,
+  )
 import Cardano.Ledger.Slot (EpochNo)
 import Control.SetAlgebra (eval, (⨃))
 import Control.State.Transition
@@ -40,7 +63,6 @@ import Control.State.Transition
   )
 import Data.Default.Class (Default)
 import qualified Data.Map.Strict as Map
-import Data.Void (Void)
 import GHC.Records (HasField)
 
 instance
@@ -55,12 +77,10 @@ instance
     Environment (EraRule "POOLREAP" era) ~ PParams era,
     State (EraRule "POOLREAP" era) ~ ShelleyPoolreapState era,
     Signal (EraRule "POOLREAP" era) ~ EpochNo,
-    Embed (EraRule "UPEC" era) (ConwayEPOCH era),
-    Environment (EraRule "UPEC" era) ~ EpochState era,
-    State (EraRule "UPEC" era) ~ UpecState era,
-    Signal (EraRule "UPEC" era) ~ (),
     Default (PPUPState era),
-    Default (PParams era)
+    Default (PParams era),
+    Eq (UpecPredFailure era),
+    Show (UpecPredFailure era)
   ) =>
   STS (ConwayEPOCH era)
   where
@@ -81,11 +101,7 @@ epochTransition ::
     Embed (EraRule "POOLREAP" era) (ConwayEPOCH era),
     Environment (EraRule "POOLREAP" era) ~ PParams era,
     State (EraRule "POOLREAP" era) ~ ShelleyPoolreapState era,
-    Signal (EraRule "POOLREAP" era) ~ EpochNo,
-    Embed (EraRule "UPEC" era) (ConwayEPOCH era),
-    Environment (EraRule "UPEC" era) ~ EpochState era,
-    State (EraRule "UPEC" era) ~ UpecState era,
-    Signal (EraRule "UPEC" era) ~ ()
+    Signal (EraRule "POOLREAP" era) ~ EpochNo
   ) =>
   TransitionRule (ConwayEPOCH era)
 epochTransition = do
@@ -128,11 +144,6 @@ epochTransition = do
           pp
           nm
 
-  UpecState pp' ppupSt' <-
-    trans @(EraRule "UPEC" era) $
-      TRC (epochState', UpecState pp (sutxosPpups utxoSt'), ())
-  let utxoSt'' = utxoSt' {sutxosPpups = ppupSt'}
-
   let -- At the epoch boundary refunds are made, so we need to change what
       -- the sutxosDeposited field is. The other two places where deposits are
       -- kept (dsDeposits of DState and psDeposits of PState) are adjusted by
@@ -140,14 +151,14 @@ epochTransition = do
       -- since we have the invariant that: obligationDPState dpstate == sutxosDeposited sutxostate
       Coin oblgNew = obligationDPState adjustedDPstate
       Coin reserves = asReserves acnt'
-      utxoSt''' = utxoSt'' {sutxosDeposited = Coin oblgNew}
+      utxoSt''' = utxoSt' {sutxosDeposited = Coin oblgNew}
       acnt'' = acnt' {asReserves = Coin reserves}
   pure $
     epochState'
       { esAccountState = acnt'',
         esLState = (esLState epochState') {lsUTxOState = utxoSt'''},
         esPrevPp = pp,
-        esPp = pp'
+        esPp = pp
       }
 
 instance
@@ -160,14 +171,3 @@ instance
   where
   wrapFailed = PoolReapFailure
   wrapEvent = PoolReapEvent
-
-instance
-  ( Era era,
-    STS (ShelleyUPEC era),
-    PredicateFailure (EraRule "UPEC" era) ~ ShelleyUpecPredFailure era,
-    Event (EraRule "UPEC" era) ~ Void
-  ) =>
-  Embed (ShelleyUPEC era) (ConwayEPOCH era)
-  where
-  wrapFailed = UpecFailure
-  wrapEvent = UpecEvent

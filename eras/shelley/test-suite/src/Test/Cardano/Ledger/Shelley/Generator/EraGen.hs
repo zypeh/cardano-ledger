@@ -51,7 +51,7 @@ import Cardano.Ledger.Shelley.API
     ShelleyLedgersEnv,
     StakeReference (StakeRefBase),
   )
-import Cardano.Ledger.Shelley.LedgerState (ShelleyUTxOState (..), StashedAVVMAddresses)
+import Cardano.Ledger.Shelley.LedgerState (UTxOState (..), StashedAVVMAddresses)
 import Cardano.Ledger.Shelley.PParams (Update)
 import Cardano.Ledger.Shelley.Rules (UtxoEnv)
 import Cardano.Ledger.Shelley.TxBody (DCert, ShelleyEraTxBody, Wdrl, WitVKey)
@@ -145,10 +145,10 @@ type MinCHAIN_STS era =
 type MinUTXO_STS era =
   ( STS (EraRule "UTXOW" era),
     BaseM (EraRule "UTXOW" era) ~ ShelleyBase,
-    State (EraRule "UTXOW" era) ~ ShelleyUTxOState era,
+    State (EraRule "UTXOW" era) ~ UTxOState era,
     Environment (EraRule "UTXOW" era) ~ UtxoEnv era,
     Signal (EraRule "UTXOW" era) ~ Tx era,
-    State (EraRule "UTXO" era) ~ ShelleyUTxOState era,
+    State (EraRule "UTXO" era) ~ UTxOState era,
     Environment (EraRule "UTXO" era) ~ UtxoEnv era,
     Signal (EraRule "UTXO" era) ~ Tx era
   )

@@ -55,7 +55,7 @@ import Cardano.Ledger.Shelley.API
 import Cardano.Ledger.Shelley.LedgerState
   ( DPState (..),
     DState (..),
-    ShelleyUTxOState (..),
+    UTxOState (..),
   )
 import Cardano.Ledger.Shelley.PParams
   ( ShelleyPParams,
@@ -304,7 +304,7 @@ genUpdate ::
   [(GenesisKeyPair (EraCrypto era), AllIssuerKeys (EraCrypto era) 'GenesisDelegate)] ->
   Map (KeyHash 'GenesisDelegate (EraCrypto era)) (AllIssuerKeys (EraCrypto era) 'GenesisDelegate) ->
   PParams era ->
-  (ShelleyUTxOState era, DPState (EraCrypto era)) ->
+  (UTxOState era, DPState (EraCrypto era)) ->
   Gen (Maybe (Update era), [KeyPair 'Witness (EraCrypto era)])
 genUpdate
   c@Constants {frequencyTxUpdates}

@@ -14,7 +14,6 @@
 module Test.Cardano.Ledger.Generic.MockChain where
 
 import Cardano.Ledger.BaseTypes (BlocksMade (..), ShelleyBase)
-import Cardano.Ledger.Conway.Rules ()
 import qualified Cardano.Ledger.Core as Core
 import qualified Cardano.Ledger.Crypto as CC
 import Cardano.Ledger.Era (Era (EraCrypto))
@@ -247,7 +246,7 @@ ppMockBlock (MockBlock iss sl txs) =
 
 instance PrettyA (MockBlock era) where prettyA = ppMockBlock
 
-ppMockChainFailure :: Proof era -> MockChainFailure era -> PDoc
+ppMockChainFailure :: Reflect era => Proof era -> MockChainFailure era -> PDoc
 ppMockChainFailure proof x = case proof of
   (Conway _) -> help x
   (Babbage _) -> help x

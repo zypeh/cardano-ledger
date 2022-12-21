@@ -68,9 +68,9 @@ alonzoTranslationTests =
     "Alonzo translation binary compatibiliby tests"
     [ testProperty "Tx compatibility" testTx,
       testProperty "ProposedPPUpdates compatibility" (test @API.ProposedPPUpdates),
-      testProperty "PPUPState compatibility" (test @API.ShelleyPPUPState),
+      testProperty "PPUPState compatibility" (test @API.PPUPState),
       testProperty "UTxO compatibility" (test @API.UTxO),
-      testProperty "UTxOState compatibility" (test @API.ShelleyUTxOState),
+      testProperty "UTxOState compatibility" (test @API.UTxOState),
       testProperty "LedgerState compatibility" (test @API.LedgerState)
     ]
 

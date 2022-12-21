@@ -97,7 +97,7 @@ import Cardano.Ledger.Shelley.LedgerState
     PState (..),
     RewardAccounts,
     obligationDPState,
-    smartShelleyUTxOState,
+    smartUTxOState,
   )
 import qualified Cardano.Ledger.Shelley.Scripts as Shelley (MultiSig (..))
 import Cardano.Ledger.Shelley.TxBody (PoolParams (..))
@@ -694,7 +694,7 @@ initialLedgerState :: forall era. Reflect era => GenState era -> LedgerState era
 initialLedgerState gstate = LedgerState sutxostate dpstate
   where
     umap = UM.unify (gsInitialRewards gstate) (gsInitialDelegations gstate) Map.empty
-    sutxostate = smartShelleyUTxOState (UTxO (gsInitialUtxo gstate)) deposited (Coin 0) (pPUPStateZero @era)
+    sutxostate = smartUTxOState (UTxO (gsInitialUtxo gstate)) deposited (Coin 0) (pPUPStateZero @era)
     dpstate = DPState dstate pstate
     dstate =
       DState

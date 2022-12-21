@@ -48,7 +48,7 @@ import Cardano.Ledger.Shelley.LedgerState
     DPState (..),
     IncrementalStake (..),
     LedgerState (..),
-    ShelleyUTxOState (..),
+    UTxOState (..),
     dpsDState,
     dsUnified,
     rewards,
@@ -370,9 +370,9 @@ aliceGivesBobLovelace
           SNothing
       awits = makeWitnessesVKey (hashAnnotated txbody) signers
 
-utxoState :: ShelleyUTxOState C
+utxoState :: UTxOState C
 utxoState =
-  ShelleyUTxOState
+  UTxOState
     ( genesisCoins
         genesisId
         [ ShelleyTxOut aliceAddr aliceInitCoin,

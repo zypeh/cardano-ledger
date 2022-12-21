@@ -91,7 +91,7 @@ import Cardano.Ledger.Shelley.LedgerState as X
     PState (..),
     RewardUpdate (..),
     ShelleyPPUPState (..),
-    ShelleyUTxOState (..),
+    UTxOState (..),
   )
 import Cardano.Ledger.Shelley.PParams as X
   ( PParams,

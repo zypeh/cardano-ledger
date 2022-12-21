@@ -356,6 +356,8 @@ instance CC.Crypto c => ShelleyEraTxBody (ConwayEra c) where
   updateTxBodyL = notSupportedInThisEraL
   {-# INLINE updateTxBodyL #-}
 
+  updateTxBodyG = to (const SNothing)
+
   certsTxBodyL = notSupportedInThisEraL
   {-# INLINE certsTxBodyL #-}
 

@@ -43,7 +43,7 @@ import Cardano.Ledger.Shelley.LedgerState
     DState (..),
     LedgerState (..),
     PState (..),
-    ShelleyUTxOState (..),
+    UTxOState (..),
     obligationDPState,
   )
 import Cardano.Ledger.Shelley.LedgerState.Types (PPUPState)
@@ -167,7 +167,7 @@ instance
     Embed (EraRule "DELEGS" era) (ShelleyLEDGER era),
     Embed (EraRule "UTXOW" era) (ShelleyLEDGER era),
     Environment (EraRule "UTXOW" era) ~ UtxoEnv era,
-    State (EraRule "UTXOW" era) ~ ShelleyUTxOState era,
+    State (EraRule "UTXOW" era) ~ UTxOState era,
     Signal (EraRule "UTXOW" era) ~ Tx era,
     Environment (EraRule "DELEGS" era) ~ DelegsEnv era,
     State (EraRule "DELEGS" era) ~ DPState (EraCrypto era),
@@ -227,7 +227,7 @@ ledgerTransition ::
     Signal (EraRule "DELEGS" era) ~ Seq (DCert (EraCrypto era)),
     Embed (EraRule "UTXOW" era) (ShelleyLEDGER era),
     Environment (EraRule "UTXOW" era) ~ UtxoEnv era,
-    State (EraRule "UTXOW" era) ~ ShelleyUTxOState era,
+    State (EraRule "UTXOW" era) ~ UTxOState era,
     Signal (EraRule "UTXOW" era) ~ Tx era,
     ProtVerAtMost era 8
   ) =>

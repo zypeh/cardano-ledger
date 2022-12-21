@@ -18,7 +18,7 @@ module Cardano.Ledger.Shelley.LedgerState.IncrementalStake
     incrementalStakeDistr,
     applyRUpd,
     applyRUpdFiltered,
-    smartShelleyUTxOState,
+    smartUTxOState,
     filterAllRewards,
     FilteredRewards (..),
   )
@@ -77,6 +77,7 @@ import Data.Set (Set)
 import qualified Data.VMap as VMap
 import GHC.Records (HasField (..))
 import Lens.Micro
+import Cardano.Ledger.Shelley.PParams (ShelleyPPUPState(..))
 
 -- =======================================================================
 -- Part 1, Incrementally updating the IncrementalStake in Utxo rule
@@ -129,25 +130,25 @@ incrementalAggregateUtxoCoinByCredential mode (UTxO u) initial =
 
 -- ================================================
 
--- | A valid (or self-consistent) ShelleyUTxOState{sutxosUtxo, sutxosDeposited , sutxosFees  , sutxosPpups , sutxosStakeDistr}
+-- | A valid (or self-consistent) UTxOState{sutxosUtxo, sutxosDeposited , sutxosFees  , sutxosPpups , sutxosStakeDistr}
 --   maintains an invariant between the sutxosUtxo and sutxosStakeDistr fields. the sutxosStakeDistr field is
 --   the aggregation of Coin over the StakeReferences in the UTxO. It can be computed by a pure
 --   function from the _utxo field. In some situations, mostly unit or example tests, or when
---   initializing a small UTxO, we want to create a ShelleyUTxOState that computes the sutxosStakeDistr from
+--   initializing a small UTxO, we want to create a UTxOState that computes the sutxosStakeDistr from
 --   the sutxosUtxo. This is aways safe to do, but if the sutxosUtxo field is big, this can be very expensive,
 --   which defeats the purpose of memoizing the sutxosStakeDistr field. So use of this function should be
 --   restricted to tests and initializations, where the invariant should be maintained.
 --
 --   TO IncrementalStake
-smartShelleyUTxOState ::
+smartUTxOState ::
   EraTxOut era =>
   UTxO era ->
   Coin ->
   Coin ->
-  PPUPState era ->
-  ShelleyUTxOState era
-smartShelleyUTxOState utxo c1 c2 st =
-  ShelleyUTxOState
+  ShelleyPPUPState era ->
+  UTxOState era
+smartUTxOState utxo c1 c2 st =
+  UTxOState
     utxo
     c1
     c2
@@ -249,7 +250,7 @@ aggregateActiveStake =
 --   1) Adds reward coins to Rewards component of the UMap field of the DState,
 --      for actively delegated Stake
 --   2) Adds to the Treasury of the AccountState for non-actively delegated stake
---   3) Adds fees to the ShelleyUTxOState
+--   3) Adds fees to the UTxOState
 applyRUpd ::
   ( HasField "_protocolVersion" (PParams era) ProtVer
   ) =>

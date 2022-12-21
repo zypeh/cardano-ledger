@@ -68,9 +68,8 @@ import Cardano.Ledger.Core
 import Cardano.Ledger.Rules.ValidationMode (Inject (..), lblStatic)
 import Cardano.Ledger.Shelley.LedgerState
   ( PPUPPredFailure,
-    PPUPState,
     ShelleyPPUPState (..),
-    ShelleyUTxOState (..),
+    UTxOState (..),
     keyTxRefunds,
     totalTxDeposits,
     updateStakeDistribution,
@@ -116,9 +115,7 @@ instance
     Script era ~ AlonzoScript era,
     Embed (EraRule "PPUP" era) (AlonzoUTXOS era),
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
-    PPUPState era ~ ShelleyPPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
-    State (EraRule "PPUP" era) ~ PPUPState era,
     HasField "_costmdls" (PParams era) CostModels,
     HasField "_protocolVersion" (PParams era) ProtVer,
     HasField "_keyDeposit" (PParams era) Coin,
@@ -133,7 +130,7 @@ instance
   where
   type BaseM (AlonzoUTXOS era) = ShelleyBase
   type Environment (AlonzoUTXOS era) = UtxoEnv era
-  type State (AlonzoUTXOS era) = ShelleyUTxOState era
+  type State (AlonzoUTXOS era) = UTxOState era
   type Signal (AlonzoUTXOS era) = Tx era
   type PredicateFailure (AlonzoUTXOS era) = AlonzoUtxosPredFailure era
   type Event (AlonzoUTXOS era) = AlonzoUtxosEvent era
@@ -163,9 +160,7 @@ utxosTransition ::
     ScriptsNeeded era ~ AlonzoScriptsNeeded era,
     Script era ~ AlonzoScript era,
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
-    PPUPState era ~ ShelleyPPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
-    State (EraRule "PPUP" era) ~ PPUPState era,
     Embed (EraRule "PPUP" era) (AlonzoUTXOS era),
     HasField "_costmdls" (PParams era) CostModels,
     HasField "_keyDeposit" (PParams era) Coin,
@@ -231,7 +226,6 @@ scriptsValidateTransition ::
     Script era ~ AlonzoScript era,
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
-    State (EraRule "PPUP" era) ~ PPUPState era,
     Embed (EraRule "PPUP" era) (AlonzoUTXOS era),
     HasField "_keyDeposit" (PParams era) Coin,
     HasField "_poolDeposit" (PParams era) Coin,
@@ -240,7 +234,7 @@ scriptsValidateTransition ::
   ) =>
   TransitionRule (AlonzoUTXOS era)
 scriptsValidateTransition = do
-  TRC (UtxoEnv slot pp dpstate genDelegs, u@(ShelleyUTxOState utxo _ _ pup _), tx) <-
+  TRC (UtxoEnv slot pp dpstate genDelegs, u@(UTxOState utxo _ _ pup _), tx) <-
     judgmentContext
   let txBody = tx ^. bodyTxL
       protVer = getField @"_protocolVersion" pp
@@ -278,7 +272,7 @@ scriptsNotValidateTransition ::
   ) =>
   TransitionRule (AlonzoUTXOS era)
 scriptsNotValidateTransition = do
-  TRC (UtxoEnv slot pp _ _, us@(ShelleyUTxOState utxo _ fees _ _), tx) <- judgmentContext
+  TRC (UtxoEnv slot pp _ _, us@(UTxOState utxo _ fees _ _), tx) <- judgmentContext
   let txBody = tx ^. bodyTxL
 
   let !_ = traceEvent invalidBegin ()
@@ -400,13 +394,13 @@ instance
       dec n = Invalid n
 
 deriving stock instance
-  ( Show (Shelley.ShelleyUTxOState era),
+  ( Show (Shelley.UTxOState era),
     Show (PPUPPredFailure era)
   ) =>
   Show (AlonzoUtxosPredFailure era)
 
 instance
-  ( Eq (Shelley.ShelleyUTxOState era),
+  ( Eq (Shelley.UTxOState era),
     Eq (PPUPPredFailure era)
   ) =>
   Eq (AlonzoUtxosPredFailure era)
@@ -417,7 +411,7 @@ instance
   _ == _ = False
 
 instance
-  ( NoThunks (Shelley.ShelleyUTxOState era),
+  ( NoThunks (Shelley.UTxOState era),
     NoThunks (PPUPPredFailure era)
   ) =>
   NoThunks (AlonzoUtxosPredFailure era)

@@ -85,7 +85,7 @@ import Cardano.Ledger.Shelley.API
   )
 import Cardano.Ledger.Shelley.LedgerState
   ( PPUPState,
-    smartShelleyUTxOState,
+    smartUTxOState,
   )
 import Cardano.Ledger.Shelley.PParams (ShelleyPParamsHKD (..))
 import Cardano.Ledger.Shelley.Rules
@@ -374,7 +374,7 @@ testUTXOWsubset (UTXOW other) _ = error ("Cannot use testUTXOW in era " ++ show 
 -- | Use a test where any two (ValidationTagMismatch x y) failures match regardless of 'x' and 'y'
 testUTXOspecialCase wit@(UTXOW proof) utxo pparam tx expected =
   let env = UtxoEnv (SlotNo 0) pparam def (GenDelegs mempty)
-      state = smartShelleyUTxOState utxo (Coin 0) (Coin 0) def
+      state = smartUTxOState utxo (Coin 0) (Coin 0) def
    in case proof of
         Alonzo _ -> runSTS wit (TRC (env, state, tx)) (specialCont proof expected)
         Babbage _ -> runSTS wit (TRC (env, state, tx)) (specialCont proof expected)
@@ -405,7 +405,7 @@ testUTXOWwith ::
   Assertion
 testUTXOWwith wit@(UTXOW proof) cont utxo pparams tx expected =
   let env = UtxoEnv (SlotNo 0) pparams def (GenDelegs mempty)
-      state = smartShelleyUTxOState utxo (Coin 0) (Coin 0) def
+      state = smartUTxOState utxo (Coin 0) (Coin 0) def
    in case proof of
         -- TODO re-enable this once we have added all the new rules to Conway
         -- Conway _ -> runSTS wit (TRC (env, state, tx)) (cont expected)

@@ -65,7 +65,7 @@ import Cardano.Ledger.Shelley.LedgerState
     PPUPPredFailure,
     PPUPState,
     PState (..),
-    ShelleyUTxOState (..),
+    UTxOState (..),
   )
 import Cardano.Ledger.Shelley.Rules as Shelley
   ( ShelleyBbodyPredFailure (..),
@@ -115,6 +115,7 @@ import Test.Cardano.Ledger.Generic.Fields
     abstractWitnesses,
   )
 import Test.Cardano.Ledger.Generic.Proof
+import Data.Void (absurd)
 
 -- =====================================================
 
@@ -723,7 +724,7 @@ instance
 ppTickPredicateFailure ::
   ( ShelleyNewEpochPredFailure era ~ PredicateFailure (EraRule "NEWEPOCH" era),
     ShelleyEpochPredFailure era ~ PredicateFailure (EraRule "EPOCH" era),
-    ShelleyUpecPredFailure era ~ PredicateFailure (EraRule "UPEC" era)
+    Reflect era
   ) =>
   ShelleyTickPredFailure era ->
   PDoc
@@ -734,7 +735,7 @@ ppTickPredicateFailure (RupdFailure _) =
 instance
   ( ShelleyNewEpochPredFailure era ~ PredicateFailure (EraRule "NEWEPOCH" era),
     ShelleyEpochPredFailure era ~ PredicateFailure (EraRule "EPOCH" era),
-    ShelleyUpecPredFailure era ~ PredicateFailure (EraRule "UPEC" era)
+    Reflect era
   ) =>
   PrettyA (ShelleyTickPredFailure era)
   where
@@ -743,7 +744,7 @@ instance
 -- ===============
 ppNewEpochPredicateFailure ::
   ( ShelleyEpochPredFailure era ~ PredicateFailure (EraRule "EPOCH" era),
-    ShelleyUpecPredFailure era ~ PredicateFailure (EraRule "UPEC" era)
+    Reflect era
   ) =>
   ShelleyNewEpochPredFailure era ->
   PDoc
@@ -756,7 +757,7 @@ ppNewEpochPredicateFailure (MirFailure _) =
 instance
   ( ShelleyNewEpochPredFailure era ~ PredicateFailure (EraRule "NEWEPOCH" era),
     ShelleyEpochPredFailure era ~ PredicateFailure (EraRule "EPOCH" era),
-    ShelleyUpecPredFailure era ~ PredicateFailure (EraRule "UPEC" era)
+    Reflect era
   ) =>
   PrettyA (ShelleyNewEpochPredFailure era)
   where
@@ -764,19 +765,26 @@ instance
 
 -- ===============
 ppEpochPredicateFailure ::
-  ( ShelleyUpecPredFailure era ~ PredicateFailure (EraRule "UPEC" era)
-  ) =>
+  forall era.
+  Reflect era =>
   ShelleyEpochPredFailure era ->
   PDoc
 ppEpochPredicateFailure (PoolReapFailure _) =
   ppString "PoolreapPredicateFailure has no constructors"
 ppEpochPredicateFailure (SnapFailure _) =
   ppString "SnapPredicateFailure has no constructors"
-ppEpochPredicateFailure (UpecFailure x) = ppUpecPredicateFailure x
+ppEpochPredicateFailure (UpecFailure x) = case reify @era of
+  Shelley _ -> ppUpecPredicateFailure x
+  Mary _ -> ppUpecPredicateFailure x
+  Alonzo _ -> ppUpecPredicateFailure x
+  Allegra _ -> ppUpecPredicateFailure x
+  Babbage _ -> ppUpecPredicateFailure x
+  Conway _ -> absurd x
 
 instance
   ( ShelleyEpochPredFailure era ~ PredicateFailure (EraRule "EPOCH" era),
-    ShelleyUpecPredFailure era ~ PredicateFailure (EraRule "UPEC" era)
+    ShelleyUpecPredFailure era ~ PredicateFailure (EraRule "UPEC" era),
+    Reflect era
   ) =>
   PrettyA (ShelleyEpochPredFailure era)
   where
@@ -1332,10 +1340,10 @@ pcTxBody proof txbody = ppRecord "TxBody" pairs
     fields = abstractTxBody proof txbody
     pairs = concat (map (pcTxBodyField proof) fields)
 
-pcShelleyUTxOState :: Reflect era => Proof era -> ShelleyUTxOState era -> PDoc
-pcShelleyUTxOState proof (ShelleyUTxOState u dep fees _pups _stakedistro) =
+pcUTxOState :: Reflect era => Proof era -> UTxOState era -> PDoc
+pcUTxOState proof (UTxOState u dep fees _pups _stakedistro) =
   ppRecord
-    "ShelleyUTxOState"
+    "UTxOState"
     [ ("utxo", pcUTxO proof u),
       ("deposited", pcCoin dep),
       ("fees", pcCoin fees),
@@ -1343,7 +1351,7 @@ pcShelleyUTxOState proof (ShelleyUTxOState u dep fees _pups _stakedistro) =
       ("stake distr", ppString "Stake Distr")
     ]
 
-instance Reflect era => PrettyC (ShelleyUTxOState era) era where prettyC = pcShelleyUTxOState
+instance Reflect era => PrettyC (UTxOState era) era where prettyC = pcUTxOState
 
 pcDPState :: p -> DPState era -> PDoc
 pcDPState _proof (DPState (DState {dsUnified = un}) (PState {psStakePoolParams = pool})) =
@@ -1360,7 +1368,7 @@ pcLedgerState :: Reflect era => Proof era -> LedgerState era -> PDoc
 pcLedgerState proof (LedgerState utstate dpstate) =
   ppRecord
     "LedgerState"
-    [ ("ShelleyUTxOState", pcShelleyUTxOState proof utstate),
+    [ ("UTxOState", pcUTxOState proof utstate),
       ("DPState", pcDPState proof dpstate)
     ]
 

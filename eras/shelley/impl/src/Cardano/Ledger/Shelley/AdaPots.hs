@@ -28,7 +28,7 @@ import Cardano.Ledger.Shelley.LedgerState
     EpochState (..),
     LedgerState (..),
     PState (..),
-    ShelleyUTxOState (..),
+    UTxOState (..),
     keyTxRefunds,
     rewards,
     totalTxDeposits,
@@ -69,7 +69,7 @@ totalAdaPotsES (EpochState (AccountState treasury_ reserves_) _ ls _ _ _) =
       feesAdaPot = fees_
     }
   where
-    ShelleyUTxOState u deposits fees_ _ _ = lsUTxOState ls
+    UTxOState u deposits fees_ _ _ = lsUTxOState ls
     DPState dstate _ = lsDPState ls
     rewards_ = fromCompact $ fold (rewards dstate)
     coins = coinBalance u

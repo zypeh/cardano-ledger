@@ -35,7 +35,7 @@ import Cardano.Ledger.Shelley.API
     LedgerState,
     applyTxsTransition,
   )
-import Cardano.Ledger.Shelley.LedgerState (DPState, PPUPState, ShelleyUTxOState)
+import Cardano.Ledger.Shelley.LedgerState (DPState, PPUPState, UTxOState)
 import Cardano.Ledger.Shelley.PParams (ShelleyPParamsHKD (..))
 import Control.DeepSeq (NFData (..))
 import Control.State.Transition (Environment, Signal, State)
@@ -160,16 +160,16 @@ applyTxBenchmarks =
         ]
     ]
 
-instance FromCBOR (ShelleyUTxOState ShelleyBench) where
+instance FromCBOR (UTxOState ShelleyBench) where
   fromCBOR = fromNotSharedCBOR
 
-instance FromCBOR (ShelleyUTxOState AllegraBench) where
+instance FromCBOR (UTxOState AllegraBench) where
   fromCBOR = fromNotSharedCBOR
 
-instance FromCBOR (ShelleyUTxOState MaryBench) where
+instance FromCBOR (UTxOState MaryBench) where
   fromCBOR = fromNotSharedCBOR
 
-instance FromCBOR (ShelleyUTxOState AlonzoBench) where
+instance FromCBOR (UTxOState AlonzoBench) where
   fromCBOR = fromNotSharedCBOR
 
 instance FromCBOR (DPState C_Crypto) where

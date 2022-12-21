@@ -62,7 +62,7 @@ import Cardano.Ledger.Shelley.AdaPots (consumedTxBody, producedTxBody)
 import Cardano.Ledger.Shelley.Era (ShelleyEra, ShelleyUTXO)
 import Cardano.Ledger.Shelley.LedgerState (DPState (..), PPUPPredFailure, keyTxRefunds, totalTxDeposits)
 import Cardano.Ledger.Shelley.LedgerState.IncrementalStake
-import Cardano.Ledger.Shelley.LedgerState.Types (PPUPState, ShelleyUTxOState (..))
+import Cardano.Ledger.Shelley.LedgerState.Types (PPUPState, UTxOState (..))
 import Cardano.Ledger.Shelley.PParams
   ( ShelleyPPUPState (..),
     ShelleyPParams,
@@ -315,7 +315,7 @@ instance
   ) =>
   STS (ShelleyUTXO era)
   where
-  type State (ShelleyUTXO era) = ShelleyUTxOState era
+  type State (ShelleyUTXO era) = UTxOState era
   type Signal (ShelleyUTXO era) = ShelleyTx era
   type Environment (ShelleyUTXO era) = UtxoEnv era
   type BaseM (ShelleyUTXO era) = ShelleyBase
@@ -328,7 +328,7 @@ instance
     AssertionViolation
       { avSTS,
         avMsg,
-        avCtx = TRC (UtxoEnv _slot pp dpstate _, ShelleyUTxOState {sutxosDeposited, sutxosUtxo}, tx)
+        avCtx = TRC (UtxoEnv _slot pp dpstate _, UTxOState {sutxosDeposited, sutxosUtxo}, tx)
       } =
       "AssertionViolation ("
         <> avSTS
@@ -376,7 +376,7 @@ utxoInductive ::
     Embed (EraRule "PPUP" era) (utxo era),
     BaseM (utxo era) ~ ShelleyBase,
     Environment (utxo era) ~ UtxoEnv era,
-    State (utxo era) ~ ShelleyUTxOState era,
+    State (utxo era) ~ UTxOState era,
     Signal (utxo era) ~ Tx era,
     PredicateFailure (utxo era) ~ ShelleyUtxoPredFailure era,
     Event (utxo era) ~ UtxoEvent era,
@@ -392,7 +392,7 @@ utxoInductive ::
   TransitionRule (utxo era)
 utxoInductive = do
   TRC (UtxoEnv slot pp dpstate genDelegs, u, tx) <- judgmentContext
-  let ShelleyUTxOState utxo _ _ ppup _ = u
+  let UTxOState utxo _ _ ppup _ = u
   let txb = tx ^. bodyTxL
 
   {- txttl txb ≥ slot -}
@@ -602,12 +602,12 @@ validateMaxTxSizeUTxO pp tx =
 updateUTxOState ::
   forall era.
   EraTxBody era =>
-  ShelleyUTxOState era ->
+  UTxOState era ->
   TxBody era ->
   Coin ->
   PPUPState era ->
-  ShelleyUTxOState era
-updateUTxOState ShelleyUTxOState {sutxosUtxo, sutxosDeposited, sutxosFees, sutxosStakeDistr} txb depositChange ppups =
+  UTxOState era
+updateUTxOState UTxOState {sutxosUtxo, sutxosDeposited, sutxosFees, sutxosStakeDistr} txb depositChange ppups =
   let UTxO utxo = sutxosUtxo
       !utxoAdd = txouts txb -- These will be inserted into the UTxO
       {- utxoDel  = txins txb ◁ utxo -}
@@ -615,7 +615,7 @@ updateUTxOState ShelleyUTxOState {sutxosUtxo, sutxosDeposited, sutxosFees, sutxo
       {- newUTxO = (txins txb ⋪ utxo) ∪ outs txb -}
       newUTxO = utxoWithout `Map.union` unUTxO utxoAdd
       newIncStakeDistro = updateStakeDistribution sutxosStakeDistr (UTxO utxoDel) utxoAdd
-   in ShelleyUTxOState
+   in UTxOState
         { sutxosUtxo = UTxO newUTxO,
           sutxosDeposited = sutxosDeposited <> depositChange,
           sutxosFees = sutxosFees <> txb ^. feeTxBodyL,

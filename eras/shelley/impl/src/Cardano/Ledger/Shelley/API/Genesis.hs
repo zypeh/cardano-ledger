@@ -25,7 +25,7 @@ import Cardano.Ledger.Shelley.API.Types
     genesisUTxO,
     word64ToCoin,
   )
-import Cardano.Ledger.Shelley.LedgerState (StashedAVVMAddresses, smartShelleyUTxOState)
+import Cardano.Ledger.Shelley.LedgerState (StashedAVVMAddresses, smartUTxOState)
 import Cardano.Ledger.Shelley.LedgerState.Types (PPUPState)
 import Cardano.Ledger.Shelley.PParams (ShelleyPParams)
 import Cardano.Ledger.UTxO (coinBalance)
@@ -78,7 +78,7 @@ initialStateFromGenesis extendPPWithGenesis' sg ag =
         (AccountState (Coin 0) reserves)
         emptySnapShots
         ( LedgerState
-            (smartShelleyUTxOState initialUtxo (Coin 0) (Coin 0) def)
+            (smartUTxOState initialUtxo (Coin 0) (Coin 0) def)
             (DPState (def {dsGenDelegs = GenDelegs genDelegs}) def)
         )
         (extendPPWithGenesis' pp ag)

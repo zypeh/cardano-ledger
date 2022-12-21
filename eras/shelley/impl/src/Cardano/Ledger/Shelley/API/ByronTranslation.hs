@@ -155,7 +155,7 @@ translateToShelleyLedgerState genesisShelley epochNo cvs =
     ledgerState =
       LedgerState
         { lsUTxOState =
-            ShelleyUTxOState
+            UTxOState
               { sutxosUtxo = utxoShelley,
                 sutxosDeposited = Coin 0,
                 sutxosFees = Coin 0,

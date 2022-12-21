@@ -56,7 +56,7 @@ import Cardano.Ledger.Binary.Coders
 import Cardano.Ledger.Core
 import Cardano.Ledger.Crypto (DSIGN, HASH)
 import Cardano.Ledger.Rules.ValidationMode (Inject (..), Test, runTest, runTestOnSignal)
-import Cardano.Ledger.Shelley.LedgerState (ShelleyUTxOState (..), witsFromTxWitnesses)
+import Cardano.Ledger.Shelley.LedgerState (UTxOState (..), witsFromTxWitnesses)
 import Cardano.Ledger.Shelley.Rules
   ( ShelleyUtxowEvent (UtxoEvent),
     ShelleyUtxowPredFailure,
@@ -275,9 +275,8 @@ babbageUtxowTransition ::
     -- Allow UTXOW to call UTXO
     Embed (EraRule "UTXO" era) (BabbageUTXOW era),
     Environment (EraRule "UTXO" era) ~ UtxoEnv era,
-    State (EraRule "UTXO" era) ~ ShelleyUTxOState era,
     Signal (EraRule "UTXO" era) ~ Tx era,
-    ProtVerAtMost era 8
+    State (EraRule "UTXO" era) ~ UTxOState era
   ) =>
   TransitionRule (BabbageUTXOW era)
 babbageUtxowTransition = do
@@ -376,15 +375,14 @@ instance
     -- Allow UTXOW to call UTXO
     Embed (EraRule "UTXO" era) (BabbageUTXOW era),
     Environment (EraRule "UTXO" era) ~ UtxoEnv era,
-    State (EraRule "UTXO" era) ~ ShelleyUTxOState era,
+    State (EraRule "UTXO" era) ~ UTxOState era,
     Signal (EraRule "UTXO" era) ~ Tx era,
     Eq (PredicateFailure (EraRule "UTXOS" era)),
-    Show (PredicateFailure (EraRule "UTXOS" era)),
-    ProtVerAtMost era 8
+    Show (PredicateFailure (EraRule "UTXOS" era))
   ) =>
   STS (BabbageUTXOW era)
   where
-  type State (BabbageUTXOW era) = ShelleyUTxOState era
+  type State (BabbageUTXOW era) = UTxOState era
   type Signal (BabbageUTXOW era) = Tx era
   type Environment (BabbageUTXOW era) = UtxoEnv era
   type BaseM (BabbageUTXOW era) = ShelleyBase

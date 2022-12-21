@@ -35,7 +35,7 @@ import Cardano.Ledger.Shelley.LedgerState
     DState (..),
     LedgerState (..),
     PState (..),
-    ShelleyUTxOState (..),
+    UTxOState (..),
     incrementalStakeDistr,
     updateStakeDistribution,
   )
@@ -171,8 +171,8 @@ profileUTxO = do
 touchDPState :: DPState c -> Int
 touchDPState (DPState _x _y) = 1
 
-touchShelleyUTxOState :: Cardano.Ledger.Shelley.LedgerState.ShelleyUTxOState cryto -> Int
-touchShelleyUTxOState (ShelleyUTxOState _utxo _deposited _fees _ppups _) = 2
+touchUTxOState :: Cardano.Ledger.Shelley.LedgerState.UTxOState cryto -> Int
+touchUTxOState (UTxOState _utxo _deposited _fees _ppups _) = 2
 
 profileCreateRegKeys :: IO ()
 profileCreateRegKeys = do
@@ -181,7 +181,7 @@ profileCreateRegKeys = do
   -- mainbench: internal error: PAP object entered!
   -- (GHC version 8.6.5 for x86_64_unknown_linux)
   -- Please report this as a GHC bug:  http://www.haskell.org/ghc/reportabug
-  let touch (LedgerState x y) = touchShelleyUTxOState x + touchDPState y
+  let touch (LedgerState x y) = touchUTxOState x + touchDPState y
   putStrLn ("Exit profiling " ++ show (touch state))
 
 -- ============================================
@@ -204,7 +204,7 @@ profileCreateRegPools :: Word64 -> IO ()
 profileCreateRegPools size = do
   putStrLn "Enter profiling pool creation"
   let state = ledgerStateWithNregisteredPools 1 size
-  let touch (LedgerState x y) = touchShelleyUTxOState x + touchDPState y
+  let touch (LedgerState x y) = touchUTxOState x + touchDPState y
   putStrLn ("Exit profiling " ++ show (touch state))
 
 -- ==========================================

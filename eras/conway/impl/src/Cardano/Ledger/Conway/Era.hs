@@ -3,17 +3,16 @@
 
 module Cardano.Ledger.Conway.Era
   ( ConwayEra,
-    ConwayUTXO,
-    ConwayUTXOS,
     ConwayTALLY,
     ConwayNEWEPOCH,
     ConwayEPOCH,
     ConwayENACTMENT,
+    ConwayUTXOS,
   )
 where
 
 import Cardano.Ledger.Alonzo.Rules (AlonzoBBODY)
-import Cardano.Ledger.Babbage.Rules (BabbageLEDGER, BabbageUTXOW)
+import Cardano.Ledger.Babbage.Rules (BabbageLEDGER, BabbageUTXOS, BabbageUTXO, BabbageUTXOW)
 import Cardano.Ledger.Core
 import qualified Cardano.Ledger.Crypto as CC
 import Cardano.Ledger.Mary.Value (MaryValue)
@@ -25,7 +24,6 @@ import Cardano.Ledger.Shelley.Rules
     ShelleySNAP,
     ShelleyTICK,
     ShelleyTICKF,
-    ShelleyUPEC,
   )
 
 -- =====================================================
@@ -43,14 +41,6 @@ type instance Value (ConwayEra c) = MaryValue c
 -- Era Mapping
 -------------------------------------------------------------------------------
 
-data ConwayUTXOS era
-
-type instance EraRule "UTXOS" (ConwayEra c) = ConwayUTXOS (ConwayEra c)
-
-data ConwayUTXO era
-
-type instance EraRule "UTXO" (ConwayEra c) = ConwayUTXO (ConwayEra c)
-
 data ConwayTALLY era
 
 type instance EraRule "TALLY" (ConwayEra c) = ConwayTALLY (ConwayEra c)
@@ -67,11 +57,18 @@ data ConwayENACTMENT era
 
 type instance EraRule "ENACTMENT" (ConwayEra c) = ConwayENACTMENT (ConwayEra c)
 
+data ConwayUTXOS era
+
+type instance EraRule "UTXOS" (ConwayEra c) = BabbageUTXOS (ConwayEra c)
+
+
 -- Rules inherited from Babbage
 
-type instance EraRule "UTXOW" (ConwayEra c) = BabbageUTXOW (ConwayEra c)
-
 type instance EraRule "LEDGER" (ConwayEra c) = BabbageLEDGER (ConwayEra c)
+
+type instance EraRule "UTXO" (ConwayEra c) = BabbageUTXO (ConwayEra c)
+
+type instance EraRule "UTXOW" (ConwayEra c) = BabbageUTXOW (ConwayEra c)
 
 -- Rules inherited from Alonzo
 
@@ -102,7 +99,5 @@ type instance EraRule "SNAP" (ConwayEra c) = ShelleySNAP (ConwayEra c)
 type instance EraRule "TICK" (ConwayEra c) = ShelleyTICK (ConwayEra c)
 
 type instance EraRule "TICKF" (ConwayEra c) = ShelleyTICKF (ConwayEra c)
-
-type instance EraRule "UPEC" (ConwayEra c) = ShelleyUPEC (ConwayEra c)
 
 -- =================================================

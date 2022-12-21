@@ -57,6 +57,7 @@ import qualified Data.Map.Strict as Map
 import Data.Set (Set)
 import GHC.Records (HasField (..))
 import Lens.Micro.Extras (view)
+import Cardano.Ledger.Shelley.LedgerState (ShelleyPPUPState(..))
 
 -- | This function returns the coin balance of a given pot, either the
 -- reserves or the treasury, after the instantaneous rewards and pot
@@ -82,13 +83,13 @@ getGKeys nes = Map.keysSet genDelegs
 -- | Creates the ledger state for an empty ledger which
 --  contains the specified transaction outputs.
 genesisState ::
-  Default (PPUPState era) =>
+  Default (ShelleyPPUPState era) =>
   Map (KeyHash 'Genesis (EraCrypto era)) (GenDelegPair (EraCrypto era)) ->
   UTxO era ->
   LedgerState era
 genesisState genDelegs0 utxo0 =
   LedgerState
-    ( ShelleyUTxOState
+    ( UTxOState
         utxo0
         (Coin 0)
         (Coin 0)

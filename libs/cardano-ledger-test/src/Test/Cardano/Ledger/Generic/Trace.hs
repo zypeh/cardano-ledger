@@ -52,7 +52,7 @@ import Cardano.Ledger.Shelley.LedgerState
     NewEpochState (..),
     PPUPState,
     PState (..),
-    ShelleyUTxOState (..),
+    UTxOState (..),
     StashedAVVMAddresses,
   )
 import qualified Cardano.Ledger.Shelley.PParams as Shelley (ShelleyPParamsHKD (..))
@@ -222,7 +222,7 @@ makeEpochState gstate ledgerstate =
     }
 
 snaps :: EraTxOut era => LedgerState era -> SnapShots (EraCrypto era)
-snaps (LedgerState ShelleyUTxOState {sutxosUtxo = u, sutxosFees = f} (DPState dstate pstate)) =
+snaps (LedgerState UTxOState {sutxosUtxo = u, sutxosFees = f} (DPState dstate pstate)) =
   SnapShots snap (calculatePoolDistr snap) snap snap f
   where
     snap = stakeDistr u dstate pstate

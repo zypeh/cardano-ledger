@@ -75,7 +75,7 @@ import Cardano.Ledger.Shelley.Delegation.Certificates
     requiresVKeyWitness,
   )
 import Cardano.Ledger.Shelley.LedgerState
-  ( ShelleyUTxOState (..),
+  ( UTxOState (..),
     witsFromTxWitnesses,
   )
 import Cardano.Ledger.Shelley.Rules
@@ -344,7 +344,7 @@ alonzoStyleWitness ::
     -- Allow UTXOW to call UTXO
     Embed (EraRule "UTXO" era) (AlonzoUTXOW era),
     Environment (EraRule "UTXO" era) ~ UtxoEnv era,
-    State (EraRule "UTXO" era) ~ ShelleyUTxOState era,
+    State (EraRule "UTXO" era) ~ UTxOState era,
     Signal (EraRule "UTXO" era) ~ Tx era,
     ProtVerAtMost era 8
   ) =>
@@ -429,7 +429,7 @@ alonzoStyleWitness = do
 --  required to authenticate collateral witnesses.
 witsVKeyNeeded ::
   forall era.
-  (EraTx era, AlonzoEraTxBody era, ProtVerAtMost era 8) =>
+  (EraTx era, AlonzoEraTxBody era) =>
   UTxO era ->
   Tx era ->
   GenDelegs (EraCrypto era) ->
@@ -487,7 +487,7 @@ witsVKeyNeeded utxo' tx genDelegs =
     updateKeys =
       asWitness
         `Set.map` propWits
-          (strictMaybeToMaybe $ txBody ^. updateTxBodyL)
+          (strictMaybeToMaybe $ txBody ^. updateTxBodyG)
           genDelegs
 
 extSymmetricDifference :: (Ord k) => [a] -> (a -> k) -> [b] -> (b -> k) -> ([a], [b])
@@ -514,13 +514,13 @@ instance
     -- Allow UTXOW to call UTXO
     Embed (EraRule "UTXO" era) (AlonzoUTXOW era),
     Environment (EraRule "UTXO" era) ~ UtxoEnv era,
-    State (EraRule "UTXO" era) ~ ShelleyUTxOState era,
+    State (EraRule "UTXO" era) ~ UTxOState era,
     Signal (EraRule "UTXO" era) ~ Tx era,
     ProtVerAtMost era 8
   ) =>
   STS (AlonzoUTXOW era)
   where
-  type State (AlonzoUTXOW era) = ShelleyUTxOState era
+  type State (AlonzoUTXOW era) = UTxOState era
   type Signal (AlonzoUTXOW era) = Tx era
   type Environment (AlonzoUTXOW era) = UtxoEnv era
   type BaseM (AlonzoUTXOW era) = ShelleyBase

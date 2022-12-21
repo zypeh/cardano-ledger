@@ -64,7 +64,7 @@ import Cardano.Ledger.Shelley.API
 import Cardano.Ledger.Shelley.BlockChain (bBodySize)
 import Cardano.Ledger.Shelley.LedgerState
   ( PPUPState,
-    smartShelleyUTxOState,
+    smartUTxOState,
   )
 import Cardano.Ledger.Shelley.Rules
   ( ShelleyBbodyPredFailure (..),
@@ -177,7 +177,7 @@ initialBBodyState ::
 initialBBodyState pf utxo =
   BbodyState (LedgerState initialUtxoSt dpstate) (BlocksMade mempty)
   where
-    initialUtxoSt = smartShelleyUTxOState utxo (Coin 0) (Coin 0) def
+    initialUtxoSt = smartUTxOState utxo (Coin 0) (Coin 0) def
     dpstate =
       def
         { dpsDState =
@@ -639,7 +639,7 @@ testBBodyState pf =
             DHash' [hashData $ someDatum @era]
           ]
       poolID = hashKey . vKey . coerceKeyRole $ coldKeys
-      example1UtxoSt = smartShelleyUTxOState utxo (Coin 0) (Coin 40) def
+      example1UtxoSt = smartUTxOState utxo (Coin 0) (Coin 40) def
    in BbodyState (LedgerState example1UtxoSt def) (BlocksMade $ Map.singleton poolID 1)
 
 -- ============================== Helper functions ===============================

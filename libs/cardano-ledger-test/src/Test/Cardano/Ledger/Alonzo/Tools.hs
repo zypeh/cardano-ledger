@@ -26,7 +26,7 @@ import Cardano.Ledger.Core
 import qualified Cardano.Ledger.Crypto as CC
 import Cardano.Ledger.Keys (GenDelegs (..))
 import Cardano.Ledger.SafeHash (hashAnnotated)
-import Cardano.Ledger.Shelley.LedgerState (IncrementalStake (..), PPUPState, ShelleyUTxOState (..))
+import Cardano.Ledger.Shelley.LedgerState (IncrementalStake (..), PPUPState, UTxOState (..))
 import Cardano.Ledger.Shelley.Rules (UtxoEnv (..))
 import Cardano.Ledger.Shelley.UTxO (EraUTxO (..), UTxO (..), makeWitnessVKey)
 import Cardano.Ledger.Val (Val (inject))
@@ -108,7 +108,7 @@ testExUnitCalculation ::
   forall era m.
   ( MonadFail m,
     BaseM (EraRule "UTXOS" era) ~ ShelleyBase,
-    State (EraRule "UTXOS" era) ~ ShelleyUTxOState era,
+    State (EraRule "UTXOS" era) ~ UTxOState era,
     Environment (EraRule "UTXOS" era) ~ UtxoEnv era,
     Signal (EraRule "UTXOS" era) ~ Tx era,
     AlonzoEraTx era,
@@ -121,7 +121,7 @@ testExUnitCalculation ::
   ) =>
   Proof era ->
   Tx era ->
-  ShelleyUTxOState era ->
+  UTxOState era ->
   UtxoEnv era ->
   EpochInfo (Either Text) ->
   SystemStart ->
@@ -141,7 +141,7 @@ testExUnitCalculation proof tx utxoState ue ei ss costmdls err = do
 exampleExUnitCalc ::
   forall era.
   ( BaseM (EraRule "UTXOS" era) ~ ShelleyBase,
-    State (EraRule "UTXOS" era) ~ ShelleyUTxOState era,
+    State (EraRule "UTXOS" era) ~ UTxOState era,
     Environment (EraRule "UTXOS" era) ~ UtxoEnv era,
     Signable (CC.DSIGN (EraCrypto era)) (Crypto.Hash (CC.HASH (EraCrypto era)) EraIndependentTxBody),
     Signal (EraRule "UTXOS" era) ~ Tx era,
@@ -257,9 +257,9 @@ costmodels = array (PlutusV1, PlutusV1) [(PlutusV1, testingCostModelV1)]
 ustate ::
   (EraTxOut era, PostShelley era, Default (PPUPState era)) =>
   Proof era ->
-  ShelleyUTxOState era
+  UTxOState era
 ustate pf =
-  ShelleyUTxOState
+  UTxOState
     { sutxosUtxo = initUTxO pf,
       sutxosDeposited = Coin 0,
       sutxosFees = Coin 0,

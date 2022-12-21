@@ -125,10 +125,10 @@ instance Crypto c => TranslateEra (MaryEra c) ShelleyPPUPState where
           futureProposals = translateEra' ctxt $ futureProposals ps
         }
 
-instance Crypto c => TranslateEra (MaryEra c) ShelleyUTxOState where
+instance Crypto c => TranslateEra (MaryEra c) UTxOState where
   translateEra ctxt us =
     return
-      ShelleyUTxOState
+      UTxOState
         { sutxosUtxo = translateEra' ctxt $ sutxosUtxo us,
           sutxosDeposited = sutxosDeposited us,
           sutxosFees = sutxosFees us,

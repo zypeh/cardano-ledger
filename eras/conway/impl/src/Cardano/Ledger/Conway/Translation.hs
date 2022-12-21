@@ -38,7 +38,7 @@ import Cardano.Ledger.Shelley.API
     EpochState (..),
     NewEpochState (..),
     ShelleyGenesis,
-    ShelleyUTxOState (..),
+    UTxOState (..),
     StrictMaybe (..),
   )
 import qualified Cardano.Ledger.Shelley.API as API
@@ -150,10 +150,10 @@ instance Crypto c => TranslateEra (ConwayEra c) API.LedgerState where
         where
           dstate' = dstate {dsGenDelegs = newGenDelegs}
 
-instance Crypto c => TranslateEra (ConwayEra c) ShelleyUTxOState where
+instance Crypto c => TranslateEra (ConwayEra c) UTxOState where
   translateEra ctxt us =
     pure
-      ShelleyUTxOState
+      UTxOState
         { API.sutxosUtxo = translateEra' ctxt $ API.sutxosUtxo us,
           API.sutxosDeposited = API.sutxosDeposited us,
           API.sutxosFees = API.sutxosFees us,

@@ -35,7 +35,7 @@ import Cardano.Ledger.Shelley.Era (ShelleySNAP)
 import Cardano.Ledger.Shelley.LedgerState
   ( DPState (..),
     LedgerState (..),
-    ShelleyUTxOState (..),
+    UTxOState (..),
     incrementalStakeDistr,
   )
 import Control.State.Transition
@@ -85,7 +85,7 @@ snapTransition ::
 snapTransition = do
   TRC (lstate, s, _) <- judgmentContext
 
-  let LedgerState (ShelleyUTxOState _utxo _ fees _ incStake) (DPState dstate pstate) = lstate
+  let LedgerState (UTxOState _utxo _ fees _ incStake) (DPState dstate pstate) = lstate
       -- stakeSnap = stakeDistr @era utxo dstate pstate  -- HISTORICAL NOTE
       istakeSnap = incrementalStakeDistr @(EraCrypto era) incStake dstate pstate
 

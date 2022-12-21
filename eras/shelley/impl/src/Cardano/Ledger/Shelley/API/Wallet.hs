@@ -97,7 +97,7 @@ import Cardano.Ledger.Shelley.LedgerState
     NewEpochState (..),
     PState (..),
     RewardUpdate,
-    ShelleyUTxOState (..),
+    UTxOState (..),
     circulation,
     createRUpd,
     incrementalStakeDistr,

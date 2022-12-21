@@ -47,7 +47,7 @@ import Cardano.Ledger.Rules.ValidationMode
     Test,
     runTest,
   )
-import Cardano.Ledger.Shelley.LedgerState (PPUPPredFailure, PPUPState, ShelleyPPUPState, keyTxRefunds, totalTxDeposits)
+import Cardano.Ledger.Shelley.LedgerState (PPUPState, keyTxRefunds, totalTxDeposits)
 import qualified Cardano.Ledger.Shelley.LedgerState as Shelley
 import Cardano.Ledger.Shelley.PParams (ShelleyPParams, ShelleyPParamsHKD (..), Update)
 import Cardano.Ledger.Shelley.Rules (PpupEnv (..), ShelleyPPUP, ShelleyPpupPredFailure)
@@ -111,7 +111,7 @@ data AllegraUtxoPredFailure era
 deriving stock instance
   ( Show (TxOut era),
     Show (Value era),
-    Show (Shelley.ShelleyUTxOState era),
+    Show (Shelley.UTxOState era),
     Show (PPUPPredFailure era)
   ) =>
   Show (AllegraUtxoPredFailure era)
@@ -119,7 +119,7 @@ deriving stock instance
 deriving stock instance
   ( Eq (TxOut era),
     Eq (Value era),
-    Eq (Shelley.ShelleyUTxOState era),
+    Eq (Shelley.UTxOState era),
     Eq (PPUPPredFailure era)
   ) =>
   Eq (AllegraUtxoPredFailure era)
@@ -127,7 +127,7 @@ deriving stock instance
 instance
   ( NoThunks (TxOut era),
     NoThunks (Value era),
-    NoThunks (Shelley.ShelleyUTxOState era),
+    NoThunks (Shelley.UTxOState era),
     NoThunks (PPUPPredFailure era)
   ) =>
   NoThunks (AllegraUtxoPredFailure era)
@@ -145,18 +145,17 @@ utxoTransition ::
     Tx era ~ ShelleyTx era,
     Embed (EraRule "PPUP" era) (AllegraUTXO era),
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
-    PPUPState era ~ ShelleyPPUPState era,
+    State (EraRule "PPUP" era) ~ PPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
     HasField "_keyDeposit" (PParams era) Coin,
     HasField "_poolDeposit" (PParams era) Coin,
     HasField "_maxTxSize" (PParams era) Natural,
-    State (EraRule "PPUP" era) ~ ShelleyPPUPState era,
     ProtVerAtMost era 8
   ) =>
   TransitionRule (AllegraUTXO era)
 utxoTransition = do
   TRC (Shelley.UtxoEnv slot pp dpstate genDelegs, u, tx) <- judgmentContext
-  let Shelley.ShelleyUTxOState utxo _ _ ppup _ = u
+  let Shelley.UTxOState utxo _ _ ppup _ = u
   let txb = tx ^. bodyTxL
 
   {- ininterval slot (txvld tx) -}
@@ -273,8 +272,7 @@ instance
     Tx era ~ ShelleyTx era,
     Embed (EraRule "PPUP" era) (AllegraUTXO era),
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
-    State (EraRule "PPUP" era) ~ ShelleyPPUPState era,
-    PPUPState era ~ ShelleyPPUPState era,
+    State (EraRule "PPUP" era) ~ PPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
     ProtVerAtMost era 8,
     Eq (PPUPPredFailure era),
@@ -282,7 +280,7 @@ instance
   ) =>
   STS (AllegraUTXO era)
   where
-  type State (AllegraUTXO era) = Shelley.ShelleyUTxOState era
+  type State (AllegraUTXO era) = Shelley.UTxOState era
   type Signal (AllegraUTXO era) = ShelleyTx era
   type Environment (AllegraUTXO era) = Shelley.UtxoEnv era
   type BaseM (AllegraUTXO era) = ShelleyBase
@@ -311,7 +309,7 @@ instance
     Crypto (EraCrypto era),
     ToCBOR (Value era),
     ToCBOR (TxOut era),
-    ToCBOR (Shelley.ShelleyUTxOState era),
+    ToCBOR (Shelley.UTxOState era),
     ToCBOR (PPUPPredFailure era)
   ) =>
   ToCBOR (AllegraUtxoPredFailure era)

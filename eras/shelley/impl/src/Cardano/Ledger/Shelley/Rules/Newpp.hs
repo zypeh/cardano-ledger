@@ -25,10 +25,10 @@ import Cardano.Ledger.Shelley.LedgerState
   ( DPState (..),
     DState (..),
     PState (..),
-    ShelleyPPUPState (..),
-    ShelleyUTxOState (sutxosDeposited),
+    PPUPState (..),
+    UTxOState (sutxosDeposited),
     obligationDPState,
-    pvCanFollow,
+    pvCanFollow, PPUPState,
   )
 import Cardano.Ledger.Shelley.PParams
   ( ProposedPPUpdates (..),
@@ -49,13 +49,13 @@ import GHC.Records (HasField (..))
 import NoThunks.Class (NoThunks (..))
 
 data ShelleyNewppState era
-  = NewppState (PParams era) (ShelleyPPUPState era)
+  = NewppState (PParams era) (PPUPState era)
 
 data NewppEnv era
   = NewppEnv
       (DState (EraCrypto era))
       (PState (EraCrypto era))
-      (ShelleyUTxOState era)
+      (UTxOState era)
 
 data ShelleyNewppPredFailure era
   = UnexpectedDepositPot
@@ -123,10 +123,10 @@ updatePpup ::
   ( HasField "_protocolVersion" (PParams era) ProtVer,
     HasField "_protocolVersion" (PParamsUpdate era) (StrictMaybe ProtVer)
   ) =>
-  ShelleyPPUPState era ->
+  PPUPState era ->
   PParams era ->
-  ShelleyPPUPState era
-updatePpup ppupSt pp = ShelleyPPUPState ps emptyPPPUpdates
+  PPUPState era
+updatePpup ppupSt pp = PPUPState ps emptyPPPUpdates
   where
     ProposedPPUpdates newProposals = futureProposals ppupSt
     goodPV =

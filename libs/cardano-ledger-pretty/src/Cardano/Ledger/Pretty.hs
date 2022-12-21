@@ -106,7 +106,7 @@ import Cardano.Ledger.Shelley.LedgerState
     PPUPState,
     PState (..),
     ShelleyPPUPState (..),
-    ShelleyUTxOState (..),
+    UTxOState (..),
   )
 import Cardano.Ledger.Shelley.PParams
   ( PPUpdateEnv (..),
@@ -717,13 +717,13 @@ ppIncrementalStake (IStake st dangle) =
       ("ptrMap", ppMap ppPtr ppCoin dangle)
     ]
 
-ppShelleyUTxOState ::
+ppUTxOState ::
   CanPrettyPrintLedgerState era =>
-  ShelleyUTxOState era ->
+  UTxOState era ->
   PDoc
-ppShelleyUTxOState (ShelleyUTxOState u dep fee ppup sd) =
+ppUTxOState (UTxOState u dep fee ppup sd) =
   ppRecord
-    "ShelleyUTxOState"
+    "UTxOState"
     [ ("utxo", ppUTxO u),
       ("deposited", ppCoin dep),
       ("fees", ppCoin fee),
@@ -762,7 +762,7 @@ ppLedgerState ::
 ppLedgerState (LedgerState u d) =
   ppRecord
     "LedgerState"
-    [ ("utxoState", ppShelleyUTxOState u),
+    [ ("utxoState", ppUTxOState u),
       ("delegationState", ppDPState d)
     ]
 
@@ -818,9 +818,9 @@ instance
   ( Era era,
     CanPrettyPrintLedgerState era
   ) =>
-  PrettyA (ShelleyUTxOState era)
+  PrettyA (UTxOState era)
   where
-  prettyA = ppShelleyUTxOState
+  prettyA = ppUTxOState
 
 instance PrettyA (IncrementalStake c) where
   prettyA = ppIncrementalStake

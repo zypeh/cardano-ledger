@@ -17,6 +17,7 @@ module Cardano.Ledger.Shelley.Rules.Epoch
     ShelleyEpochPredFailure (..),
     ShelleyEpochEvent (..),
     PredicateFailure,
+    UpecPredFailure,
   )
 where
 
@@ -25,7 +26,7 @@ import Cardano.Ledger.Coin (Coin (..))
 import Cardano.Ledger.Core
 import Cardano.Ledger.EpochBoundary (SnapShots)
 import Cardano.Ledger.Shelley.Era (ShelleyEPOCH)
-import Cardano.Ledger.Shelley.LedgerState (EpochState, LedgerState, PState (..), ShelleyUTxOState (sutxosDeposited, sutxosPpups), UpecState (..), asReserves, esAccountState, esLState, esNonMyopic, esPp, esPrevPp, esSnapshots, lsDPState, lsUTxOState, obligationDPState, pattern DPState, pattern EpochState)
+import Cardano.Ledger.Shelley.LedgerState (EpochState, LedgerState, PState (..), UTxOState (sutxosDeposited, sutxosPpups), UpecState (..), asReserves, esAccountState, esLState, esNonMyopic, esPp, esPrevPp, esSnapshots, lsDPState, lsUTxOState, obligationDPState, pattern DPState, pattern EpochState)
 import Cardano.Ledger.Shelley.LedgerState.Types (PPUPState)
 import Cardano.Ledger.Shelley.Rewards ()
 import Cardano.Ledger.Shelley.Rules.PoolReap
@@ -53,23 +54,36 @@ import GHC.Generics (Generic)
 import GHC.Records (HasField)
 import NoThunks.Class (NoThunks (..))
 
+type UpecPredFailure era = UpecPredFailurePV (ProtVerLow era) era
+
+type family UpecPredFailurePV pv era where
+  UpecPredFailurePV 1 era = ShelleyUpecPredFailure era
+  UpecPredFailurePV 2 era = ShelleyUpecPredFailure era
+  UpecPredFailurePV 3 era = ShelleyUpecPredFailure era
+  UpecPredFailurePV 4 era = ShelleyUpecPredFailure era
+  UpecPredFailurePV 5 era = ShelleyUpecPredFailure era
+  UpecPredFailurePV 6 era = ShelleyUpecPredFailure era
+  UpecPredFailurePV 7 era = ShelleyUpecPredFailure era
+  UpecPredFailurePV 8 era = ShelleyUpecPredFailure era
+  UpecPredFailurePV _ era = Void
+
 data ShelleyEpochPredFailure era
   = PoolReapFailure (PredicateFailure (EraRule "POOLREAP" era)) -- Subtransition Failures
   | SnapFailure (PredicateFailure (EraRule "SNAP" era)) -- Subtransition Failures
-  | UpecFailure (PredicateFailure (EraRule "UPEC" era)) -- Subtransition Failures
+  | UpecFailure (UpecPredFailure era) -- Subtransition Failures
   deriving (Generic)
 
 deriving stock instance
   ( Eq (PredicateFailure (EraRule "POOLREAP" era)),
     Eq (PredicateFailure (EraRule "SNAP" era)),
-    Eq (PredicateFailure (EraRule "UPEC" era))
+    Eq (UpecPredFailure era)
   ) =>
   Eq (ShelleyEpochPredFailure era)
 
 deriving stock instance
   ( Show (PredicateFailure (EraRule "POOLREAP" era)),
     Show (PredicateFailure (EraRule "SNAP" era)),
-    Show (PredicateFailure (EraRule "UPEC" era))
+    Show (UpecPredFailure era)
   ) =>
   Show (ShelleyEpochPredFailure era)
 
@@ -95,7 +109,9 @@ instance
     State (EraRule "UPEC" era) ~ UpecState era,
     Signal (EraRule "UPEC" era) ~ (),
     Default (PPUPState era),
-    Default (PParams era)
+    Default (PParams era),
+    Eq (UpecPredFailure era),
+    Show (UpecPredFailure era)
   ) =>
   STS (ShelleyEPOCH era)
   where
@@ -110,7 +126,7 @@ instance
 instance
   ( NoThunks (PredicateFailure (EraRule "POOLREAP" era)),
     NoThunks (PredicateFailure (EraRule "SNAP" era)),
-    NoThunks (PredicateFailure (EraRule "UPEC" era))
+    NoThunks (UpecPredFailure era)
   ) =>
   NoThunks (ShelleyEpochPredFailure era)
 
@@ -216,7 +232,7 @@ instance
 instance
   ( Era era,
     STS (ShelleyUPEC era),
-    PredicateFailure (EraRule "UPEC" era) ~ ShelleyUpecPredFailure era,
+    UpecPredFailure era ~ ShelleyUpecPredFailure era,
     Event (EraRule "UPEC" era) ~ Void
   ) =>
   Embed (ShelleyUPEC era) (ShelleyEPOCH era)

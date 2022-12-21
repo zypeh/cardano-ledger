@@ -61,7 +61,7 @@ import Cardano.Ledger.Shelley.LedgerState
     PPUPState,
     PState (..),
     ShelleyPPUPState (..),
-    ShelleyUTxOState (..),
+    UTxOState (..),
     completeRupd,
     credMap,
     deltaF,
@@ -294,9 +294,9 @@ incrStakeComp SourceSignalTarget {source = chainSt, signal = block} =
     checkIncrStakeComp :: SourceSignalTarget ledger -> Property
     checkIncrStakeComp
       SourceSignalTarget
-        { source = LedgerState ShelleyUTxOState {sutxosUtxo = u, sutxosStakeDistr = sd} dp,
+        { source = LedgerState UTxOState {sutxosUtxo = u, sutxosStakeDistr = sd} dp,
           signal = tx,
-          target = LedgerState ShelleyUTxOState {sutxosUtxo = u', sutxosStakeDistr = sd'} dp'
+          target = LedgerState UTxOState {sutxosUtxo = u', sutxosStakeDistr = sd'} dp'
         } =
         counterexample
           ( mconcat
@@ -535,7 +535,7 @@ utxoDepositsIncreaseByFeesWithdrawals SourceSignalTarget {source, signal, target
   where
     us = lsUTxOState . esLState . nesEs . chainNes
     circulation chainSt =
-      let ShelleyUTxOState {sutxosUtxo = u, sutxosDeposited = d} = us chainSt
+      let UTxOState {sutxosUtxo = u, sutxosDeposited = d} = us chainSt
        in coinBalance u <+> d
     (_, ledgerTr) = ledgerTraceFromBlock @era @ledger source signal
 
@@ -551,7 +551,7 @@ potsSumIncreaseWdrlsPerBlock SourceSignalTarget {source, signal, target} =
     $ potsSum target <-> potsSum source === withdrawals signal
   where
     potsSum chainSt =
-      let ShelleyUTxOState {sutxosUtxo = u, sutxosDeposited = d, sutxosFees = f} =
+      let UTxOState {sutxosUtxo = u, sutxosDeposited = d, sutxosFees = f} =
             lsUTxOState . esLState . nesEs . chainNes $ chainSt
        in coinBalance u <+> d <+> f
 
@@ -575,9 +575,9 @@ potsSumIncreaseWdrlsPerTx SourceSignalTarget {source = chainSt, signal = block} 
     sumIncreaseWdrls :: SourceSignalTarget ledger -> Property
     sumIncreaseWdrls
       SourceSignalTarget
-        { source = LedgerState ShelleyUTxOState {sutxosUtxo = u, sutxosDeposited = d, sutxosFees = f} _,
+        { source = LedgerState UTxOState {sutxosUtxo = u, sutxosDeposited = d, sutxosFees = f} _,
           signal = tx,
-          target = LedgerState ShelleyUTxOState {sutxosUtxo = u', sutxosDeposited = d', sutxosFees = f'} _
+          target = LedgerState UTxOState {sutxosUtxo = u', sutxosDeposited = d', sutxosFees = f'} _
         } =
         property (hasFailedScripts tx)
           .||. (coinBalance u' <+> d' <+> f')
@@ -604,11 +604,11 @@ potsSumIncreaseByRewardsPerTx SourceSignalTarget {source = chainSt, signal = blo
       SourceSignalTarget
         { source =
             LedgerState
-              ShelleyUTxOState {sutxosUtxo = u, sutxosDeposited = d, sutxosFees = f}
+              UTxOState {sutxosUtxo = u, sutxosDeposited = d, sutxosFees = f}
               DPState {dpsDState = DState {dsUnified = umap1}},
           target =
             LedgerState
-              ShelleyUTxOState {sutxosUtxo = u', sutxosDeposited = d', sutxosFees = f'}
+              UTxOState {sutxosUtxo = u', sutxosDeposited = d', sutxosFees = f'}
               DPState {dpsDState = DState {dsUnified = umap2}}
         } =
         (coinBalance u' <+> d' <+> f')
@@ -679,8 +679,8 @@ preserveBalance SourceSignalTarget {source = chainSt, signal = block} =
         (failedScripts .||. ediffEq created consumed_)
       where
         failedScripts = property $ hasFailedScripts tx
-        LedgerState (ShelleyUTxOState {sutxosUtxo = u}) dpstate = ledgerSt
-        LedgerState (ShelleyUTxOState {sutxosUtxo = u'}) _ = ledgerSt'
+        LedgerState (UTxOState {sutxosUtxo = u}) dpstate = ledgerSt
+        LedgerState (UTxOState {sutxosUtxo = u'}) _ = ledgerSt'
         txb = tx ^. bodyTxL
         created =
           coinBalance u'
@@ -715,7 +715,7 @@ preserveBalanceRestricted SourceSignalTarget {source = chainSt, signal = block} 
 
     createdIsConsumed
       SourceSignalTarget
-        { source = LedgerState (ShelleyUTxOState {sutxosUtxo = UTxO u}) dpstate,
+        { source = LedgerState (UTxOState {sutxosUtxo = UTxO u}) dpstate,
           signal = tx
         } =
         inps === outs
@@ -748,7 +748,7 @@ preserveOutputsTx SourceSignalTarget {source = chainSt, signal = block} =
     (_, ledgerTr) = ledgerTraceFromBlock @era @ledger chainSt block
     outputPreserved
       SourceSignalTarget
-        { target = LedgerState (ShelleyUTxOState {sutxosUtxo = UTxO utxo}) _,
+        { target = LedgerState (UTxOState {sutxosUtxo = UTxO utxo}) _,
           signal = tx
         } =
         let UTxO outs = txouts @era (tx ^. bodyTxL)
@@ -776,8 +776,8 @@ canRestrictUTxO SourceSignalTarget {source = chainSt, signal = block} =
     (UTxO irrelevantUTxO, ledgerTrRestr) =
       ledgerTraceFromBlockWithRestrictedUTxO @era @ledger chainSt block
     outputPreserved
-      SourceSignalTarget {target = LedgerState (ShelleyUTxOState {sutxosUtxo = UTxO uFull}) _}
-      SourceSignalTarget {target = LedgerState (ShelleyUTxOState {sutxosUtxo = UTxO uRestr}) _} =
+      SourceSignalTarget {target = LedgerState (UTxOState {sutxosUtxo = UTxO uFull}) _}
+      SourceSignalTarget {target = LedgerState (UTxOState {sutxosUtxo = UTxO uRestr}) _} =
         counterexample
           (unlines ["non-disjoint:", show uRestr, show irrelevantUTxO])
           (uRestr `Map.disjoint` irrelevantUTxO)
@@ -802,7 +802,7 @@ eliminateTxInputs SourceSignalTarget {source = chainSt, signal = block} =
     (_, ledgerTr) = ledgerTraceFromBlock @era @ledger chainSt block
     inputsEliminated
       SourceSignalTarget
-        { target = LedgerState (ShelleyUTxOState {sutxosUtxo = (UTxO u')}) _,
+        { target = LedgerState (UTxOState {sutxosUtxo = (UTxO u')}) _,
           signal = tx
         } =
         property $
@@ -828,9 +828,9 @@ newEntriesAndUniqueTxIns SourceSignalTarget {source = chainSt, signal = block} =
     (_, ledgerTr) = ledgerTraceFromBlock @era @ledger chainSt block
     newEntryPresent
       SourceSignalTarget
-        { source = LedgerState (ShelleyUTxOState {sutxosUtxo = UTxO u}) _,
+        { source = LedgerState (UTxOState {sutxosUtxo = UTxO u}) _,
           signal = tx,
-          target = LedgerState (ShelleyUTxOState {sutxosUtxo = UTxO u'}) _
+          target = LedgerState (UTxOState {sutxosUtxo = UTxO u'}) _
         } =
         let UTxO outs = txouts @era (tx ^. bodyTxL)
             outIds = Set.map (\(TxIn _id _) -> _id) (Map.keysSet outs)
@@ -928,7 +928,7 @@ txFees ledgerTr =
     f
       c
       SourceSignalTarget
-        { source = LedgerState ShelleyUTxOState {sutxosUtxo = utxo} _,
+        { source = LedgerState UTxOState {sutxosUtxo = utxo} _,
           signal = tx
         } = c <> feeOrCollateral tx utxo
 
@@ -938,7 +938,7 @@ nonNegativeDeposits ::
   Property
 nonNegativeDeposits SourceSignalTarget {source = chainSt} =
   let es = (nesEs . chainNes) chainSt
-      ShelleyUTxOState {sutxosDeposited = d} = (lsUTxOState . esLState) es
+      UTxOState {sutxosDeposited = d} = (lsUTxOState . esLState) es
    in counterexample ("nonNegativeDeposits: " ++ show d) (d >= mempty)
 
 -- | Check that the sum of dsDeposits and the psDepoits are equal to the utsosDeposits
@@ -985,7 +985,7 @@ feesNonDecreasing SourceSignalTarget {source, target} =
     fees_ source <= fees_ target
   where
     fees_ chainSt =
-      let ShelleyUTxOState {sutxosFees = fees} =
+      let UTxOState {sutxosFees = fees} =
             lsUTxOState . esLState . nesEs . chainNes $ chainSt
        in fees
 
@@ -1415,7 +1415,7 @@ testIncrementalStake ::
   LedgerState era ->
   LedgerState era ->
   Property
-testIncrementalStake _ (LedgerState (ShelleyUTxOState utxo _ _ _ incStake) (DPState dstate pstate)) =
+testIncrementalStake _ (LedgerState (UTxOState utxo _ _ _ incStake) (DPState dstate pstate)) =
   let stake = stakeDistr @era utxo dstate pstate
 
       istake = incrementalStakeDistr @(EraCrypto era) incStake dstate pstate

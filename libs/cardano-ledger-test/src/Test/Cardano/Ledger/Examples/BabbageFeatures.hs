@@ -59,7 +59,7 @@ import Cardano.Ledger.Keys
 import Cardano.Ledger.Pretty.Babbage ()
 import Cardano.Ledger.SafeHash (hashAnnotated)
 import Cardano.Ledger.Shelley.API (DCert (DCertDeleg), DelegCert (DeRegKey), ProtVer (..), UTxO (..))
-import Cardano.Ledger.Shelley.LedgerState (PPUPState, ShelleyUTxOState (..), smartShelleyUTxOState)
+import Cardano.Ledger.Shelley.LedgerState (PPUPState, UTxOState (..), smartUTxOState)
 import qualified Cardano.Ledger.Shelley.Rules as Shelley
 import Cardano.Ledger.TxIn (TxIn (..))
 import Cardano.Ledger.UTxO (makeWitnessVKey)
@@ -850,8 +850,8 @@ refScriptInOutput pf =
 --  Valid: Unlock Simple Scripts with a Reference Script
 -- ====================================================================================
 
-simpleScriptOutWithRefScriptShelleyUTxOState :: (Scriptic era, EraTxBody era) => Proof era -> TestCaseData era
-simpleScriptOutWithRefScriptShelleyUTxOState pf =
+simpleScriptOutWithRefScriptUTxOState :: (Scriptic era, EraTxBody era) => Proof era -> TestCaseData era
+simpleScriptOutWithRefScriptUTxOState pf =
   TestCaseData
     { txBody =
         newTxBody
@@ -1042,7 +1042,7 @@ txFromTestCaseData
 
 testExpectSuccessValid ::
   forall era.
-  ( State (EraRule "UTXOW" era) ~ ShelleyUTxOState era,
+  ( State (EraRule "UTXOW" era) ~ UTxOState era,
     GoodCrypto (EraCrypto era),
     Default (PPUPState era),
     PostShelley era,
@@ -1065,7 +1065,7 @@ testExpectSuccessValid
 
         initUtxo = (UTxO . Map.fromList) $ inputs' ++ refInputs' ++ collateral'
         expectedUtxo = UTxO $ Map.fromList (newTxInOut ++ refInputs' ++ collateral')
-        expectedState = smartShelleyUTxOState expectedUtxo (Coin 0) fees def
+        expectedState = smartUTxOState expectedUtxo (Coin 0) fees def
         assumedValidTx = trustMeP pf True tx'
      in testUTXOW (UTXOW pf) initUtxo (pp pf) assumedValidTx (Right expectedState)
 
@@ -1087,7 +1087,7 @@ newColReturn
 
 testExpectSuccessInvalid ::
   forall era.
-  ( State (EraRule "UTXOW" era) ~ ShelleyUTxOState era,
+  ( State (EraRule "UTXOW" era) ~ UTxOState era,
     TxBody era ~ BabbageTxBody era,
     TxOut era ~ BabbageTxOut era,
     GoodCrypto (EraCrypto era),
@@ -1108,13 +1108,13 @@ testExpectSuccessInvalid
         initUtxo = UTxO . Map.fromList $ inputs' ++ refInputs' ++ collateral'
         colBallance = Collateral.collAdaBalance txBody' (Map.fromList collateral')
         expectedUtxo = UTxO $ Map.fromList (inputs' ++ refInputs' ++ newColReturn txBody')
-        expectedState = smartShelleyUTxOState expectedUtxo (Coin 0) colBallance def
+        expectedState = smartUTxOState expectedUtxo (Coin 0) colBallance def
         assumedInvalidTx = trustMeP pf False tx'
      in testUTXOW (UTXOW pf) initUtxo (pp pf) assumedInvalidTx (Right expectedState)
 
 testExpectFailure ::
   forall era.
-  ( State (EraRule "UTXOW" era) ~ ShelleyUTxOState era,
+  ( State (EraRule "UTXOW" era) ~ UTxOState era,
     GoodCrypto (EraCrypto era),
     Default (PPUPState era),
     PostShelley era,
@@ -1138,7 +1138,7 @@ genericBabbageFeatures ::
   forall era.
   ( AlonzoBased era (PredicateFailure (EraRule "UTXOW" era)),
     BabbageBased era (PredicateFailure (EraRule "UTXOW" era)),
-    State (EraRule "UTXOW" era) ~ ShelleyUTxOState era,
+    State (EraRule "UTXOW" era) ~ UTxOState era,
     TxBody era ~ BabbageTxBody era,
     TxOut era ~ BabbageTxOut era,
     GoodCrypto (EraCrypto era),
@@ -1161,7 +1161,7 @@ genericBabbageFeatures pf =
           testCase "reference input with data hash, with data witness" $ testExpectSuccessValid pf (refInputWithDataHashWithWit pf),
           testCase "reference script to authorize delegation certificate" $ testExpectSuccessValid pf (refscriptForDelegCert pf),
           testCase "reference script in output" $ testExpectSuccessValid pf (refScriptInOutput pf),
-          testCase "spend simple script output with reference script" $ testExpectSuccessValid pf (simpleScriptOutWithRefScriptShelleyUTxOState pf)
+          testCase "spend simple script output with reference script" $ testExpectSuccessValid pf (simpleScriptOutWithRefScriptUTxOState pf)
         ],
       testGroup
         "invalid transactions"

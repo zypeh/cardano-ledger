@@ -42,7 +42,7 @@ import Cardano.Ledger.Shelley.LedgerState
     NewEpochState (..),
     PPUPState,
     PulsingRewUpdate,
-    ShelleyUTxOState (..),
+    UTxOState (..),
     UpecState (..),
   )
 import Cardano.Ledger.Shelley.Rules.NewEpoch

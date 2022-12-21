@@ -18,7 +18,7 @@ import Cardano.Ledger.Shelley.LedgerState
     LedgerState (..),
     NewEpochState (..),
     PState (..),
-    ShelleyUTxOState (..),
+    UTxOState (..),
   )
 import qualified Cardano.Ledger.Shelley.PParams as Shelley (ShelleyPParamsHKD (..))
 import Cardano.Ledger.Shelley.Rules.Reports (synopsisCoinMap)
