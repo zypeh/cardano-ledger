@@ -26,7 +26,7 @@ import Cardano.Ledger.Core
 import Cardano.Ledger.Shelley.Era (ShelleyUPEC)
 import Cardano.Ledger.Shelley.LedgerState
   ( EpochState,
-    ShelleyPPUPState (..),
+    PPUPState (..),
     UTxOState (sutxosPpups),
     UpecState (..),
     esLState,
@@ -35,7 +35,6 @@ import Cardano.Ledger.Shelley.LedgerState
     pattern DPState,
     pattern EpochState,
   )
-import Cardano.Ledger.Shelley.LedgerState.Types (PPUPState)
 import Cardano.Ledger.Shelley.PParams (ProposedPPUpdates (..))
 import Cardano.Ledger.Shelley.Rules.Newpp (NewppEnv (..), ShelleyNEWPP, ShelleyNewppState (..))
 import Control.Monad.Trans.Reader (asks)
@@ -54,6 +53,7 @@ import GHC.Generics (Generic)
 import GHC.Records (HasField)
 import NoThunks.Class (NoThunks (..))
 import Numeric.Natural (Natural)
+import Cardano.Ledger.Shelley.LedgerState.Types (PPUPStateOrUnit)
 
 newtype ShelleyUpecPredFailure era
   = NewPpFailure (PredicateFailure (ShelleyNEWPP era))
@@ -64,7 +64,7 @@ instance NoThunks (ShelleyUpecPredFailure era)
 instance
   ( EraPParams era,
     Default (PParams era),
-    PPUPState era ~ ShelleyPPUPState era,
+    PPUPStateOrUnit era ~ PPUPState era,
     HasField "_keyDeposit" (PParams era) Coin,
     HasField "_maxBBSize" (PParams era) Natural,
     HasField "_maxTxSize" (PParams era) Natural,

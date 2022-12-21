@@ -41,7 +41,7 @@ import Cardano.Ledger.Keys
 import Cardano.Ledger.Keys.Bootstrap
 import Cardano.Ledger.SafeHash (extractHash, hashAnnotated)
 import Cardano.Ledger.Shelley (ShelleyEra)
-import Cardano.Ledger.Shelley.LedgerState (IncrementalStake (..), ShelleyPPUPState (..), UTxOState (..))
+import Cardano.Ledger.Shelley.LedgerState (IncrementalStake (..), PPUPState (..), UTxOState (..))
 -- def instance for DPState
 import Cardano.Ledger.Shelley.PParams
   ( ProposedPPUpdates (..),
@@ -141,7 +141,7 @@ utxoState0 =
     { sutxosUtxo = utxo0,
       sutxosDeposited = Coin 0,
       sutxosFees = Coin 0,
-      sutxosPpups = ShelleyPPUPState (ProposedPPUpdates mempty) (ProposedPPUpdates mempty),
+      sutxosPpups = PPUPState (ProposedPPUpdates mempty) (ProposedPPUpdates mempty),
       sutxosStakeDistr = mempty
     }
 
@@ -157,7 +157,7 @@ utxoState1 =
     { sutxosUtxo = UTxO $ Map.fromList [bobResult, aliceResult],
       sutxosDeposited = Coin 0,
       sutxosFees = Coin 10,
-      sutxosPpups = ShelleyPPUPState (ProposedPPUpdates mempty) (ProposedPPUpdates mempty),
+      sutxosPpups = PPUPState (ProposedPPUpdates mempty) (ProposedPPUpdates mempty),
       sutxosStakeDistr = IStake mempty mempty
     }
   where

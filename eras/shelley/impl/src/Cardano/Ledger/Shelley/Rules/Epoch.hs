@@ -26,8 +26,7 @@ import Cardano.Ledger.Coin (Coin (..))
 import Cardano.Ledger.Core
 import Cardano.Ledger.EpochBoundary (SnapShots)
 import Cardano.Ledger.Shelley.Era (ShelleyEPOCH)
-import Cardano.Ledger.Shelley.LedgerState (EpochState, LedgerState, PState (..), UTxOState (sutxosDeposited, sutxosPpups), UpecState (..), asReserves, esAccountState, esLState, esNonMyopic, esPp, esPrevPp, esSnapshots, lsDPState, lsUTxOState, obligationDPState, pattern DPState, pattern EpochState)
-import Cardano.Ledger.Shelley.LedgerState.Types (PPUPState)
+import Cardano.Ledger.Shelley.LedgerState (EpochState, LedgerState, PState (..), UTxOState (sutxosDeposited, sutxosPpups), UpecState (..), asReserves, esAccountState, esLState, esNonMyopic, esPp, esPrevPp, esSnapshots, lsDPState, lsUTxOState, obligationDPState, pattern DPState, pattern EpochState, PPUPState (..))
 import Cardano.Ledger.Shelley.Rewards ()
 import Cardano.Ledger.Shelley.Rules.PoolReap
   ( ShelleyPOOLREAP,
@@ -53,6 +52,7 @@ import Data.Void (Void)
 import GHC.Generics (Generic)
 import GHC.Records (HasField)
 import NoThunks.Class (NoThunks (..))
+import Cardano.Ledger.Shelley.LedgerState.Types (PPUPStateOrUnit)
 
 type UpecPredFailure era = UpecPredFailurePV (ProtVerLow era) era
 
@@ -108,10 +108,10 @@ instance
     Environment (EraRule "UPEC" era) ~ EpochState era,
     State (EraRule "UPEC" era) ~ UpecState era,
     Signal (EraRule "UPEC" era) ~ (),
-    Default (PPUPState era),
     Default (PParams era),
     Eq (UpecPredFailure era),
-    Show (UpecPredFailure era)
+    Show (UpecPredFailure era),
+    PPUPStateOrUnit era ~ PPUPState era
   ) =>
   STS (ShelleyEPOCH era)
   where
@@ -143,7 +143,8 @@ epochTransition ::
     Embed (EraRule "UPEC" era) (ShelleyEPOCH era),
     Environment (EraRule "UPEC" era) ~ EpochState era,
     State (EraRule "UPEC" era) ~ UpecState era,
-    Signal (EraRule "UPEC" era) ~ ()
+    Signal (EraRule "UPEC" era) ~ (),
+    PPUPStateOrUnit era ~ PPUPState era
   ) =>
   TransitionRule (ShelleyEPOCH era)
 epochTransition = do

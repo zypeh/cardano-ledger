@@ -24,9 +24,9 @@ module Cardano.Ledger.Shelley.LedgerState
     InstantaneousRewards (..),
     KeyPairs,
     LedgerState (..),
-    ShelleyPPUPState (..),
+    PPUPState (..),
+    PPUPStateOrUnit,
     PState (..),
-    PPUPState,
     PPUPPredFailure,
     RewardAccounts,
     RewardUpdate (..),
@@ -100,7 +100,7 @@ import Cardano.Ledger.Shelley.LedgerState.PulsingReward
 import Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits
 import Cardano.Ledger.Shelley.LedgerState.Types
 import Cardano.Ledger.Shelley.PParams
-  ( ShelleyPPUPState (..),
+  ( PPUPState (..),
     pvCanFollow,
   )
 import Cardano.Ledger.Shelley.RewardUpdate

@@ -48,9 +48,10 @@ import Cardano.Ledger.Shelley.LedgerState
     LedgerState (..),
     NewEpochState (..),
     PPUPState,
+    PPUPStateOrUnit,
     PState (..),
-    UTxOState (..),
     StashedAVVMAddresses,
+    UTxOState (..),
   )
 import Cardano.Ledger.Shelley.PParams (ProposedPPUpdates (..), ShelleyPParamsHKD)
 import Cardano.Ledger.Shelley.Tx (ShelleyTx (..))
@@ -148,24 +149,37 @@ samePPUP (Allegra _) x y = eqByShow x y
 samePPUP (Mary _) x y = eqByShow x y
 samePPUP (Alonzo _) x y = eqByShow x y
 samePPUP (Babbage _) x y = eqByShow x y
-samePPUP (Conway _) () () = Nothing
+samePPUP (Conway _) x y = eqByShow x y
 {-# NOINLINE samePPUP #-}
 
-instance (Era era) => Same era (UTxOState era) where
+instance (Era era, Reflect era) => Same era (UTxOState era) where
   same proof u1 u2 =
     [ ("UTxO", sameUTxO proof (sutxosUtxo u1) (sutxosUtxo u2)),
       ("Deposited", eqByShow (sutxosDeposited u1) (sutxosDeposited u2)),
-      ("Fees", eqByShow (sutxosFees u1) (sutxosFees u2)),
-      ("PPUpdates", samePPUP proof (sutxosPpups u1) (sutxosPpups u2)),
-      ("StakeDistr", eqByShow (sutxosStakeDistr u1) (sutxosStakeDistr u2))
+      ("Fees", eqByShow (sutxosFees u1) (sutxosFees u2))
     ]
+      ++ ppu
+      ++ [
+           --
+           ("StakeDistr", eqByShow (sutxosStakeDistr u1) (sutxosStakeDistr u2))
+         ]
+    where
+      ppuPretty :: PPUPState era ~ PPUPStateOrUnit era => [(String, Maybe PDoc)]
+      ppuPretty = [("PPUpdates", samePPUP proof (sutxosPpups u1) (sutxosPpups u2))]
+      ppu = case reify @era of
+        Shelley _ -> ppuPretty
+        Mary _ -> ppuPretty
+        Allegra _ -> ppuPretty
+        Alonzo _ -> ppuPretty
+        Babbage _ -> ppuPretty
+        Conway _ -> []
 
-instance (Era era) => Same era (LedgerState era) where
+instance (Era era, Reflect era) => Same era (LedgerState era) where
   same proof x1 x2 =
     extendLabel "UTxOState " (same proof (lsUTxOState x1) (lsUTxOState x2))
       ++ extendLabel "DPState " (same proof (lsDPState x1) (lsDPState x2))
 
-instance (Era era) => Same era (EpochState era) where
+instance (Era era, Reflect era) => Same era (EpochState era) where
   same proof e1 e2 =
     [ ("AccountState", eqByShow (esAccountState e1) (esAccountState e2)),
       ("SnapShots", eqByShow (esSnapshots e1) (esSnapshots e2)),
@@ -187,7 +201,8 @@ sameStashedAVVMAddresses proof x y =
     Conway _ -> if x == y then Nothing else Just (viaShow x)
 
 instance
-  ( Era era
+  ( Era era,
+    Reflect era
   ) =>
   Same era (NewEpochState era)
   where

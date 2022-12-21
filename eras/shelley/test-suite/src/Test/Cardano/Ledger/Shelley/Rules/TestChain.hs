@@ -58,9 +58,7 @@ import Cardano.Ledger.Shelley.LedgerState
     IncrementalStake (..),
     LedgerState (..),
     NewEpochState (..),
-    PPUPState,
     PState (..),
-    ShelleyPPUPState (..),
     UTxOState (..),
     completeRupd,
     credMap,
@@ -74,7 +72,7 @@ import Cardano.Ledger.Shelley.LedgerState
     ptrsMap,
     rewards,
     rs,
-    totalTxDeposits,
+    totalTxDeposits, PPUPState (..), PPUPStateOrUnit,
   )
 import Cardano.Ledger.Shelley.Rewards (sumRewards)
 import Cardano.Ledger.Shelley.Rules
@@ -182,9 +180,9 @@ import qualified Test.Tasty.QuickCheck as TQC
 adaIsPreserved ::
   forall era.
   ( EraGen era,
-    PPUPState era ~ ShelleyPPUPState era,
     QC.HasTrace (CHAIN era) (GenEnv era),
-    ProtVerAtMost era 8
+    ProtVerAtMost era 8,
+    PPUPStateOrUnit era ~ PPUPState era
   ) =>
   Property
 adaIsPreserved =
@@ -201,8 +199,8 @@ minimal ::
   forall era.
   ( EraGen era,
     QC.HasTrace (CHAIN era) (GenEnv era),
-    PPUPState era ~ ShelleyPPUPState era,
-    ProtVerAtMost era 8
+    ProtVerAtMost era 8,
+    PPUPStateOrUnit era ~ PPUPState era
   ) =>
   TestTree
 minimal =
@@ -244,8 +242,8 @@ collisionFreeComplete ::
   ( EraGen era,
     ChainProperty era,
     TestingLedger era ledger,
-    Default (PPUPState era),
-    QC.HasTrace (CHAIN era) (GenEnv era)
+    QC.HasTrace (CHAIN era) (GenEnv era),
+    Default (PPUPStateOrUnit era)
   ) =>
   Property
 collisionFreeComplete =
@@ -266,9 +264,9 @@ stakeIncrTest ::
   forall era ledger.
   ( EraGen era,
     TestingLedger era ledger,
-    PPUPState era ~ ShelleyPPUPState era,
     ChainProperty era,
-    QC.HasTrace (CHAIN era) (GenEnv era)
+    QC.HasTrace (CHAIN era) (GenEnv era),
+    Default (PPUPStateOrUnit era)
   ) =>
   Property
 stakeIncrTest =
@@ -332,10 +330,10 @@ adaPreservationChain ::
   forall era ledger.
   ( EraGen era,
     TestingLedger era ledger,
-    PPUPState era ~ ShelleyPPUPState era,
     ChainProperty era,
     QC.HasTrace (CHAIN era) (GenEnv era),
-    ProtVerAtMost era 8
+    ProtVerAtMost era 8,
+    PPUPStateOrUnit era ~ PPUPState era
   ) =>
   Property
 adaPreservationChain =
@@ -380,8 +378,8 @@ checkPreservation ::
     ShelleyEraTxBody era,
     HasField "_keyDeposit" (PParams era) Coin,
     HasField "_poolDeposit" (PParams era) Coin,
-    PPUPState era ~ ShelleyPPUPState era,
-    ProtVerAtMost era 8
+    ProtVerAtMost era 8,
+    PPUPStateOrUnit era ~ PPUPState era
   ) =>
   (SourceSignalTarget (CHAIN era), Int) ->
   Property
@@ -995,8 +993,8 @@ feesNonDecreasing SourceSignalTarget {source, target} =
 shortChainTrace ::
   forall era.
   ( EraGen era,
-    PPUPState era ~ ShelleyPPUPState era,
-    QC.HasTrace (CHAIN era) (GenEnv era)
+    QC.HasTrace (CHAIN era) (GenEnv era),
+    Default (PPUPStateOrUnit era)
   ) =>
   (SourceSignalTarget (CHAIN era) -> Property) ->
   Property
@@ -1006,8 +1004,8 @@ shortChainTrace f = withMaxSuccess 100 $ forAllChainTrace @era 10 $ \tr -> conjo
 depositTests ::
   forall era.
   ( EraGen era,
-    PPUPState era ~ ShelleyPPUPState era,
-    QC.HasTrace (CHAIN era) (GenEnv era)
+    QC.HasTrace (CHAIN era) (GenEnv era),
+    Default (PPUPStateOrUnit era)
   ) =>
   TestTree
 depositTests =
@@ -1027,10 +1025,10 @@ depositTests =
 poolProperties ::
   forall era.
   ( EraGen era,
-    Default (PPUPState era),
     ChainProperty era,
     QC.HasTrace (CHAIN era) (GenEnv era),
-    ProtVerAtMost era 8
+    ProtVerAtMost era 8,
+    Default (PPUPStateOrUnit era)
   ) =>
   Property
 poolProperties =
@@ -1111,10 +1109,10 @@ poolStateIsInternallyConsistent (SourceSignalTarget {source = chainSt, signal = 
 delegProperties ::
   forall era.
   ( EraGen era,
-    Default (PPUPState era),
     QC.HasTrace (CHAIN era) (GenEnv era),
     ChainProperty era,
-    ProtVerAtMost era 8
+    ProtVerAtMost era 8,
+    Default (PPUPStateOrUnit era)
   ) =>
   Property
 delegProperties =
@@ -1311,9 +1309,9 @@ chainSstWithTick ledgerTr =
 removedAfterPoolreap ::
   forall era.
   ( ChainProperty era,
-    Default (PPUPState era),
     EraGen era,
-    QC.HasTrace (CHAIN era) (GenEnv era)
+    QC.HasTrace (CHAIN era) (GenEnv era),
+    Default (PPUPStateOrUnit era)
   ) =>
   Property
 removedAfterPoolreap =
@@ -1336,9 +1334,9 @@ removedAfterPoolreap =
 forAllChainTrace ::
   forall era prop.
   ( Testable prop,
-    Default (PPUPState era),
     EraGen era,
-    QC.HasTrace (CHAIN era) (GenEnv era)
+    QC.HasTrace (CHAIN era) (GenEnv era),
+    Default (PPUPStateOrUnit era)
   ) =>
   Word64 -> -- trace length
   (Trace (CHAIN era) -> prop) ->
@@ -1370,7 +1368,7 @@ forEachEpochTrace ::
   ( EraGen era,
     Testable prop,
     QC.HasTrace (CHAIN era) (GenEnv era),
-    Default (PPUPState era)
+    Default (PPUPStateOrUnit era)
   ) =>
   Int ->
   Word64 ->
@@ -1394,7 +1392,7 @@ atEpoch ::
   ( EraGen era,
     Testable prop,
     QC.HasTrace (CHAIN era) (GenEnv era),
-    Default (PPUPState era)
+    Default (PPUPStateOrUnit era)
   ) =>
   (LedgerState era -> LedgerState era -> prop) ->
   Property
@@ -1429,7 +1427,7 @@ incrementalStakeProp ::
   forall era.
   ( EraGen era,
     QC.HasTrace (CHAIN era) (GenEnv era),
-    Default (PPUPState era)
+    Default (PPUPStateOrUnit era)
   ) =>
   Proxy era ->
   Property

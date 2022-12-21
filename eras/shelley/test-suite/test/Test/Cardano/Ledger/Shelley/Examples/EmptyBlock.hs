@@ -13,7 +13,8 @@ where
 import Cardano.Ledger.BaseTypes (Nonce)
 import Cardano.Ledger.Block (Block)
 import Cardano.Ledger.Core
-import Cardano.Ledger.Shelley.PParams (ShelleyPParams)
+import Cardano.Ledger.Shelley.LedgerState (PPUPStateOrUnit)
+import Cardano.Ledger.Shelley.PParams (PPUPState (..), ShelleyPParams)
 import Cardano.Ledger.Slot
   ( BlockNo (..),
     SlotNo (..),
@@ -46,7 +47,13 @@ import Test.Cardano.Ledger.Shelley.Utils (ShelleyTest, getBlockNonce)
 
 -- =============================================================
 
-initStEx1 :: forall era. (ShelleyTest era, PParams era ~ ShelleyPParams era) => ChainState era
+initStEx1 ::
+  forall era.
+  ( ShelleyTest era,
+    PParams era ~ ShelleyPParams era,
+    PPUPStateOrUnit era ~ PPUPState era
+  ) =>
+  ChainState era
 initStEx1 = initSt (UTxO mempty)
 
 blockEx1 ::
@@ -88,7 +95,8 @@ expectedStEx1 ::
     EraSegWits era,
     ExMock (EraCrypto era),
     PreAlonzo era,
-    PParams era ~ ShelleyPParams era
+    PParams era ~ ShelleyPParams era,
+    PPUPStateOrUnit era ~ PPUPState era
   ) =>
   ChainState era
 expectedStEx1 = evolveNonceUnfrozen (blockNonce @era) . newLab blockEx1 $ initStEx1
@@ -105,7 +113,8 @@ exEmptyBlock ::
     ExMock (EraCrypto era),
     PreAlonzo era,
     EraSegWits era,
-    PParams era ~ ShelleyPParams era
+    PParams era ~ ShelleyPParams era,
+    PPUPStateOrUnit era ~ PPUPState era
   ) =>
   CHAINExample (BHeader (EraCrypto era)) era
 exEmptyBlock = CHAINExample initStEx1 blockEx1 (Right expectedStEx1)

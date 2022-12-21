@@ -30,8 +30,7 @@ import Cardano.Ledger.Core
 import qualified Cardano.Ledger.Crypto as CC (Crypto)
 import Cardano.Ledger.Keys (DSignable, Hash)
 import Cardano.Ledger.SafeHash (SafeHash)
-import Cardano.Ledger.Shelley.API (LedgerState, ShelleyPPUPState)
-import Cardano.Ledger.Shelley.LedgerState (PPUPState)
+import Cardano.Ledger.Shelley.API (LedgerState, PPUPState (..))
 import Cardano.Ledger.Shelley.Rules (LedgerEnv)
 import Cardano.Ledger.Shelley.Tx (ShelleyTx)
 import Cardano.Ledger.UTxO (makeWitnessVKey)
@@ -76,6 +75,7 @@ import Test.Cardano.Ledger.Shelley.Utils (ChainProperty, RawSeed, mkKeyPair')
 import Test.QuickCheck (conjoin, (===), (==>))
 import Test.Tasty (TestTree, localOption, testGroup)
 import qualified Test.Tasty.QuickCheck as TQC
+import Cardano.Ledger.Shelley.LedgerState (PPUPStateOrUnit)
 
 -- =====================================================================
 
@@ -103,8 +103,8 @@ minimalPropertyTests ::
     TestingLedger era ledger,
     ChainProperty era,
     QC.HasTrace (CHAIN era) (GenEnv era),
-    PPUPState era ~ ShelleyPPUPState era,
-    ProtVerAtMost era 8
+    ProtVerAtMost era 8,
+    PPUPState era ~ PPUPStateOrUnit era
   ) =>
   TestTree
 minimalPropertyTests =
@@ -138,13 +138,13 @@ propertyTests ::
     QC.HasTrace ledger (GenEnv era),
     Embed (EraRule "DELEGS" era) ledger,
     Embed (EraRule "UTXOW" era) ledger,
-    PPUPState era ~ ShelleyPPUPState era,
     Environment ledger ~ LedgerEnv era,
     QC.BaseEnv ledger ~ Globals,
     BaseM ledger ~ ReaderT Globals Identity,
     State ledger ~ LedgerState era,
     Signal ledger ~ Tx era,
-    ProtVerAtMost era 8
+    ProtVerAtMost era 8,
+    PPUPState era ~ PPUPStateOrUnit era
   ) =>
   TestTree
 propertyTests =

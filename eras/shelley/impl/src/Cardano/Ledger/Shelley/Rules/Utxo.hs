@@ -60,11 +60,11 @@ import Cardano.Ledger.Keys (GenDelegs)
 import Cardano.Ledger.Rules.ValidationMode (Inject (..), Test, runTest)
 import Cardano.Ledger.Shelley.AdaPots (consumedTxBody, producedTxBody)
 import Cardano.Ledger.Shelley.Era (ShelleyEra, ShelleyUTXO)
-import Cardano.Ledger.Shelley.LedgerState (DPState (..), PPUPPredFailure, keyTxRefunds, totalTxDeposits)
+import Cardano.Ledger.Shelley.LedgerState (DPState (..), PPUPPredFailure, UTxOState (..), keyTxRefunds, totalTxDeposits)
 import Cardano.Ledger.Shelley.LedgerState.IncrementalStake
-import Cardano.Ledger.Shelley.LedgerState.Types (PPUPState, UTxOState (..))
+import Cardano.Ledger.Shelley.LedgerState.Types (PPUPStateOrUnit)
 import Cardano.Ledger.Shelley.PParams
-  ( ShelleyPPUPState (..),
+  ( PPUPState (..),
     ShelleyPParams,
     ShelleyPParamsHKD (..),
     Update,
@@ -111,6 +111,7 @@ import Control.State.Transition
     wrapEvent,
     wrapFailed,
   )
+import Data.Default.Class (Default)
 import Data.Foldable (foldl', toList)
 import qualified Data.Map.Strict as Map
 import Data.MapExtras (extractKeys)
@@ -306,12 +307,13 @@ instance
     Show (ShelleyTx era),
     Embed (EraRule "PPUP" era) (ShelleyUTXO era),
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
-    PPUPState era ~ ShelleyPPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
-    State (EraRule "PPUP" era) ~ ShelleyPPUPState era,
+    State (EraRule "PPUP" era) ~ PPUPState era,
     ProtVerAtMost era 8,
     Eq (PPUPPredFailure era),
-    Show (PPUPPredFailure era)
+    Show (PPUPPredFailure era),
+    Default (PPUPStateOrUnit era),
+    PPUPStateOrUnit era ~ PPUPState era
   ) =>
   STS (ShelleyUTXO era)
   where
@@ -381,13 +383,13 @@ utxoInductive ::
     PredicateFailure (utxo era) ~ ShelleyUtxoPredFailure era,
     Event (utxo era) ~ UtxoEvent era,
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
-    State (EraRule "PPUP" era) ~ ShelleyPPUPState era,
-    PPUPState era ~ ShelleyPPUPState era,
+    State (EraRule "PPUP" era) ~ PPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
     HasField "_keyDeposit" (PParams era) Coin,
     HasField "_poolDeposit" (PParams era) Coin,
     HasField "_maxTxSize" (PParams era) Natural,
-    ProtVerAtMost era 8
+    ProtVerAtMost era 8,
+    PPUPStateOrUnit era ~ PPUPState era
   ) =>
   TransitionRule (utxo era)
 utxoInductive = do
@@ -601,7 +603,7 @@ validateMaxTxSizeUTxO pp tx =
 
 updateUTxOState ::
   forall era.
-  EraTxBody era =>
+  (EraTxBody era, PPUPStateOrUnit era ~ PPUPState era) =>
   UTxOState era ->
   TxBody era ->
   Coin ->

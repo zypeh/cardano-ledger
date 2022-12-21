@@ -25,7 +25,7 @@ import Cardano.Ledger.Era
     EraCrypto,
   )
 import Cardano.Ledger.Shelley.API
-import Cardano.Ledger.Shelley.LedgerState (PPUPState, incrementalStakeDistr)
+import Cardano.Ledger.Shelley.LedgerState (incrementalStakeDistr, PPUPStateOrUnit)
 import Cardano.Ledger.Shelley.Rules
   ( BbodyEnv,
     ShelleyBbodyState,
@@ -140,7 +140,9 @@ lastByronHeaderHash _ = HashHeader $ mkHash 0
 -- and (2) always return Right (since this function does not raise predicate failures).
 mkGenesisChainState ::
   forall era a.
-  (Default (PPUPState era), EraGen era) =>
+  ( Default (PPUPStateOrUnit era),
+    EraGen era
+  ) =>
   GenEnv era ->
   IRC (CHAIN era) ->
   Gen (Either a (ChainState era))

@@ -99,9 +99,9 @@ deriving instance
     Eq (Core.Tx era),
     Eq (PredicateFailure (Core.EraRule "LEDGER" era)),
     Eq (Core.TxOut era),
-    Eq (PPUPState era),
     Eq (StashedAVVMAddresses era),
     Eq (TranslationContext era),
+    Eq (PPUPStateOrUnit era),
     Era era
   ) =>
   Eq (ShelleyLedgerExamples era)
@@ -111,8 +111,7 @@ deriving instance
 -------------------------------------------------------------------------------}
 
 type ShelleyBasedEra' era =
-  ( Default (PPUPState era),
-    PraosCrypto (EraCrypto era)
+  ( PraosCrypto (EraCrypto era)
   )
 
 defaultShelleyLedgerExamples ::
@@ -123,7 +122,8 @@ defaultShelleyLedgerExamples ::
     PredicateFailure (Core.EraRule "LEDGER" era) ~ ShelleyLedgerPredFailure era,
     Core.PParams era ~ ShelleyPParams era,
     Core.PParamsUpdate era ~ ShelleyPParamsUpdate era,
-    Default (StashedAVVMAddresses era)
+    Default (StashedAVVMAddresses era),
+    Default (PPUPStateOrUnit era)
   ) =>
   (Core.TxBody era -> KeyPairWits era -> Core.TxWits era) ->
   (ShelleyTx era -> Core.Tx era) ->
@@ -309,7 +309,8 @@ exampleNewEpochState ::
     HasField "_rho" (Core.PParams era) UnitInterval,
     HasField "_tau" (Core.PParams era) UnitInterval,
     Default (StashedAVVMAddresses era),
-    Core.EraTxOut era
+    Core.EraTxOut era,
+    Default (PPUPStateOrUnit era)
   ) =>
   Core.Value era ->
   Core.PParams era ->

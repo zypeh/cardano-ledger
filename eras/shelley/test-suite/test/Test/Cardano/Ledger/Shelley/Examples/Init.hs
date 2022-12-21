@@ -24,7 +24,7 @@ import qualified Cardano.Ledger.Crypto as CC
 import Cardano.Ledger.Shelley.PParams
   ( ShelleyPParams,
     ShelleyPParamsHKD (..),
-    emptyPParams,
+    emptyPParams, PPUPState (..),
   )
 import Cardano.Ledger.Slot
   ( BlockNo (..),
@@ -46,6 +46,7 @@ import Test.Cardano.Ledger.Shelley.Rules.Chain
     initialShelleyState,
   )
 import Test.Cardano.Ledger.Shelley.Utils (ShelleyTest, maxLLSupply, mkHash, unsafeBoundRational)
+import Cardano.Ledger.Shelley.LedgerState (PPUPStateOrUnit)
 
 -- === Initial Protocol Parameters
 --
@@ -107,7 +108,10 @@ nonce0 = hashHeaderToNonce (lastByronHeaderHash @c)
 -- 'genDelegs' and any given starting 'UTxO' set.
 initSt ::
   forall era.
-  (ShelleyTest era, PParams era ~ ShelleyPParams era) =>
+  ( ShelleyTest era,
+    PParams era ~ ShelleyPParams era,
+    PPUPState era ~ PPUPStateOrUnit era
+  ) =>
   UTxO era ->
   ChainState era
 initSt utxo =

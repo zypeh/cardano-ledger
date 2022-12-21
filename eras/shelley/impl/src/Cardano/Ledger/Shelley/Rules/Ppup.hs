@@ -40,7 +40,7 @@ import Cardano.Ledger.Keys (GenDelegs (GenDelegs), KeyHash, KeyRole (Genesis))
 import Cardano.Ledger.Shelley.Era (ShelleyPPUP)
 import Cardano.Ledger.Shelley.PParams
   ( ProposedPPUpdates (ProposedPPUpdates),
-    ShelleyPPUPState (..),
+    PPUPState (..),
     Update (..),
     pvCanFollow,
   )
@@ -118,7 +118,7 @@ instance
   ) =>
   STS (ShelleyPPUP era)
   where
-  type State (ShelleyPPUP era) = ShelleyPPUPState era
+  type State (ShelleyPPUP era) = PPUPState era
   type Signal (ShelleyPPUP era) = Maybe (Update era)
   type Environment (ShelleyPPUP era) = PpupEnv era
   type BaseM (ShelleyPPUP era) = ShelleyBase
@@ -172,13 +172,13 @@ ppupTransitionNonEmpty ::
 ppupTransitionNonEmpty = do
   TRC
     ( PPUPEnv slot pp (GenDelegs _genDelegs),
-      ShelleyPPUPState (ProposedPPUpdates pupS) (ProposedPPUpdates fpupS),
+      PPUPState (ProposedPPUpdates pupS) (ProposedPPUpdates fpupS),
       up
       ) <-
     judgmentContext
 
   case up of
-    Nothing -> pure $ ShelleyPPUPState (ProposedPPUpdates pupS) (ProposedPPUpdates fpupS)
+    Nothing -> pure $ PPUPState (ProposedPPUpdates pupS) (ProposedPPUpdates fpupS)
     Just (Update (ProposedPPUpdates pup) te) -> do
       eval (dom pup ⊆ dom _genDelegs) ?! NonGenesisUpdatePPUP (eval (dom pup)) (eval (dom _genDelegs))
 
@@ -208,12 +208,12 @@ ppupTransitionNonEmpty = do
         then do
           currentEpoch == te ?! PPUpdateWrongEpoch currentEpoch te VoteForThisEpoch
           pure $
-            ShelleyPPUPState
+            PPUPState
               (ProposedPPUpdates (eval (pupS ⨃ pup)))
               (ProposedPPUpdates fpupS)
         else do
           currentEpoch + 1 == te ?! PPUpdateWrongEpoch currentEpoch te VoteForNextEpoch
           pure $
-            ShelleyPPUPState
+            PPUPState
               (ProposedPPUpdates pupS)
               (ProposedPPUpdates (eval (fpupS ⨃ pup)))

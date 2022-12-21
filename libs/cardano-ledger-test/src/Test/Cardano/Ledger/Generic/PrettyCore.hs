@@ -63,9 +63,8 @@ import Cardano.Ledger.Shelley.LedgerState
     LedgerState (..),
     NewEpochState (..),
     PPUPPredFailure,
-    PPUPState,
     PState (..),
-    UTxOState (..),
+    UTxOState (..), PPUPStateOrUnit,
   )
 import Cardano.Ledger.Shelley.Rules as Shelley
   ( ShelleyBbodyPredFailure (..),
@@ -816,7 +815,7 @@ instance PrettyA (ShelleyNewppPredFailure era) where prettyA = ppNewppPredicateF
 ppBbodyState ::
   ( PrettyA (TxOut era),
     PrettyA (PParams era),
-    PrettyA (PPUPState era)
+    PrettyA (PPUPStateOrUnit era)
   ) =>
   ShelleyBbodyState era ->
   PDoc
@@ -830,7 +829,7 @@ ppBbodyState (BbodyState ls (BlocksMade mp)) =
 instance
   ( PrettyA (TxOut era),
     PrettyA (PParams era),
-    PrettyA (PPUPState era)
+    PrettyA (PPUPStateOrUnit era)
   ) =>
   PrettyA (ShelleyBbodyState era)
   where

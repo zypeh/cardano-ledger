@@ -61,7 +61,7 @@ import Cardano.Ledger.Shelley.LedgerState
     UTxOState (..),
     keyTxRefunds,
     totalTxDeposits,
-    updateStakeDistribution,
+    updateStakeDistribution, PPUPStateOrUnit,
   )
 import Cardano.Ledger.Shelley.PParams (Update)
 import Cardano.Ledger.Shelley.Rules
@@ -75,7 +75,6 @@ import Cardano.Ledger.UTxO (EraUTxO (..), UTxO (..))
 import Cardano.Ledger.Val ((<->))
 import Control.Monad.Trans.Reader (asks)
 import Control.State.Transition.Extended
-import Data.Default (Default)
 import Data.List.NonEmpty (nonEmpty)
 import qualified Data.Map.Strict as Map
 import Data.MapExtras (extractKeys)
@@ -102,14 +101,12 @@ instance
     HasField "_protocolVersion" (PParams era) ProtVer,
     Embed (EraRule "PPUP" era) (BabbageUTXOS era),
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
-    State (EraRule "PPUP" era) ~ PPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
+    State (EraRule "PPUP" era) ~ PPUPState era,
     ToCBOR (PPUPPredFailure era), -- Serializing the PredicateFailure
     Eq (PPUPPredFailure era),
     Show (PPUPPredFailure era),
-    Eq (PPUPState era),
-    Show (PPUPState era),
-    Default (PPUPState era)
+    PPUPStateOrUnit era ~ PPUPState era
   ) =>
   STS (BabbageUTXOS era)
   where
@@ -147,15 +144,13 @@ utxosTransition ::
     HasField "_poolDeposit" (PParams era) Coin,
     HasField "_costmdls" (PParams era) CostModels,
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
-    State (EraRule "PPUP" era) ~ PPUPState era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
     Embed (EraRule "PPUP" era) (BabbageUTXOS era),
+    State (EraRule "PPUP" era) ~ PPUPState era,
     ToCBOR (PPUPPredFailure era),
     Eq (PPUPPredFailure era),
     Show (PPUPPredFailure era),
-    Eq (PPUPState era),
-    Show (PPUPState era),
-    Default (PPUPState era)
+    PPUPStateOrUnit era ~ PPUPState era
   ) =>
   TransitionRule (BabbageUTXOS era)
 utxosTransition =
@@ -177,11 +172,12 @@ scriptsYes ::
     STS (BabbageUTXOS era),
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
-    State (EraRule "PPUP" era) ~ PPUPState era,
     Embed (EraRule "PPUP" era) (BabbageUTXOS era),
+    State (EraRule "PPUP" era) ~ PPUPState era,
     HasField "_poolDeposit" (PParams era) Coin,
     HasField "_keyDeposit" (PParams era) Coin,
-    HasField "_costmdls" (PParams era) CostModels
+    HasField "_costmdls" (PParams era) CostModels,
+    PPUPStateOrUnit era ~ PPUPState era
   ) =>
   TransitionRule (BabbageUTXOS era)
 scriptsYes = do

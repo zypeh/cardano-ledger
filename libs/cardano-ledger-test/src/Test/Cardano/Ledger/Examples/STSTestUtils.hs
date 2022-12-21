@@ -84,8 +84,7 @@ import Cardano.Ledger.Shelley.API
     UTxO (..),
   )
 import Cardano.Ledger.Shelley.LedgerState
-  ( PPUPState,
-    smartUTxOState,
+  ( smartUTxOState,
   )
 import Cardano.Ledger.Shelley.PParams (ShelleyPParamsHKD (..))
 import Cardano.Ledger.Shelley.Rules
@@ -331,7 +330,6 @@ testBBODY wit@(BBODY proof) initialSt block expected pparams =
 testUTXOW ::
   forall era.
   ( GoodCrypto (EraCrypto era),
-    Default (PPUPState era),
     PostShelley era,
     EraTx era,
     HasCallStack
@@ -353,7 +351,6 @@ testUTXOWsubset,
   testUTXOspecialCase ::
     forall era.
     ( GoodCrypto (EraCrypto era),
-      Default (PPUPState era),
       PostShelley era,
       EraTx era,
       HasCallStack
@@ -393,7 +390,6 @@ type Result era = Either [PredicateFailure (EraRule "UTXOW" era)] (State (EraRul
 testUTXOWwith ::
   forall era.
   ( GoodCrypto (EraCrypto era),
-    Default (PPUPState era),
     EraTx era
   ) =>
   WitRule "UTXOW" era ->

@@ -101,9 +101,9 @@ instance
     Signal (EraRule "EPOCH" era) ~ EpochNo,
     Default (EpochState era),
     HasField "_protocolVersion" (PParams era) ProtVer,
-    Default (PPUPState era),
     Default (PParams era),
-    Default (StashedAVVMAddresses era)
+    Default (StashedAVVMAddresses era),
+    Default (PPUPStateOrUnit era)
   ) =>
   STS (ShelleyNEWEPOCH era)
   where
@@ -143,10 +143,10 @@ newEpochTransition ::
     Environment (EraRule "EPOCH" era) ~ (),
     State (EraRule "EPOCH" era) ~ EpochState era,
     Signal (EraRule "EPOCH" era) ~ EpochNo,
-    Default (PPUPState era),
     Default (PParams era),
     Default (StashedAVVMAddresses era),
-    Event (EraRule "RUPD" era) ~ RupdEvent (EraCrypto era)
+    Event (EraRule "RUPD" era) ~ RupdEvent (EraCrypto era),
+    Default (PPUPStateOrUnit era)
   ) =>
   TransitionRule (ShelleyNEWEPOCH era)
 newEpochTransition = do

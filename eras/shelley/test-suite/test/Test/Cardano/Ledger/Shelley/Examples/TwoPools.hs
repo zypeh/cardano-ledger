@@ -56,7 +56,7 @@ import Cardano.Ledger.Shelley.LedgerState
   ( PulsingRewUpdate (..),
     RewardUpdate (..),
     completeStep,
-    emptyRewardUpdate,
+    emptyRewardUpdate, PPUPStateOrUnit, PPUPState (..),
   )
 import Cardano.Ledger.Shelley.PParams
   ( ShelleyPParams,
@@ -159,7 +159,8 @@ type TwoPoolsConstraints era =
     Core.PParams era ~ ShelleyPParams era,
     PreAlonzo era,
     Core.EraSegWits era,
-    ToCBOR (Core.Script era)
+    ToCBOR (Core.Script era),
+    PPUPStateOrUnit era ~ PPUPState era
   )
 
 aliceInitCoin :: Coin

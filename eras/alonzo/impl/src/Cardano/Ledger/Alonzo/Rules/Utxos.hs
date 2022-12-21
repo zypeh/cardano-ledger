@@ -68,7 +68,8 @@ import Cardano.Ledger.Core
 import Cardano.Ledger.Rules.ValidationMode (Inject (..), lblStatic)
 import Cardano.Ledger.Shelley.LedgerState
   ( PPUPPredFailure,
-    ShelleyPPUPState (..),
+    PPUPState,
+    PPUPStateOrUnit,
     UTxOState (..),
     keyTxRefunds,
     totalTxDeposits,
@@ -116,15 +117,17 @@ instance
     Embed (EraRule "PPUP" era) (AlonzoUTXOS era),
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
+    State (EraRule "PPUP" era) ~ Shelley.PPUPState era,
     HasField "_costmdls" (PParams era) CostModels,
     HasField "_protocolVersion" (PParams era) ProtVer,
     HasField "_keyDeposit" (PParams era) Coin,
     HasField "_poolDeposit" (PParams era) Coin,
     ToCBOR (PPUPPredFailure era), -- Serializing the PredicateFailure,
     ProtVerAtMost era 8,
-    ShelleyEraTxBody era,
     Eq (PPUPPredFailure era),
-    Show (PPUPPredFailure era)
+    Show (PPUPPredFailure era),
+    PPUPStateOrUnit era ~ PPUPState era,
+    ShelleyEraTxBody era
   ) =>
   STS (AlonzoUTXOS era)
   where
@@ -162,13 +165,15 @@ utxosTransition ::
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
     Embed (EraRule "PPUP" era) (AlonzoUTXOS era),
+    State (EraRule "PPUP" era) ~ Shelley.PPUPState era,
     HasField "_costmdls" (PParams era) CostModels,
     HasField "_keyDeposit" (PParams era) Coin,
     HasField "_poolDeposit" (PParams era) Coin,
     ToCBOR (PPUPPredFailure era), -- Serializing the PredicateFailure
     ProtVerAtMost era 8,
     Eq (PPUPPredFailure era),
-    Show (PPUPPredFailure era)
+    Show (PPUPPredFailure era),
+    PPUPStateOrUnit era ~ PPUPState era
   ) =>
   TransitionRule (AlonzoUTXOS era)
 utxosTransition =
@@ -227,10 +232,12 @@ scriptsValidateTransition ::
     Environment (EraRule "PPUP" era) ~ PpupEnv era,
     Signal (EraRule "PPUP" era) ~ Maybe (Update era),
     Embed (EraRule "PPUP" era) (AlonzoUTXOS era),
+    State (EraRule "PPUP" era) ~ Shelley.PPUPState era,
     HasField "_keyDeposit" (PParams era) Coin,
     HasField "_poolDeposit" (PParams era) Coin,
     HasField "_costmdls" (PParams era) CostModels,
-    ProtVerAtMost era 8
+    ProtVerAtMost era 8,
+    PPUPStateOrUnit era ~ PPUPState era
   ) =>
   TransitionRule (AlonzoUTXOS era)
 scriptsValidateTransition = do

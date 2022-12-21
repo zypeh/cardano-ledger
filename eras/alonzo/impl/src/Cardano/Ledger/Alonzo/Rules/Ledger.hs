@@ -30,7 +30,7 @@ import Cardano.Ledger.Shelley.LedgerState
     DState (..),
     LedgerState (..),
     UTxOState (..),
-    obligationDPState,
+    obligationDPState, PPUPStateOrUnit,
   )
 import Cardano.Ledger.Shelley.Rules
   ( DelegsEnv (..),
@@ -125,7 +125,8 @@ instance
     Signal (EraRule "DELEGS" era) ~ Seq (DCert (EraCrypto era)),
     HasField "_keyDeposit" (PParams era) Coin,
     HasField "_poolDeposit" (PParams era) Coin,
-    ProtVerAtMost era 8
+    ProtVerAtMost era 8,
+    Show (PPUPStateOrUnit era)
   ) =>
   STS (AlonzoLEDGER era)
   where

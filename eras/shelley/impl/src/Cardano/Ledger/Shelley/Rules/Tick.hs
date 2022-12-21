@@ -65,6 +65,7 @@ import qualified Data.Map.Strict as Map
 import Data.Void (Void)
 import GHC.Generics (Generic)
 import NoThunks.Class (NoThunks (..))
+import Cardano.Ledger.Shelley.LedgerState.Types (PPUPStateOrUnit)
 
 -- ==================================================
 
@@ -185,7 +186,8 @@ validatingTickTransitionFORECAST ::
     Signal (EraRule "UPEC" era) ~ (),
     Environment (EraRule "UPEC" era) ~ EpochState era,
     Embed (EraRule "UPEC" era) (tick era),
-    STS (tick era)
+    STS (tick era),
+    PPUPStateOrUnit era ~ PPUPState era
   ) =>
   NewEpochState era ->
   SlotNo ->
@@ -327,7 +329,8 @@ instance
     Signal (EraRule "UPEC" era) ~ (),
     State (EraRule "UPEC" era) ~ UpecState era,
     Environment (EraRule "UPEC" era) ~ EpochState era,
-    Embed (EraRule "UPEC" era) (ShelleyTICKF era)
+    Embed (EraRule "UPEC" era) (ShelleyTICKF era),
+    PPUPStateOrUnit era ~ PPUPState era
   ) =>
   STS (ShelleyTICKF era)
   where

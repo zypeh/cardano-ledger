@@ -27,7 +27,6 @@ import Cardano.Ledger.EpochBoundary (SnapShots)
 import Cardano.Ledger.Shelley.LedgerState
   ( EpochState,
     LedgerState,
-    PPUPState,
     PState (..),
     UTxOState (..),
     asReserves,
@@ -41,7 +40,7 @@ import Cardano.Ledger.Shelley.LedgerState
     lsUTxOState,
     obligationDPState,
     pattern DPState,
-    pattern EpochState,
+    pattern EpochState, PPUPStateOrUnit,
   )
 import Cardano.Ledger.Shelley.Rewards ()
 import Cardano.Ledger.Shelley.Rules
@@ -77,10 +76,10 @@ instance
     Environment (EraRule "POOLREAP" era) ~ PParams era,
     State (EraRule "POOLREAP" era) ~ ShelleyPoolreapState era,
     Signal (EraRule "POOLREAP" era) ~ EpochNo,
-    Default (PPUPState era),
     Default (PParams era),
     Eq (UpecPredFailure era),
-    Show (UpecPredFailure era)
+    Show (UpecPredFailure era),
+    Default (PPUPStateOrUnit era)
   ) =>
   STS (ConwayEPOCH era)
   where

@@ -57,9 +57,9 @@ instance
     Environment (EraRule "ENACTMENT" era) ~ (),
     State (EraRule "ENACTMENT" era) ~ EpochState era,
     HasField "_protocolVersion" (PParams era) ProtVer,
-    Default (PPUPState era),
     Default (PParams era),
-    Default (StashedAVVMAddresses era)
+    Default (StashedAVVMAddresses era),
+    Default (PPUPStateOrUnit era)
   ) =>
   STS (ConwayNEWEPOCH era)
   where
@@ -99,14 +99,14 @@ newEpochTransition ::
     Environment (EraRule "EPOCH" era) ~ (),
     State (EraRule "EPOCH" era) ~ EpochState era,
     Signal (EraRule "EPOCH" era) ~ EpochNo,
-    Default (PPUPState era),
     Default (PParams era),
     Default (StashedAVVMAddresses era),
     Event (EraRule "RUPD" era) ~ RupdEvent (EraCrypto era),
     Embed (EraRule "ENACTMENT" era) (ConwayNEWEPOCH era),
     State (EraRule "ENACTMENT" era) ~ EpochState era,
     Environment (EraRule "ENACTMENT" era) ~ (),
-    Signal (EraRule "ENACTMENT" era) ~ EpochNo
+    Signal (EraRule "ENACTMENT" era) ~ EpochNo,
+    Default (PPUPStateOrUnit era)
   ) =>
   TransitionRule (ConwayNEWEPOCH era)
 newEpochTransition = do

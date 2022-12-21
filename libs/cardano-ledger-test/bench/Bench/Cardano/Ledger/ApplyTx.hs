@@ -78,7 +78,6 @@ benchWithGenState ::
   ( NFData a,
     EraGen era,
     HasTrace (EraRule "LEDGER" era) (GenEnv era),
-    Default (PPUPState era),
     BaseEnv (EraRule "LEDGER" era) ~ Globals,
     Signal (EraRule "LEDGER" era) ~ Tx era,
     Environment (EraRule "LEDGER" era) ~ LedgerEnv era,
@@ -96,9 +95,7 @@ benchApplyTx ::
   ( EraGen era,
     ApplyTx era,
     HasTrace (EraRule "LEDGER" era) (GenEnv era),
-    BaseEnv (EraRule "LEDGER" era) ~ Globals,
-    Default (PPUPState era),
-    NFData (PPUPState era)
+    BaseEnv (EraRule "LEDGER" era) ~ Globals
   ) =>
   Proxy era ->
   Benchmark
@@ -120,7 +117,6 @@ benchApplyTx px =
 deserialiseTxEra ::
   forall era.
   ( EraGen era,
-    Default (PPUPState era),
     BaseEnv (EraRule "LEDGER" era) ~ Globals,
     HasTrace (EraRule "LEDGER" era) (GenEnv era),
     State (EraRule "LEDGER" era) ~ LedgerState era,

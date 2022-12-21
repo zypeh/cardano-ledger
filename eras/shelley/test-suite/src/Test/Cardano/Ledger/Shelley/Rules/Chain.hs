@@ -55,6 +55,7 @@ import Cardano.Ledger.Keys
     coerceKeyRole,
   )
 import Cardano.Ledger.PoolDistr (PoolDistr (..))
+import Cardano.Ledger.Pretty (PrettyA)
 import qualified Cardano.Ledger.Pretty as PP
 import Cardano.Ledger.Shelley (ShelleyEra)
 import Cardano.Ledger.Shelley.AdaPots
@@ -69,7 +70,7 @@ import Cardano.Ledger.Shelley.LedgerState
     EpochState (..),
     LedgerState (..),
     NewEpochState (..),
-    PPUPState,
+    PPUPStateOrUnit,
     PState (..),
     StashedAVVMAddresses,
     dsGenDelegs,
@@ -130,6 +131,7 @@ import GHC.Generics (Generic)
 import GHC.Records
 import NoThunks.Class (NoThunks (..))
 import Numeric.Natural (Natural)
+import Cardano.Ledger.Core (EraPParams(..))
 
 type instance Core.EraRule "TICKN" (ShelleyEra c) = TICKN
 
@@ -194,8 +196,8 @@ instance
 -- | Creates a valid initial chain state
 initialShelleyState ::
   ( Core.EraTxOut era,
-    Default (PPUPState era),
-    Default (StashedAVVMAddresses era)
+    Default (StashedAVVMAddresses era),
+    Default (PPUPStateOrUnit era)
   ) =>
   WithOrigin (LastAppliedBlock (EraCrypto era)) ->
   EpochNo ->
@@ -439,7 +441,12 @@ totalAdaPots = totalAdaPotsES . nesEs . chainNes
 totalAda :: Core.EraTxOut era => ChainState era -> Coin
 totalAda = totalAdaES . nesEs . chainNes
 
-ppChainState :: PP.CanPrettyPrintLedgerState era => ChainState era -> PP.PDoc
+ppChainState ::
+  ( PP.CanPrettyPrintLedgerState era,
+    PrettyA (PPUPStateOrUnit era)
+  ) =>
+  ChainState era ->
+  PP.PDoc
 ppChainState (ChainState nes ocert epochnonce evolvenonce prevnonce candnonce lastab) =
   PP.ppRecord
     "ChainState"
@@ -452,14 +459,20 @@ ppChainState (ChainState nes ocert epochnonce evolvenonce prevnonce candnonce la
       ("lastApplidBlock", PP.ppWithOrigin PP.ppLastAppliedBlock lastab)
     ]
 
-instance PP.CanPrettyPrintLedgerState era => PP.PrettyA (ChainState era) where
+instance
+  ( PP.CanPrettyPrintLedgerState era,
+    PrettyA (PPUPStateOrUnit era)
+  ) =>
+  PP.PrettyA (ChainState era)
+  where
   prettyA = ppChainState
 
 instance
   ( ToExpr (Core.PParams era),
     ToExpr (Core.TxOut era),
-    ToExpr (PPUPState era),
-    ToExpr (StashedAVVMAddresses era)
+    ToExpr (StashedAVVMAddresses era),
+    ToExpr (PParamsUpdate era),
+    ToExpr (PPUPStateOrUnit era)
   ) =>
   ToExpr (ChainState era)
 

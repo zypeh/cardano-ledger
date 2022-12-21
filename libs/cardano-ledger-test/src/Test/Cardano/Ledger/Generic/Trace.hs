@@ -50,7 +50,6 @@ import Cardano.Ledger.Shelley.LedgerState
     EpochState (..),
     LedgerState (..),
     NewEpochState (..),
-    PPUPState,
     PState (..),
     UTxOState (..),
     StashedAVVMAddresses,
@@ -548,7 +547,6 @@ chainTest ::
   forall era.
   ( Reflect era,
     HasTrace (MOCKCHAIN era) (Gen1 era),
-    Eq (PPUPState era),
     Eq (StashedAVVMAddresses era)
   ) =>
   Proof era ->

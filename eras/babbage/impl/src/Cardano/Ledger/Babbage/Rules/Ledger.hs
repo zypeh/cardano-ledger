@@ -23,9 +23,8 @@ import Cardano.Ledger.Core
 import Cardano.Ledger.Shelley.LedgerState
   ( DPState (..),
     LedgerState (..),
-    PPUPState,
     UTxOState (..),
-    obligationDPState,
+    obligationDPState, PPUPStateOrUnit,
   )
 import Cardano.Ledger.Shelley.Rules
   ( DelegsEnv (..),
@@ -57,7 +56,6 @@ import GHC.Records (HasField)
 
 instance
   ( AlonzoEraTx era,
-    Show (PPUPState era),
     HasField "_keyDeposit" (PParams era) Coin,
     HasField "_poolDeposit" (PParams era) Coin,
     Embed (EraRule "DELEGS" era) (BabbageLEDGER era),
@@ -67,7 +65,8 @@ instance
     Signal (EraRule "UTXOW" era) ~ Tx era,
     Environment (EraRule "DELEGS" era) ~ DelegsEnv era,
     State (EraRule "DELEGS" era) ~ DPState (EraCrypto era),
-    Signal (EraRule "DELEGS" era) ~ Seq (DCert (EraCrypto era))
+    Signal (EraRule "DELEGS" era) ~ Seq (DCert (EraCrypto era)),
+    Show (PPUPStateOrUnit era)
   ) =>
   STS (BabbageLEDGER era)
   where

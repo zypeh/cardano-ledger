@@ -77,7 +77,7 @@ LedgerState
 UtxoState
   deposited Coin
   fees Coin
-  ppups (Shelley.ShelleyPPUPState CurrentEra)
+  ppups (Shelley.PPUPState CurrentEra)
 DState
   fGenDelegs FGenDelegs
   genDelegs (Keys.GenDelegs C)

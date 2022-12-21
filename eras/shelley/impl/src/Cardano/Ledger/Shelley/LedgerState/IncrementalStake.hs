@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TypeFamilies #-}
 
 -- ===========================================================================
 -- There are three parts to IncrementalStaking.
@@ -77,7 +78,6 @@ import Data.Set (Set)
 import qualified Data.VMap as VMap
 import GHC.Records (HasField (..))
 import Lens.Micro
-import Cardano.Ledger.Shelley.PParams (ShelleyPPUPState(..))
 
 -- =======================================================================
 -- Part 1, Incrementally updating the IncrementalStake in Utxo rule
@@ -141,11 +141,12 @@ incrementalAggregateUtxoCoinByCredential mode (UTxO u) initial =
 --
 --   TO IncrementalStake
 smartUTxOState ::
-  EraTxOut era =>
+  ( EraTxOut era
+  ) =>
   UTxO era ->
   Coin ->
   Coin ->
-  ShelleyPPUPState era ->
+  PPUPStateOrUnit era ->
   UTxOState era
 smartUTxOState utxo c1 c2 st =
   UTxOState

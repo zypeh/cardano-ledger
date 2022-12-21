@@ -37,7 +37,7 @@ import Cardano.Ledger.Core
 import qualified Cardano.Ledger.Core as Core
 import Cardano.Ledger.Crypto (Crypto, DSIGN)
 import Cardano.Ledger.Shelley.API hiding (SignedDSIGN)
-import Cardano.Ledger.Shelley.LedgerState (FutureGenDeleg, PPUPState, StashedAVVMAddresses)
+import Cardano.Ledger.Shelley.LedgerState (FutureGenDeleg, StashedAVVMAddresses, PPUPStateOrUnit)
 import Cardano.Ledger.Shelley.PoolRank
   ( Likelihood (..),
     LogWeight (..),
@@ -272,7 +272,7 @@ instance Crypto c => Arbitrary (DCert c) where
   arbitrary = genericArbitraryU
   shrink = genericShrink
 
-instance (Era era, Mock (EraCrypto era)) => Arbitrary (ShelleyPPUPState era) where
+instance (Era era, Mock (EraCrypto era)) => Arbitrary (PPUPState era) where
   arbitrary = genericArbitraryU
   shrink = genericShrink
 
@@ -284,7 +284,7 @@ instance
   ( Core.EraTxOut era,
     Mock (EraCrypto era),
     Arbitrary (Core.TxOut era),
-    Arbitrary (PPUPState era)
+    Arbitrary (PPUPStateOrUnit era)
   ) =>
   Arbitrary (UTxOState era)
   where
@@ -311,7 +311,7 @@ instance
   ( Core.EraTxOut era,
     Mock (EraCrypto era),
     Arbitrary (Core.TxOut era),
-    Arbitrary (PPUPState era)
+    Arbitrary (PPUPStateOrUnit era)
   ) =>
   Arbitrary (LedgerState era)
   where
@@ -324,8 +324,8 @@ instance
     Arbitrary (Core.TxOut era),
     Arbitrary (Core.Value era),
     Arbitrary (Core.PParams era),
-    Arbitrary (PPUPState era),
-    Arbitrary (StashedAVVMAddresses era)
+    Arbitrary (StashedAVVMAddresses era),
+    Arbitrary (PPUPStateOrUnit era)
   ) =>
   Arbitrary (NewEpochState era)
   where
@@ -337,7 +337,7 @@ instance
     Arbitrary (Core.TxOut era),
     Arbitrary (Core.Value era),
     Arbitrary (Core.PParams era),
-    Arbitrary (PPUPState era)
+    Arbitrary (PPUPStateOrUnit era)
   ) =>
   Arbitrary (EpochState era)
   where

@@ -12,23 +12,25 @@ import Cardano.Ledger.Alonzo.Tx (AlonzoTx (..))
 import Cardano.Ledger.BaseTypes (ShelleyBase)
 import Cardano.Ledger.Conway.Era (ConwayUTXOS)
 import Cardano.Ledger.Conway.TxOut (BabbageTxOut (..))
-import Cardano.Ledger.Core (Era (..), EraScript (..), EraTxOut (..), Value)
+import Cardano.Ledger.Core (Era (..), EraScript (..), EraTxOut (..), Value, EraPParams (..))
 import Cardano.Ledger.Mary.Value (MaryValue (..))
-import Cardano.Ledger.Shelley.LedgerState (PPUPPredFailure, PPUPState, UTxOState)
+import Cardano.Ledger.Shelley.LedgerState (PPUPPredFailure, UTxOState, PPUPStateOrUnit)
 import Cardano.Ledger.Shelley.Rules (UtxoEnv (..))
 import Control.State.Transition.Extended (STS (..))
 import Data.Default (Default)
 
 instance
   ( EraScript era,
-    Eq (PPUPState era),
-    Show (PPUPState era),
     TxOut era ~ BabbageTxOut era,
     Value era ~ MaryValue (EraCrypto era),
     Script era ~ AlonzoScript era,
     Eq (PPUPPredFailure era),
     Show (PPUPPredFailure era),
-    Default (PPUPState era)
+    Eq (PParamsUpdate era),
+    Show (PParamsUpdate era),
+    Default (PPUPStateOrUnit era),
+    Eq (PPUPStateOrUnit era),
+    Show (PPUPStateOrUnit era)
   ) =>
   STS (ConwayUTXOS era)
   where

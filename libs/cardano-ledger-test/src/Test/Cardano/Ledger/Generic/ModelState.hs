@@ -65,6 +65,7 @@ import Cardano.Ledger.Pretty
   )
 import Cardano.Ledger.Pretty.Alonzo ()
 import Cardano.Ledger.Pretty.Babbage ()
+import Cardano.Ledger.Shelley.API (PPUPState (..))
 import Cardano.Ledger.Shelley.LedgerState
   ( AccountState (..),
     DPState (..),
@@ -74,11 +75,10 @@ import Cardano.Ledger.Shelley.LedgerState
     InstantaneousRewards (..),
     LedgerState (..),
     NewEpochState (..),
-    PPUPState,
+    PPUPStateOrUnit,
     PState (..),
-    ShelleyPPUPState (..),
-    UTxOState (..),
     StashedAVVMAddresses,
+    UTxOState (..),
     completeRupd,
     smartUTxOState,
   )
@@ -229,12 +229,12 @@ nonMyopicZero :: NonMyopic c
 nonMyopicZero = NonMyopic Map.empty mempty
 
 pPUPStateZeroByProof :: Proof era -> PPUPState era
-pPUPStateZeroByProof (Conway _) = ()
-pPUPStateZeroByProof (Babbage _) = ShelleyPPUPState proposedPPUpdatesZero proposedPPUpdatesZero
-pPUPStateZeroByProof (Alonzo _) = ShelleyPPUPState proposedPPUpdatesZero proposedPPUpdatesZero
-pPUPStateZeroByProof (Mary _) = ShelleyPPUPState proposedPPUpdatesZero proposedPPUpdatesZero
-pPUPStateZeroByProof (Allegra _) = ShelleyPPUPState proposedPPUpdatesZero proposedPPUpdatesZero
-pPUPStateZeroByProof (Shelley _) = ShelleyPPUPState proposedPPUpdatesZero proposedPPUpdatesZero
+pPUPStateZeroByProof (Conway _) = PPUPState proposedPPUpdatesZero proposedPPUpdatesZero
+pPUPStateZeroByProof (Babbage _) = PPUPState proposedPPUpdatesZero proposedPPUpdatesZero
+pPUPStateZeroByProof (Alonzo _) = PPUPState proposedPPUpdatesZero proposedPPUpdatesZero
+pPUPStateZeroByProof (Mary _) = PPUPState proposedPPUpdatesZero proposedPPUpdatesZero
+pPUPStateZeroByProof (Allegra _) = PPUPState proposedPPUpdatesZero proposedPPUpdatesZero
+pPUPStateZeroByProof (Shelley _) = PPUPState proposedPPUpdatesZero proposedPPUpdatesZero
 
 pParamsZeroByProof :: Proof era -> Core.PParams era
 pParamsZeroByProof (Conway _) = def
@@ -244,8 +244,14 @@ pParamsZeroByProof (Mary _) = def
 pParamsZeroByProof (Allegra _) = def
 pParamsZeroByProof (Shelley _) = def
 
-pPUPStateZero :: forall era. Reflect era => PPUPState era
-pPUPStateZero = pPUPStateZeroByProof @era (reify :: Proof era)
+pPUPStateZero :: forall era. Reflect era => PPUPStateOrUnit era
+pPUPStateZero = case reify @era of
+                  Shelley _ -> pPUPStateZeroByProof @era (reify :: Proof era)
+                  Mary _ -> pPUPStateZeroByProof @era (reify :: Proof era)
+                  Allegra _ -> pPUPStateZeroByProof @era (reify :: Proof era)
+                  Alonzo _ -> pPUPStateZeroByProof @era (reify :: Proof era)
+                  Babbage _ -> pPUPStateZeroByProof @era (reify :: Proof era)
+                  Conway _ -> ()
 
 uTxOStateZero :: forall era. Reflect era => UTxOState era
 uTxOStateZero = smartUTxOState utxoZero mempty mempty (pPUPStateZero @era)

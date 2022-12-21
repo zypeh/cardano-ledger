@@ -6,7 +6,7 @@
 module Cardano.Ledger.Shelley.API.Genesis where
 
 import Cardano.Ledger.BaseTypes (BlocksMade (..))
-import Cardano.Ledger.Core (EraRule, EraTxOut, PParams)
+import Cardano.Ledger.Core (EraTxOut, PParams)
 import Cardano.Ledger.Crypto (Crypto)
 import Cardano.Ledger.EpochBoundary (emptySnapShots)
 import Cardano.Ledger.Shelley (ShelleyEra)
@@ -26,14 +26,13 @@ import Cardano.Ledger.Shelley.API.Types
     word64ToCoin,
   )
 import Cardano.Ledger.Shelley.LedgerState (StashedAVVMAddresses, smartUTxOState)
-import Cardano.Ledger.Shelley.LedgerState.Types (PPUPState)
 import Cardano.Ledger.Shelley.PParams (ShelleyPParams)
 import Cardano.Ledger.UTxO (coinBalance)
 import Cardano.Ledger.Val (Val ((<->)))
-import Control.State.Transition (STS (State))
 import Data.Default.Class (Default, def)
 import Data.Kind (Type)
 import qualified Data.Map.Strict as Map
+import Cardano.Ledger.Shelley.LedgerState.Types (PPUPStateOrUnit)
 
 -- | Indicates that this era may be bootstrapped from 'ShelleyGenesis'.
 class CanStartFromGenesis era where
@@ -50,8 +49,7 @@ class CanStartFromGenesis era where
     NewEpochState era
 
 instance
-  ( Crypto c,
-    Default (State (EraRule "PPUP" (ShelleyEra c)))
+  ( Crypto c
   ) =>
   CanStartFromGenesis (ShelleyEra c)
   where
@@ -60,8 +58,8 @@ instance
 -- | Helper function for constructing the initial state for any era
 initialStateFromGenesis ::
   ( EraTxOut era,
-    Default (PPUPState era),
-    Default (StashedAVVMAddresses era)
+    Default (StashedAVVMAddresses era),
+    Default (PPUPStateOrUnit era)
   ) =>
   -- | Function to extend ShelleyPParams into PParams for the specific era
   (ShelleyPParams era -> g -> PParams era) ->

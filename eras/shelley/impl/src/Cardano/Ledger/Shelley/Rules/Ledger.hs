@@ -46,7 +46,6 @@ import Cardano.Ledger.Shelley.LedgerState
     UTxOState (..),
     obligationDPState,
   )
-import Cardano.Ledger.Shelley.LedgerState.Types (PPUPState)
 import Cardano.Ledger.Shelley.Rules.Delegs
   ( DelegsEnv (..),
     ShelleyDELEGS,
@@ -78,6 +77,7 @@ import GHC.Generics (Generic)
 import GHC.Records (HasField (..))
 import Lens.Micro
 import NoThunks.Class (NoThunks (..))
+import Cardano.Ledger.Shelley.LedgerState.Types (PPUPStateOrUnit)
 
 -- ========================================================
 
@@ -160,7 +160,6 @@ epochFromSlot slot = do
 instance
   ( Show (PParams era),
     Show (TxOut era),
-    Show (PPUPState era),
     DSignable (EraCrypto era) (Hash (EraCrypto era) EraIndependentTxBody),
     EraTx era,
     ShelleyEraTxBody era,
@@ -174,7 +173,8 @@ instance
     Signal (EraRule "DELEGS" era) ~ Seq (DCert (EraCrypto era)),
     HasField "_keyDeposit" (PParams era) Coin,
     HasField "_poolDeposit" (PParams era) Coin,
-    ProtVerAtMost era 8
+    ProtVerAtMost era 8,
+    Show (PPUPStateOrUnit era)
   ) =>
   STS (ShelleyLEDGER era)
   where

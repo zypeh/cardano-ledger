@@ -30,8 +30,7 @@ import Cardano.Ledger.Shelley.LedgerState
   ( EpochState (..),
     LedgerState (..),
     NewEpochState (..),
-    PPUPState,
-    StashedAVVMAddresses,
+    StashedAVVMAddresses, PPUPStateOrUnit,
   )
 import Cardano.Ledger.Shelley.RewardUpdate (PulsingRewUpdate)
 import Cardano.Ledger.Shelley.Rules
@@ -101,8 +100,9 @@ deriving instance
   ( CC.Crypto (EraCrypto era),
     Eq (Core.TxOut era),
     Eq (Core.PParams era),
-    Eq (PPUPState era),
-    Eq (StashedAVVMAddresses era)
+    Eq (StashedAVVMAddresses era),
+    Eq (Core.PParamsUpdate era),
+    Eq (PPUPStateOrUnit era)
   ) =>
   Eq (MockChainState era)
 

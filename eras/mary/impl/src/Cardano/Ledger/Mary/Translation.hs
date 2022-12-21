@@ -117,10 +117,10 @@ instance Crypto c => TranslateEra (MaryEra c) ProposedPPUpdates where
   translateEra ctxt (ProposedPPUpdates ppup) =
     return $ ProposedPPUpdates $ Map.map (translateEra' ctxt) ppup
 
-instance Crypto c => TranslateEra (MaryEra c) ShelleyPPUPState where
+instance Crypto c => TranslateEra (MaryEra c) PPUPState where
   translateEra ctxt ps =
     return
-      ShelleyPPUPState
+      PPUPState
         { proposals = translateEra' ctxt $ proposals ps,
           futureProposals = translateEra' ctxt $ futureProposals ps
         }

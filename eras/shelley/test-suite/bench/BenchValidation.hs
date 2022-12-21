@@ -39,7 +39,7 @@ import Cardano.Ledger.Shelley.LedgerState
   ( NewEpochState,
     PPUPState,
     StashedAVVMAddresses,
-    nesBcur,
+    nesBcur, PPUPStateOrUnit,
   )
 import Cardano.Protocol.TPraos.API
   ( ChainDepState (..),
@@ -84,6 +84,7 @@ validateInput ::
     QC.HasTrace (API.ShelleyLEDGERS era) (GenEnv era),
     API.ApplyBlock era,
     GetLedgerView era,
+    PPUPStateOrUnit era ~ PPUPState era,
     MinLEDGER_STS era
   ) =>
   Int ->
@@ -98,7 +99,8 @@ genValidateInput ::
     QC.HasTrace (API.ShelleyLEDGERS era) (GenEnv era),
     API.ApplyBlock era,
     GetLedgerView era,
-    MinLEDGER_STS era
+    MinLEDGER_STS era,
+    PPUPStateOrUnit era ~ PPUPState era
   ) =>
   Int ->
   IO (ValidateInput era)
@@ -124,8 +126,9 @@ applyBlock ::
     NFData (Core.TxOut era),
     API.ApplyBlock era,
     NFData (Core.PParams era),
-    NFData (PPUPState era),
-    NFData (StashedAVVMAddresses era)
+    NFData (StashedAVVMAddresses era),
+    PPUPStateOrUnit era ~ PPUPState era,
+    NFData (Core.PParamsUpdate era)
   ) =>
   ValidateInput era ->
   Int ->
@@ -180,6 +183,7 @@ genUpdateInputs ::
     GetLedgerView era,
     Core.EraRule "LEDGERS" era ~ API.ShelleyLEDGERS era,
     QC.HasTrace (API.ShelleyLEDGERS era) (GenEnv era),
+    PPUPStateOrUnit era ~ PPUPState era,
     API.ApplyBlock era
   ) =>
   Int ->

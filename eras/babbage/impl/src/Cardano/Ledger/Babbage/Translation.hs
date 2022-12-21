@@ -160,10 +160,10 @@ instance Crypto c => TranslateEra (BabbageEra c) API.UTxO where
   translateEra _ctxt utxo =
     pure $ API.UTxO $ translateTxOut `Map.map` API.unUTxO utxo
 
-instance Crypto c => TranslateEra (BabbageEra c) API.ShelleyPPUPState where
+instance Crypto c => TranslateEra (BabbageEra c) API.PPUPState where
   translateEra ctxt ps =
     pure
-      API.ShelleyPPUPState
+      API.PPUPState
         { API.proposals = translateEra' ctxt $ API.proposals ps,
           API.futureProposals = translateEra' ctxt $ API.futureProposals ps
         }

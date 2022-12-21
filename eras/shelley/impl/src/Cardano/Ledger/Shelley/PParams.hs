@@ -16,7 +16,7 @@
 module Cardano.Ledger.Shelley.PParams
   ( ShelleyPParams,
     ShelleyPParamsHKD (..),
-    ShelleyPPUPState (..),
+    PPUPState (..),
     emptyPParams,
     HKD,
     HKDFunctor (..),
@@ -479,36 +479,36 @@ updatePParams pp ppup =
       _minPoolCost = fromSMaybe (_minPoolCost pp) (_minPoolCost ppup)
     }
 
-data ShelleyPPUPState era = ShelleyPPUPState
+data PPUPState era = PPUPState
   { proposals :: !(ProposedPPUpdates era),
     futureProposals :: !(ProposedPPUpdates era)
   }
   deriving (Generic)
 
-deriving instance Show (Core.PParamsUpdate era) => Show (ShelleyPPUPState era)
+deriving instance Show (Core.PParamsUpdate era) => Show (PPUPState era)
 
-deriving instance Eq (Core.PParamsUpdate era) => Eq (ShelleyPPUPState era)
+deriving instance Eq (Core.PParamsUpdate era) => Eq (PPUPState era)
 
-deriving instance NFData (Core.PParamsUpdate era) => NFData (ShelleyPPUPState era)
+deriving instance NFData (Core.PParamsUpdate era) => NFData (PPUPState era)
 
-instance NoThunks (Core.PParamsUpdate era) => NoThunks (ShelleyPPUPState era)
+instance NoThunks (Core.PParamsUpdate era) => NoThunks (PPUPState era)
 
-instance (Era era, ToCBOR (Core.PParamsUpdate era)) => ToCBOR (ShelleyPPUPState era) where
-  toCBOR (ShelleyPPUPState ppup fppup) =
+instance (Era era, ToCBOR (Core.PParamsUpdate era)) => ToCBOR (PPUPState era) where
+  toCBOR (PPUPState ppup fppup) =
     encodeListLen 2 <> toCBOR ppup <> toCBOR fppup
 
 instance
   (Era era, FromCBOR (Core.PParamsUpdate era)) =>
-  FromCBOR (ShelleyPPUPState era)
+  FromCBOR (PPUPState era)
   where
   fromCBOR =
     decode $
-      RecD ShelleyPPUPState
+      RecD PPUPState
         <! From
         <! From
 
-instance Default (ShelleyPPUPState era) where
-  def = ShelleyPPUPState emptyPPPUpdates emptyPPPUpdates
+instance Default (PPUPState era) where
+  def = PPUPState emptyPPPUpdates emptyPPPUpdates
 
 pvCanFollow :: BT.ProtVer -> StrictMaybe BT.ProtVer -> Bool
 pvCanFollow _ SNothing = True
@@ -517,7 +517,7 @@ pvCanFollow (BT.ProtVer m n) (SJust (BT.ProtVer m' n')) =
 
 -- ==============================================
 
-instance ToExpr (Core.PParamsUpdate era) => ToExpr (ShelleyPPUPState era)
+instance ToExpr (Core.PParamsUpdate era) => ToExpr (PPUPState era)
 
 instance ToExpr (Core.PParamsUpdate era) => ToExpr (ProposedPPUpdates era)
 
