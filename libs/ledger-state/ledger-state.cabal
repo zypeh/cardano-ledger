@@ -48,7 +48,7 @@ library
                     , persistent-sqlite
                     , prettyprinter
                     , set-algebra
-                    , strict-containers
+                    , cardano-strict-containers
                     , text
                     , transformers
 
