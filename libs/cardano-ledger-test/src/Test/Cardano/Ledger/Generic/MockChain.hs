@@ -30,7 +30,8 @@ import Cardano.Ledger.Shelley.LedgerState
   ( EpochState (..),
     LedgerState (..),
     NewEpochState (..),
-    StashedAVVMAddresses, PPUPStateOrUnit,
+    PPUPStateOrUnit,
+    StashedAVVMAddresses,
   )
 import Cardano.Ledger.Shelley.RewardUpdate (PulsingRewUpdate)
 import Cardano.Ledger.Shelley.Rules

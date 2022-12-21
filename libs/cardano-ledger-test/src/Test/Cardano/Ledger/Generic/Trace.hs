@@ -52,7 +52,7 @@ import Cardano.Ledger.Shelley.LedgerState
     NewEpochState (..),
     PState (..),
     UTxOState (..),
-    StashedAVVMAddresses,
+    StashedAVVMAddresses, PPUPStateOrUnit,
   )
 import qualified Cardano.Ledger.Shelley.PParams as Shelley (ShelleyPParamsHKD (..))
 import Cardano.Ledger.Shelley.Rules
@@ -547,7 +547,8 @@ chainTest ::
   forall era.
   ( Reflect era,
     HasTrace (MOCKCHAIN era) (Gen1 era),
-    Eq (StashedAVVMAddresses era)
+    Eq (StashedAVVMAddresses era),
+    Eq (PPUPStateOrUnit era)
   ) =>
   Proof era ->
   Int ->

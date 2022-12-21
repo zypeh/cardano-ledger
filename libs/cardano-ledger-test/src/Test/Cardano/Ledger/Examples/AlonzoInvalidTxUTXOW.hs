@@ -60,7 +60,7 @@ import Cardano.Ledger.Shelley.API
   ( ProtVer (..),
   )
 import Cardano.Ledger.Shelley.LedgerState
-  ( UTxOState (..),
+  ( UTxOState (..), PPUPStateOrUnit,
   )
 import Cardano.Ledger.Shelley.Rules as Shelley (ShelleyUtxowPredFailure (..))
 import Cardano.Ledger.Shelley.TxBody
@@ -133,7 +133,8 @@ alonzoUTXOWTests ::
     HasTokens era,
     EraTx era,
     PostShelley era, -- MAYBE WE CAN REPLACE THIS BY GoodCrypto,
-    Value era ~ MaryValue (EraCrypto era)
+    Value era ~ MaryValue (EraCrypto era),
+    Default (PPUPStateOrUnit era)
   ) =>
   Proof era ->
   TestTree

@@ -17,7 +17,7 @@ import Cardano.Ledger.Shelley.API
     LedgerEnv (..),
     MempoolEnv,
   )
-import Cardano.Ledger.Shelley.LedgerState (LedgerState)
+import Cardano.Ledger.Shelley.LedgerState (LedgerState, PPUPStateOrUnit)
 import Cardano.Ledger.Slot (SlotNo (SlotNo))
 import Control.DeepSeq (NFData (..))
 import Control.State.Transition (Environment, Signal, State)
@@ -27,7 +27,6 @@ import Control.State.Transition.Trace
     sourceSignalTargets,
   )
 import Control.State.Transition.Trace.Generator.QuickCheck (HasTrace (BaseEnv), traceFromInitState)
-import Data.Default.Class (Default)
 import Data.Proxy (Proxy)
 import GHC.Generics (Generic)
 import Test.Cardano.Ledger.AllegraEraGen ()
@@ -39,6 +38,7 @@ import Test.Cardano.Ledger.Shelley.Generator.Trace.Ledger (mkGenesisLedgerState)
 import Test.Cardano.Ledger.Shelley.Utils (testGlobals)
 import Test.QuickCheck.Gen (unGen)
 import Test.QuickCheck.Random (mkQCGen)
+import Data.Default.Class (Default)
 
 -- | Static mempool environment. We apply Txs in some future slot. The account
 -- state shouldn't matter much.
@@ -70,7 +70,8 @@ generateApplyTxEnvForEra ::
     BaseEnv (EraRule "LEDGER" era) ~ Globals,
     Signal (EraRule "LEDGER" era) ~ Core.Tx era,
     Environment (EraRule "LEDGER" era) ~ LedgerEnv era,
-    State (EraRule "LEDGER" era) ~ LedgerState era
+    State (EraRule "LEDGER" era) ~ LedgerState era,
+    Default (PPUPStateOrUnit era)
   ) =>
   Proxy era ->
   Int ->

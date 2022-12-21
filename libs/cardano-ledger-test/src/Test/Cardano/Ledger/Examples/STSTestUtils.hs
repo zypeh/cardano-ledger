@@ -84,7 +84,7 @@ import Cardano.Ledger.Shelley.API
     UTxO (..),
   )
 import Cardano.Ledger.Shelley.LedgerState
-  ( smartUTxOState,
+  ( smartUTxOState, PPUPStateOrUnit,
   )
 import Cardano.Ledger.Shelley.PParams (ShelleyPParamsHKD (..))
 import Cardano.Ledger.Shelley.Rules
@@ -353,7 +353,8 @@ testUTXOWsubset,
     ( GoodCrypto (EraCrypto era),
       PostShelley era,
       EraTx era,
-      HasCallStack
+      HasCallStack,
+      Default (PPUPStateOrUnit era)
     ) =>
     WitRule "UTXOW" era ->
     UTxO era ->
@@ -390,7 +391,8 @@ type Result era = Either [PredicateFailure (EraRule "UTXOW" era)] (State (EraRul
 testUTXOWwith ::
   forall era.
   ( GoodCrypto (EraCrypto era),
-    EraTx era
+    EraTx era,
+    Default (PPUPStateOrUnit era)
   ) =>
   WitRule "UTXOW" era ->
   (Result era -> Result era -> Assertion) ->

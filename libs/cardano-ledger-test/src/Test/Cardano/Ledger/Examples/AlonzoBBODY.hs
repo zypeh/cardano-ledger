@@ -63,7 +63,7 @@ import Cardano.Ledger.Shelley.API
   )
 import Cardano.Ledger.Shelley.BlockChain (bBodySize)
 import Cardano.Ledger.Shelley.LedgerState
-  ( smartUTxOState,
+  ( smartUTxOState, PPUPStateOrUnit,
   )
 import Cardano.Ledger.Shelley.Rules
   ( ShelleyBbodyPredFailure (..),
@@ -141,7 +141,8 @@ alonzoBBODYexamplesP ::
     HasTokens era,
     PostShelley era,
     Value era ~ MaryValue (EraCrypto era),
-    EraSegWits era
+    EraSegWits era,
+    Default (PPUPStateOrUnit era)
   ) =>
   Proof era ->
   TestTree
@@ -166,7 +167,8 @@ alonzoBBODYexamplesP proof =
 
 initialBBodyState ::
   ( EraTxOut era,
-    PostShelley era
+    PostShelley era,
+    Default (PPUPStateOrUnit era)
   ) =>
   Proof era ->
   UTxO era ->
@@ -573,7 +575,8 @@ testBBodyState ::
     HasTokens era,
     PostShelley era,
     EraTxBody era,
-    Value era ~ MaryValue (EraCrypto era)
+    Value era ~ MaryValue (EraCrypto era),
+    Default (PPUPStateOrUnit era)
   ) =>
   Proof era ->
   ShelleyBbodyState era

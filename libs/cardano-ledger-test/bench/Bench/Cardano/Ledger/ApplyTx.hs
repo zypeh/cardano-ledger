@@ -35,13 +35,12 @@ import Cardano.Ledger.Shelley.API
     LedgerState,
     applyTxsTransition,
   )
-import Cardano.Ledger.Shelley.LedgerState (DPState, PPUPState, UTxOState)
+import Cardano.Ledger.Shelley.LedgerState (DPState, UTxOState, PPUPStateOrUnit)
 import Cardano.Ledger.Shelley.PParams (ShelleyPParamsHKD (..))
 import Control.DeepSeq (NFData (..))
 import Control.State.Transition (Environment, Signal, State)
 import Control.State.Transition.Trace.Generator.QuickCheck (BaseEnv, HasTrace)
 import Criterion
-import Data.Default.Class (Default)
 import Data.Proxy (Proxy (..))
 import qualified Data.Sequence as Seq
 import Data.Typeable (typeRep)
@@ -51,6 +50,7 @@ import Test.Cardano.Ledger.MaryEraGen ()
 import Test.Cardano.Ledger.Shelley.ConcreteCryptoTypes (C_Crypto)
 import Test.Cardano.Ledger.Shelley.Generator.Core (GenEnv)
 import Test.Cardano.Ledger.Shelley.Generator.EraGen (EraGen)
+import Data.Default.Class (Default)
 
 type ShelleyBench = ShelleyEra C_Crypto
 
@@ -81,7 +81,8 @@ benchWithGenState ::
     BaseEnv (EraRule "LEDGER" era) ~ Globals,
     Signal (EraRule "LEDGER" era) ~ Tx era,
     Environment (EraRule "LEDGER" era) ~ LedgerEnv era,
-    State (EraRule "LEDGER" era) ~ LedgerState era
+    State (EraRule "LEDGER" era) ~ LedgerState era,
+    Default (PPUPStateOrUnit era)
   ) =>
   Proxy era ->
   (ApplyTxEnv era -> IO a) ->
@@ -95,7 +96,9 @@ benchApplyTx ::
   ( EraGen era,
     ApplyTx era,
     HasTrace (EraRule "LEDGER" era) (GenEnv era),
-    BaseEnv (EraRule "LEDGER" era) ~ Globals
+    BaseEnv (EraRule "LEDGER" era) ~ Globals,
+    Default (PPUPStateOrUnit era),
+    NFData (PPUPStateOrUnit era)
   ) =>
   Proxy era ->
   Benchmark
@@ -122,7 +125,8 @@ deserialiseTxEra ::
     State (EraRule "LEDGER" era) ~ LedgerState era,
     Environment (EraRule "LEDGER" era) ~ LedgerEnv era,
     Signal (EraRule "LEDGER" era) ~ Tx era,
-    NFData (Tx era)
+    NFData (Tx era),
+    Default (PPUPStateOrUnit era)
   ) =>
   Proxy era ->
   Benchmark

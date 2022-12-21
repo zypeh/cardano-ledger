@@ -375,6 +375,9 @@ data AlonzoUtxosPredFailure era
   deriving
     (Generic)
 
+instance PPUPPredFailure era ~ () => Inject () (AlonzoUtxosPredFailure era) where
+  inject () = UpdateFailure ()
+
 instance
   ( Era era,
     Show (TxOut era),

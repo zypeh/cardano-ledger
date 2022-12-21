@@ -149,7 +149,8 @@ mkWitnesses proof txBody keyPairWits =
 defaultLedgerExamples ::
   forall era.
   ( Reflect era,
-    Default (StashedAVVMAddresses era)
+    Default (StashedAVVMAddresses era),
+    Default (PPUPStateOrUnit era)
   ) =>
   Proof era ->
   Core.Value era ->
@@ -407,7 +408,8 @@ type UsesPP era =
 exampleNewEpochState ::
   forall era.
   ( Reflect era,
-    Default (StashedAVVMAddresses era)
+    Default (StashedAVVMAddresses era),
+    Default (PPUPStateOrUnit era)
   ) =>
   Proof era ->
   Core.Value era ->
