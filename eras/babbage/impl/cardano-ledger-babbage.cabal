@@ -62,7 +62,7 @@ library
     deepseq,
     mtl,
     nothunks,
-    plutus-ledger-api ^>= 1.0,
+    plutus-ledger-api ^>= 1.1,
     plutus-tx ^>= 1.0,
     set-algebra,
     small-steps,
