@@ -44,7 +44,7 @@ library
                      , containers
                      , byron-spec-ledger
                      , goblins
-                     , hashable == 1.4.0.2
+                     , hashable
                      , hedgehog >= 1.0.4
                      , microlens
                      , microlens-th
