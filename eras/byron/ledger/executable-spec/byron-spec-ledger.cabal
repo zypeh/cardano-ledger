@@ -59,7 +59,7 @@ library
                      , microlens-th
                      , nothunks
                      , template-haskell
-                     , Unique >= 0.4.7.6
+                     , Unique
                      -- IOHK deps
                      , cardano-binary
                      -- Local deps
@@ -90,7 +90,7 @@ test-suite byron-spec-ledger-test
                , tasty
                , tasty-hunit
                , tasty-hedgehog
-               , Unique >= 0.4.7.6
+               , Unique
                -- Local deps
                , byron-spec-ledger
                , small-steps
