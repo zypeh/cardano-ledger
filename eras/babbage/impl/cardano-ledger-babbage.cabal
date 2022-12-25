@@ -63,7 +63,7 @@ library
     mtl,
     nothunks,
     plutus-ledger-api ^>= 1.1,
-    plutus-tx ^>= 1.0,
+    plutus-tx ^>= 1.1,
     set-algebra,
     small-steps,
     cardano-strict-containers,
