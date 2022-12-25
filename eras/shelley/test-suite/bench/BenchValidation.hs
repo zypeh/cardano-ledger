@@ -40,7 +40,6 @@ import Cardano.Ledger.Shelley.LedgerState
     StashedAVVMAddresses,
     nesBcur,
   )
-import Cardano.Ledger.Shelley.TxBody (TransTxBody, TransTxId)
 import Cardano.Protocol.TPraos.API
   ( ChainDepState (..),
     ChainTransitionError,
@@ -81,8 +80,8 @@ validateInput ::
   ( EraGen era,
     ShelleyTest era,
     Mock (Crypto era),
-    Core.EraRule "LEDGERS" era ~ API.LEDGERS era,
-    QC.HasTrace (API.LEDGERS era) (GenEnv era),
+    Core.EraRule "LEDGERS" era ~ API.ShelleyLEDGERS era,
+    QC.HasTrace (API.ShelleyLEDGERS era) (GenEnv era),
     API.ApplyBlock era,
     GetLedgerView era,
     MinLEDGER_STS era
@@ -95,8 +94,8 @@ genValidateInput ::
   ( EraGen era,
     ShelleyTest era,
     Mock (Crypto era),
-    Core.EraRule "LEDGERS" era ~ API.LEDGERS era,
-    QC.HasTrace (API.LEDGERS era) (GenEnv era),
+    Core.EraRule "LEDGERS" era ~ API.ShelleyLEDGERS era,
+    QC.HasTrace (API.ShelleyLEDGERS era) (GenEnv era),
     API.ApplyBlock era,
     GetLedgerView era,
     MinLEDGER_STS era
@@ -121,8 +120,8 @@ benchValidate (ValidateInput globals state (Block bh txs)) =
 
 applyBlock ::
   forall era.
-  ( TransTxId Show era,
-    TransTxBody NFData era,
+  ( Era era,
+    NFData (Core.TxOut era),
     API.ApplyBlock era,
     NFData (Core.PParams era),
     NFData (State (Core.EraRule "PPUP" era)),
@@ -182,8 +181,8 @@ genUpdateInputs ::
     ShelleyTest era,
     MinLEDGER_STS era,
     GetLedgerView era,
-    Core.EraRule "LEDGERS" era ~ API.LEDGERS era,
-    QC.HasTrace (API.LEDGERS era) (GenEnv era),
+    Core.EraRule "LEDGERS" era ~ API.ShelleyLEDGERS era,
+    QC.HasTrace (API.ShelleyLEDGERS era) (GenEnv era),
     API.ApplyBlock era
   ) =>
   Int ->

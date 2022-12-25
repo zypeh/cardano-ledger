@@ -10,7 +10,7 @@ module Test.Cardano.Ledger.Alonzo.Examples where
 
 import Cardano.Ledger.Alonzo (AlonzoEra)
 import Cardano.Ledger.Alonzo.Language (Language (..))
-import Cardano.Ledger.Alonzo.Scripts (ExUnits (..), Script (..))
+import Cardano.Ledger.Alonzo.Scripts (AlonzoScript (..), ExUnits (..))
 import Cardano.Ledger.Alonzo.TxInfo
   ( PlutusDebug (..),
     PlutusDebugInfo (..),
@@ -21,12 +21,12 @@ import Cardano.Ledger.Alonzo.TxInfo
 import Cardano.Ledger.BaseTypes (ProtVer (..))
 import Data.ByteString.Short (ShortByteString)
 import Data.Proxy (Proxy (..))
-import qualified Plutus.V1.Ledger.Api as P
-import qualified Plutus.V1.Ledger.EvaluationContext as P
-import Plutus.V1.Ledger.Examples
+import PlutusLedgerApi.Test.EvaluationContext
+import PlutusLedgerApi.Test.Examples
   ( alwaysFailingNAryFunction,
     alwaysSucceedingNAryFunction,
   )
+import qualified PlutusLedgerApi.V1 as P
 import Test.Cardano.Ledger.Alonzo.PlutusScripts (testingCostModelV1)
 import qualified Test.Cardano.Ledger.Alonzo.PlutusScripts as Generated
   ( evenRedeemer2,
@@ -76,10 +76,10 @@ directPlutusTest expectation script ds =
     pv = P.ProtocolVersion 6 0
     evalWithTightBudget :: ShortByteString -> [P.Data] -> Either P.EvaluationError P.ExBudget
     evalWithTightBudget scr datums = do
-      budget <- snd $ P.evaluateScriptCounting pv P.Quiet P.evalCtxForTesting scr datums
-      snd $ P.evaluateScriptRestricting pv P.Verbose P.evalCtxForTesting budget scr datums
+      budget <- snd $ P.evaluateScriptCounting pv P.Quiet evalCtxForTesting scr datums
+      snd $ P.evaluateScriptRestricting pv P.Verbose evalCtxForTesting budget scr datums
 
-getRawPlutusScript :: String -> Script () -> ShortByteString
+getRawPlutusScript :: String -> AlonzoScript () -> ShortByteString
 getRawPlutusScript name =
   \case
     PlutusScript _ sbs -> sbs
@@ -193,7 +193,7 @@ plutusScriptExamples =
 alonzo :: Proxy (AlonzoEra StandardCrypto)
 alonzo = Proxy
 
-explainTest :: Script (AlonzoEra StandardCrypto) -> ShouldSucceed -> [P.Data] -> Assertion
+explainTest :: AlonzoScript (AlonzoEra StandardCrypto) -> ShouldSucceed -> [P.Data] -> Assertion
 explainTest script@(PlutusScript _ bytes) mode ds =
   case ( mode,
          runPLCScript

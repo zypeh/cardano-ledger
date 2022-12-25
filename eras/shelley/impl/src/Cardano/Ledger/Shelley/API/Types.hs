@@ -59,12 +59,12 @@ import Cardano.Ledger.Keys as X
     hashKey,
     hashVerKeyVRF,
   )
+import Cardano.Ledger.Keys.Bootstrap as X
+  ( BootstrapWitness (..),
+  )
 import Cardano.Ledger.PoolDistr as X
   ( PoolDistr (..),
     individualPoolStake,
-  )
-import Cardano.Ledger.Shelley.Address.Bootstrap as X
-  ( BootstrapWitness (..),
   )
 import Cardano.Ledger.Shelley.BlockChain as X (bbHash)
 import Cardano.Ledger.Shelley.Delegation.Certificates as X
@@ -92,7 +92,6 @@ import Cardano.Ledger.Shelley.LedgerState as X
     PState (..),
     RewardUpdate (..),
     UTxOState (..),
-    WitHashes (..),
   )
 import Cardano.Ledger.Shelley.Metadata as X
   ( Metadata (..),
@@ -100,31 +99,34 @@ import Cardano.Ledger.Shelley.Metadata as X
   )
 import Cardano.Ledger.Shelley.PParams as X
   ( PParams,
-    PParams' (..),
+    PParams',
     ProposedPPUpdates (..),
+    ShelleyPParams,
+    ShelleyPParamsHKD (..),
     Update (..),
   )
 import Cardano.Ledger.Shelley.PoolRank as X
   ( NonMyopic,
   )
-import Cardano.Ledger.Shelley.Rules.Deleg as X (DELEG, DelegEnv (..))
-import Cardano.Ledger.Shelley.Rules.Delegs as X (DELEGS, DelegsEnv (..))
-import Cardano.Ledger.Shelley.Rules.Delpl as X (DELPL, DelplEnv (..))
-import Cardano.Ledger.Shelley.Rules.Ledger as X (LEDGER, LedgerEnv (..))
-import Cardano.Ledger.Shelley.Rules.Ledgers as X (LEDGERS, LedgersEnv (..))
+import Cardano.Ledger.Shelley.Rules.Deleg as X (DelegEnv (..), ShelleyDELEG)
+import Cardano.Ledger.Shelley.Rules.Delegs as X (DelegsEnv (..), ShelleyDELEGS)
+import Cardano.Ledger.Shelley.Rules.Delpl as X (DelplEnv (..), ShelleyDELPL)
+import Cardano.Ledger.Shelley.Rules.Ledger as X (LedgerEnv (..), ShelleyLEDGER)
+import Cardano.Ledger.Shelley.Rules.Ledgers as X (ShelleyLEDGERS, ShelleyLedgersEnv (..))
 import Cardano.Ledger.Shelley.Rules.NewEpoch as X
-  ( NEWEPOCH,
+  ( ShelleyNEWEPOCH,
     calculatePoolDistr,
+    calculatePoolDistr',
   )
-import Cardano.Ledger.Shelley.Rules.Pool as X (POOL, PoolEnv (..))
-import Cardano.Ledger.Shelley.Rules.PoolReap as X (POOLREAP)
-import Cardano.Ledger.Shelley.Rules.Ppup as X (PPUP, PPUPEnv (..))
-import Cardano.Ledger.Shelley.Rules.Tick as X (TICK)
+import Cardano.Ledger.Shelley.Rules.Pool as X (PoolEnv (..), ShelleyPOOL)
+import Cardano.Ledger.Shelley.Rules.PoolReap as X (ShelleyPOOLREAP)
+import Cardano.Ledger.Shelley.Rules.Ppup as X (PpupEnv (..), ShelleyPPUP)
+import Cardano.Ledger.Shelley.Rules.Tick as X (ShelleyTICK)
 import Cardano.Ledger.Shelley.Rules.Utxo as X
-  ( UTXO,
+  ( ShelleyUTXO,
     UtxoEnv (..),
   )
-import Cardano.Ledger.Shelley.Rules.Utxow as X (UTXOW)
+import Cardano.Ledger.Shelley.Rules.Utxow as X (ShelleyUTXOW)
 import Cardano.Ledger.Shelley.Scripts as X
   ( MultiSig (..),
     ScriptHash (..),
@@ -134,9 +136,13 @@ import Cardano.Ledger.Shelley.StabilityWindow as X
     computeStabilityWindow,
   )
 import Cardano.Ledger.Shelley.Tx as X
-  ( Tx (..),
-    TxBody (..),
-    TxOut (..),
+  ( ShelleyTx (..),
+    ShelleyTxBody (..),
+    ShelleyTxOut (..),
+    ShelleyWitnesses,
+    Tx,
+    TxBody,
+    TxOut,
     WitnessSet,
   )
 import Cardano.Ledger.Shelley.TxBody as X
@@ -148,7 +154,6 @@ import Cardano.Ledger.Shelley.TxBody as X
     PoolMetadata (..),
     PoolParams (..),
     Ptr (..),
-    StakeCreds (..),
     StakePoolRelay (..),
     Wdrl (..),
     WitVKey (..),

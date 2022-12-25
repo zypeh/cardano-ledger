@@ -1,7 +1,7 @@
 cabal-version: 3.0
 
 name:                cardano-ledger-alonzo-test
-version:             0.1.0.0
+version:             0.1.1.2
 synopsis:            Tests for Cardano ledger introducing Plutus Core
 description:
   This package builds upon the Mary ledger with support for extended UTxO
@@ -14,7 +14,7 @@ copyright:           2020 Input Output (Hong Kong) Ltd.
 category:            Network
 build-type:          Simple
 
-extra-source-files:
+data-files:
   cddl-files/alonzo.cddl
   cddl-files/real/crypto.cddl
   cddl-files/mock/extras.cddl
@@ -26,7 +26,7 @@ source-repository head
   subdir:   eras/alonzo/test-suite
 
 common base
-  build-depends:      base >= 4.12 && < 4.15
+  build-depends:      base >= 4.12 && < 4.17
 
 common project-config
   default-language:   Haskell2010
@@ -62,12 +62,13 @@ library
     cardano-slotting,
     containers,
     data-default-class,
-    hashable,
+    hashable >= 1.4.1.0,
     plutus-tx,
-    plutus-ledger-api,
+    plutus-ledger-api:{plutus-ledger-api, plutus-ledger-api-testlib} ^>=1.1,
     QuickCheck,
     cardano-ledger-shelley-test,
     cardano-ledger-shelley,
+    microlens,
     small-steps,
     small-steps-test,
     cardano-strict-containers,
@@ -92,6 +93,7 @@ test-suite cardano-ledger-alonzo-test
     Test.Cardano.Ledger.Alonzo.Serialisation.Tripping
     Test.Cardano.Ledger.Alonzo.Translation
     Test.Cardano.Ledger.Alonzo.TxInfo
+    Paths_cardano_ledger_alonzo_test
   build-depends:
     base16-bytestring,
     bytestring,
@@ -107,13 +109,13 @@ test-suite cardano-ledger-alonzo-test
     cborg,
     containers,
     data-default-class,
-    plutus-core,
-    plutus-ledger-api,
+    plutus-ledger-api:{plutus-ledger-api, plutus-ledger-api-testlib} ^>=1.1,
     QuickCheck,
     small-steps,
     small-steps-test,
     cardano-ledger-shelley,
     cardano-ledger-shelley-test,
+    microlens,
     cardano-strict-containers,
     tasty,
     tasty-hunit,

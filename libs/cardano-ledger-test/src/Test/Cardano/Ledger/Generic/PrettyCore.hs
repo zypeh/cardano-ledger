@@ -7,34 +7,43 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module Test.Cardano.Ledger.Generic.PrettyCore where
 
 import Cardano.Ledger.Address (Addr (..), RewardAcnt (..))
-import Cardano.Ledger.Alonzo.Data (Data (..), binaryDataToData, hashData)
-import qualified Cardano.Ledger.Alonzo.Data as Alonzo
+import Cardano.Ledger.Alonzo.Data (Data (..), Datum (..), binaryDataToData, hashData)
 import Cardano.Ledger.Alonzo.PlutusScriptApi (CollectError (..))
-import Cardano.Ledger.Alonzo.Rules.Bbody (AlonzoBbodyPredFail (..))
-import qualified Cardano.Ledger.Alonzo.Rules.Utxo as Alonzo (UtxoPredicateFailure (..))
-import Cardano.Ledger.Alonzo.Rules.Utxos (FailureDescription (..), TagMismatchDescription (..), UtxosPredicateFailure (..))
-import Cardano.Ledger.Alonzo.Rules.Utxow (UtxowPredicateFail (..))
-import Cardano.Ledger.Alonzo.Scripts (ExUnits (..), Script (..))
+import Cardano.Ledger.Alonzo.Rules
+  ( AlonzoBbodyPredFailure (..),
+    AlonzoUtxoPredFailure (..),
+    AlonzoUtxosPredFailure (..),
+    AlonzoUtxowPredFailure (..),
+    FailureDescription (..),
+    TagMismatchDescription (..),
+  )
+import Cardano.Ledger.Alonzo.Scripts (AlonzoScript (..), ExUnits (..))
 import Cardano.Ledger.Alonzo.Tx (IsValid (..), ScriptPurpose (..))
-import qualified Cardano.Ledger.Alonzo.TxBody as Alonzo (TxOut (..))
+import Cardano.Ledger.Alonzo.TxBody (AlonzoTxOut (..))
 import Cardano.Ledger.Alonzo.TxWitness (Redeemers (..), TxDats (..), unTxDats)
-import qualified Cardano.Ledger.Babbage.TxBody as Babbage
+import Cardano.Ledger.AuxiliaryData (AuxiliaryDataHash (..))
+import Cardano.Ledger.Babbage.TxBody (BabbageTxOut (..))
 import Cardano.Ledger.BaseTypes (BlocksMade (..), Network (..), TxIx (..), txIxToInt)
 import Cardano.Ledger.Coin (Coin (..))
-import qualified Cardano.Ledger.Core as Core
+import Cardano.Ledger.Core
 import Cardano.Ledger.Credential (Credential (KeyHashObj, ScriptHashObj), StakeReference (..))
 import qualified Cardano.Ledger.Crypto as CC (Crypto)
-import Cardano.Ledger.Era (Era (..), hashScript)
-import Cardano.Ledger.Hashes (DataHash, ScriptHash (..))
-import Cardano.Ledger.Keys (GenDelegs (..), HasKeyRole (coerceKeyRole), KeyHash (..), KeyPair (..), VKey (..), hashKey)
-import Cardano.Ledger.Mary.Value (Value (..))
+import Cardano.Ledger.Keys
+  ( GenDelegs (..),
+    HasKeyRole (coerceKeyRole),
+    KeyHash (..),
+    KeyPair (..),
+    KeyRole (..),
+    VKey (..),
+    hashKey,
+  )
+import Cardano.Ledger.Mary.Value (MaryValue (..))
 import Cardano.Ledger.PoolDistr (IndividualPoolStake (..), PoolDistr (..))
 import Cardano.Ledger.Pretty
 import Cardano.Ledger.Pretty.Alonzo
@@ -51,24 +60,22 @@ import Cardano.Ledger.Shelley.LedgerState
     NewEpochState (..),
     PState (..),
     UTxOState (..),
-    WitHashes (..),
   )
-import Cardano.Ledger.Shelley.Rules.Bbody (BbodyPredicateFailure (..), BbodyState (..))
-import Cardano.Ledger.Shelley.Rules.Epoch (EpochPredicateFailure (..))
-import Cardano.Ledger.Shelley.Rules.Ledger (LedgerPredicateFailure (..))
-import Cardano.Ledger.Shelley.Rules.Ledgers (LedgersPredicateFailure (..))
-import Cardano.Ledger.Shelley.Rules.NewEpoch (NewEpochPredicateFailure (..))
-import Cardano.Ledger.Shelley.Rules.Newpp (NewppPredicateFailure (..))
-import qualified Cardano.Ledger.Shelley.Rules.Ppup as Shelley (PpupPredicateFailure (..))
-import Cardano.Ledger.Shelley.Rules.Tick (TickPredicateFailure (..))
-import Cardano.Ledger.Shelley.Rules.Upec (UpecPredicateFailure (..))
-import qualified Cardano.Ledger.Shelley.Rules.Utxo as Shelley (UtxoPredicateFailure (..))
-import Cardano.Ledger.Shelley.Rules.Utxow (UtxowPredicateFailure (..))
+import Cardano.Ledger.Shelley.Rules.Bbody (ShelleyBbodyPredFailure (..), ShelleyBbodyState (..))
+import Cardano.Ledger.Shelley.Rules.Epoch (ShelleyEpochPredFailure (..))
+import Cardano.Ledger.Shelley.Rules.Ledger (ShelleyLedgerPredFailure (..))
+import Cardano.Ledger.Shelley.Rules.Ledgers (ShelleyLedgersPredFailure (..))
+import Cardano.Ledger.Shelley.Rules.NewEpoch (ShelleyNewEpochPredFailure (..))
+import Cardano.Ledger.Shelley.Rules.Newpp (ShelleyNewppPredFailure (..))
+import qualified Cardano.Ledger.Shelley.Rules.Ppup as Shelley (ShelleyPpupPredFailure (..))
+import Cardano.Ledger.Shelley.Rules.Tick (ShelleyTickPredFailure (..))
+import Cardano.Ledger.Shelley.Rules.Upec (ShelleyUpecPredFailure (..))
+import qualified Cardano.Ledger.Shelley.Rules.Utxo as Shelley (ShelleyUtxoPredFailure (..))
+import Cardano.Ledger.Shelley.Rules.Utxow (ShelleyUtxowPredFailure (..))
 import qualified Cardano.Ledger.Shelley.Scripts as SS (MultiSig (..))
-import Cardano.Ledger.Shelley.TxBody (DCert (..), DelegCert (..), Delegation (..), PoolCert (..), PoolParams (..), Wdrl (..), WitVKey (..))
-import qualified Cardano.Ledger.Shelley.TxBody as Shelley (TxOut (..))
+import Cardano.Ledger.Shelley.TxBody (DCert (..), DelegCert (..), Delegation (..), PoolCert (..), PoolParams (..), ShelleyTxOut (..), Wdrl (..), WitVKey (..))
 import Cardano.Ledger.Shelley.UTxO (UTxO (..))
-import qualified Cardano.Ledger.ShelleyMA.Rules.Utxo as Mary (UtxoPredicateFailure (..))
+import qualified Cardano.Ledger.ShelleyMA.Rules as Mary (ShelleyMAUtxoPredFailure (..))
 import Cardano.Ledger.ShelleyMA.Timelocks (Timelock (..))
 import Cardano.Ledger.TxIn (TxId (..), TxIn (..))
 import Cardano.Ledger.UnifiedMap (UnifiedMap)
@@ -77,11 +84,12 @@ import Control.State.Transition.Extended (STS (..))
 import Data.Foldable (toList)
 import qualified Data.Map.Strict as Map
 import Data.Maybe.Strict (StrictMaybe (..))
+import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Text (Text, pack)
 import Data.Typeable (Typeable)
 import qualified Data.UMap as UMap (View (..), delView, rewView, size)
-import PlutusCore.Data (Data (..))
+import qualified PlutusCore.Data as Plutus (Data (..))
 import Prettyprinter (hsep, parens, viaShow, vsep)
 import Test.Cardano.Ledger.Generic.Fields
   ( TxBodyField (..),
@@ -96,12 +104,12 @@ import Test.Cardano.Ledger.Generic.Proof
 -- =====================================================
 
 class Era era => PrettyCore era where
-  prettyTx :: Core.Tx era -> PDoc
-  prettyScript :: Core.Script era -> PDoc
-  prettyTxBody :: Core.TxBody era -> PDoc
-  prettyWitnesses :: Core.Witnesses era -> PDoc
-  prettyValue :: Core.Value era -> PDoc
-  prettyTxOut :: Core.TxOut era -> PDoc
+  prettyTx :: Tx era -> PDoc
+  prettyScript :: Script era -> PDoc
+  prettyTxBody :: TxBody era -> PDoc
+  prettyWitnesses :: Witnesses era -> PDoc
+  prettyValue :: Value era -> PDoc
+  prettyTxOut :: TxOut era -> PDoc
 
 instance CC.Crypto c => PrettyCore (ShelleyEra c) where
   prettyTx = Cardano.Ledger.Pretty.ppTx
@@ -143,10 +151,19 @@ instance CC.Crypto c => PrettyCore (BabbageEra c) where
   prettyValue = ppValue
   prettyTxOut = Babbage.ppTxOut
 
+instance CC.Crypto c => PrettyCore (ConwayEra c) where
+  prettyTx = Cardano.Ledger.Pretty.Alonzo.ppTx
+  prettyScript = ppScript
+  prettyTxBody = Babbage.ppTxBody
+  prettyWitnesses = ppTxWitness
+  prettyValue = ppValue
+  prettyTxOut = Babbage.ppTxOut
+
 prettyUTxO :: Proof era -> UTxO era -> PDoc
 prettyUTxO proof = prettyUTxOMap proof . unUTxO
 
-prettyUTxOMap :: Proof era -> Map.Map (TxIn (Crypto era)) (Core.TxOut era) -> PDoc
+prettyUTxOMap :: Proof era -> Map.Map (TxIn (Crypto era)) (TxOut era) -> PDoc
+prettyUTxOMap (Conway _) mp = ppMap ppTxIn prettyTxOut mp
 prettyUTxOMap (Babbage _) mp = ppMap ppTxIn prettyTxOut mp
 prettyUTxOMap (Alonzo _) mp = ppMap ppTxIn prettyTxOut mp
 prettyUTxOMap (Mary _) mp = ppMap ppTxIn prettyTxOut mp
@@ -162,27 +179,27 @@ prettyUTxOMap (Shelley _) mp = ppMap ppTxIn prettyTxOut mp
 -- Predicate Failure for LEDGER
 
 ppLedgerPredicateFailure ::
-  ( PrettyA (PredicateFailure (Core.EraRule "UTXOW" era)),
-    Show (PredicateFailure (Core.EraRule "DELEGS" era))
+  ( PrettyA (PredicateFailure (EraRule "UTXOW" era)),
+    Show (PredicateFailure (EraRule "DELEGS" era))
   ) =>
-  LedgerPredicateFailure era ->
+  ShelleyLedgerPredFailure era ->
   PDoc
 ppLedgerPredicateFailure (UtxowFailure x) = prettyA x
 ppLedgerPredicateFailure (DelegsFailure x) = ppString (show x)
 
 instance
-  ( PrettyA (PredicateFailure (Core.EraRule "UTXOW" era)),
-    Show (PredicateFailure (Core.EraRule "DELEGS" era))
+  ( PrettyA (PredicateFailure (EraRule "UTXOW" era)),
+    Show (PredicateFailure (EraRule "DELEGS" era))
   ) =>
-  PrettyA (LedgerPredicateFailure era)
+  PrettyA (ShelleyLedgerPredFailure era)
   where
   prettyA = ppLedgerPredicateFailure
 
 instance
-  ( PrettyA (PredicateFailure (Core.EraRule "UTXOW" era)),
-    Show (PredicateFailure (Core.EraRule "DELEGS" era))
+  ( PrettyA (PredicateFailure (EraRule "UTXOW" era)),
+    Show (PredicateFailure (EraRule "DELEGS" era))
   ) =>
-  PrettyA [LedgerPredicateFailure era]
+  PrettyA [ShelleyLedgerPredFailure era]
   where
   prettyA = ppList prettyA
 
@@ -190,12 +207,12 @@ instance
 -- Predicate Failure for Alonzo UTXOW
 
 ppUtxowPredicateFail ::
-  ( PrettyA (PredicateFailure (Core.EraRule "UTXO" era)),
+  ( PrettyA (PredicateFailure (EraRule "UTXO" era)),
     PrettyCore era
   ) =>
-  UtxowPredicateFail era ->
+  AlonzoUtxowPredFailure era ->
   PDoc
-ppUtxowPredicateFail (WrappedShelleyEraFailure x) = prettyA x
+ppUtxowPredicateFail (ShelleyInAlonzoUtxowPredFailure x) = prettyA x
 ppUtxowPredicateFail (MissingRedeemers xs) =
   ppSexp "MissingRedeemers" [ppList (ppPair ppScriptPurpose ppScriptHash) xs]
 ppUtxowPredicateFail (MissingRequiredDatums s1 s2) =
@@ -224,10 +241,10 @@ ppUtxowPredicateFail (ExtraRedeemers x) =
   ppSexp "ExtraRedeemers" [ppList prettyA x]
 
 instance
-  ( PrettyA (PredicateFailure (Core.EraRule "UTXO" era)),
+  ( PrettyA (PredicateFailure (EraRule "UTXO" era)),
     PrettyCore era
   ) =>
-  PrettyA (UtxowPredicateFail era)
+  PrettyA (AlonzoUtxowPredFailure era)
   where
   prettyA = ppUtxowPredicateFail
 
@@ -235,10 +252,10 @@ instance
 -- Predicate Failure for Shelley UTXOW
 
 ppUtxowPredicateFailure ::
-  ( PrettyA (PredicateFailure (Core.EraRule "UTXO" era)),
+  ( PrettyA (PredicateFailure (EraRule "UTXO" era)),
     PrettyCore era
   ) =>
-  UtxowPredicateFailure era ->
+  ShelleyUtxowPredFailure era ->
   PDoc
 ppUtxowPredicateFailure (InvalidWitnessesUTXOW vkeyws) =
   ppSexp "InvalidWitnessesUTXOW" [ppList ppVKey vkeyws]
@@ -256,17 +273,19 @@ ppUtxowPredicateFailure (MissingTxBodyMetadataHash m) =
 ppUtxowPredicateFailure (MissingTxMetadata m) =
   ppSexp " MissingTxMetadata" [ppAuxiliaryDataHash m]
 ppUtxowPredicateFailure (ConflictingMetadataHash h1 h2) =
-  ppRecord "ConflictingMetadataHash" [("Hash in the body", ppAuxiliaryDataHash h1), ("Hash of full metadata", ppAuxiliaryDataHash h2)]
-ppUtxowPredicateFailure (InvalidMetadata) =
+  ppRecord
+    "ConflictingMetadataHash"
+    [("Hash in the body", ppAuxiliaryDataHash h1), ("Hash of full metadata", ppAuxiliaryDataHash h2)]
+ppUtxowPredicateFailure InvalidMetadata =
   ppSexp "InvalidMetadata" []
 ppUtxowPredicateFailure (ExtraneousScriptWitnessesUTXOW m) =
   ppSexp "ExtraneousScriptWitnessesUTXOW" [ppSet ppScriptHash m]
 
 instance
-  ( PrettyA (PredicateFailure (Core.EraRule "UTXO" era)),
+  ( PrettyA (PredicateFailure (EraRule "UTXO" era)),
     PrettyCore era
   ) =>
-  PrettyA (UtxowPredicateFailure era)
+  PrettyA (ShelleyUtxowPredFailure era)
   where
   prettyA = ppUtxowPredicateFailure
 
@@ -276,56 +295,56 @@ instance
 ppUtxoPredicateFailure ::
   forall era.
   ( PrettyCore era,
-    PrettyA (PredicateFailure (Core.EraRule "UTXOS" era)),
-    PrettyA (Core.TxOut era) -- From ppUTxO FIXME
+    PrettyA (PredicateFailure (EraRule "UTXOS" era)),
+    PrettyA (TxOut era) -- From ppUTxO FIXME
   ) =>
-  Alonzo.UtxoPredicateFailure era ->
+  AlonzoUtxoPredFailure era ->
   PDoc
-ppUtxoPredicateFailure (Alonzo.BadInputsUTxO x) =
+ppUtxoPredicateFailure (BadInputsUTxO x) =
   ppSexp "BadInputsUTxO" [ppSet ppTxIn x]
-ppUtxoPredicateFailure (Alonzo.OutsideValidityIntervalUTxO vi slot) =
+ppUtxoPredicateFailure (OutsideValidityIntervalUTxO vi slot) =
   ppRecord "OutsideValidityIntervalUTxO" [("validity interval", ppValidityInterval vi), ("slot", ppSlotNo slot)]
-ppUtxoPredicateFailure (Alonzo.MaxTxSizeUTxO actual maxs) =
+ppUtxoPredicateFailure (MaxTxSizeUTxO actual maxs) =
   ppRecord
     "MaxTxSizeUTxO"
     [ ("Actual", ppInteger actual),
       ("max transaction size", ppInteger maxs)
     ]
-ppUtxoPredicateFailure (Alonzo.InputSetEmptyUTxO) =
+ppUtxoPredicateFailure InputSetEmptyUTxO =
   ppSexp "InputSetEmptyUTxO" []
-ppUtxoPredicateFailure (Alonzo.FeeTooSmallUTxO computed supplied) =
+ppUtxoPredicateFailure (FeeTooSmallUTxO computed supplied) =
   ppRecord
     "FeeTooSmallUTxO"
     [ ("min fee for thistransaction", ppCoin computed),
       ("fee supplied by transaction", ppCoin supplied)
     ]
-ppUtxoPredicateFailure (Alonzo.ValueNotConservedUTxO consumed produced) =
+ppUtxoPredicateFailure (ValueNotConservedUTxO consumed produced) =
   ppRecord
     "ValueNotConservedUTxO"
     [ ("coin consumed", prettyValue @era consumed),
       ("coin produced", prettyValue @era produced)
     ]
-ppUtxoPredicateFailure (Alonzo.WrongNetwork n add) =
+ppUtxoPredicateFailure (WrongNetwork n add) =
   ppRecord
     "WrongNetwork"
     [ ("expected network id", ppNetwork n),
       ("set addresses with wrong network id", ppSet ppAddr add)
     ]
-ppUtxoPredicateFailure (Alonzo.WrongNetworkWithdrawal n accnt) =
+ppUtxoPredicateFailure (WrongNetworkWithdrawal n accnt) =
   ppRecord
     "WrongNetworkWithdrawal"
     [ ("expected network id", ppNetwork n),
       ("set reward address with wrong network id", ppSet ppRewardAcnt accnt)
     ]
-ppUtxoPredicateFailure (Alonzo.OutputTooSmallUTxO xs) =
+ppUtxoPredicateFailure (OutputTooSmallUTxO xs) =
   ppSexp "OutputTooSmallUTxO" [ppList prettyTxOut xs]
-ppUtxoPredicateFailure (Alonzo.UtxosFailure subpred) = prettyA subpred
+ppUtxoPredicateFailure (UtxosFailure subpred) = prettyA subpred
 -- ppSexp "UtxosFailure" [prettyA subpred]
-ppUtxoPredicateFailure (Alonzo.OutputBootAddrAttrsTooBig x) =
+ppUtxoPredicateFailure (OutputBootAddrAttrsTooBig x) =
   ppSexp "OutputBootAddrAttrsTooBig" [ppList prettyTxOut x]
-ppUtxoPredicateFailure (Alonzo.TriesToForgeADA) =
+ppUtxoPredicateFailure (TriesToForgeADA) =
   ppSexp "TriesToForgeADA" []
-ppUtxoPredicateFailure (Alonzo.OutputTooBigUTxO xs) =
+ppUtxoPredicateFailure (OutputTooBigUTxO xs) =
   ppSexp
     "OutputTooBigUTxO"
     [ ppList
@@ -336,45 +355,45 @@ ppUtxoPredicateFailure (Alonzo.OutputTooBigUTxO xs) =
         )
         xs
     ]
-ppUtxoPredicateFailure (Alonzo.InsufficientCollateral x y) =
+ppUtxoPredicateFailure (InsufficientCollateral x y) =
   ppRecord
     "InsufficientCollateral"
     [ ("balance computed", ppCoin x),
       ("the required collateral for the given fee", ppCoin y)
     ]
-ppUtxoPredicateFailure (Alonzo.ScriptsNotPaidUTxO x) =
+ppUtxoPredicateFailure (ScriptsNotPaidUTxO x) =
   ppSexp "ScriptsNotPaidUTxO" [ppUTxO x]
-ppUtxoPredicateFailure (Alonzo.ExUnitsTooBigUTxO x y) =
+ppUtxoPredicateFailure (ExUnitsTooBigUTxO x y) =
   ppRecord
     "ExUnitsTooBigUTxO"
     [ ("Max EXUnits from the protocol parameters", ppExUnits x),
       ("EXUnits supplied", ppExUnits y)
     ]
-ppUtxoPredicateFailure (Alonzo.CollateralContainsNonADA x) =
+ppUtxoPredicateFailure (CollateralContainsNonADA x) =
   ppSexp "CollateralContainsNonADA" [prettyValue @era x]
-ppUtxoPredicateFailure (Alonzo.WrongNetworkInTxBody x y) =
+ppUtxoPredicateFailure (WrongNetworkInTxBody x y) =
   ppRecord
     "WrongNetworkInTxBody"
     [ ("Actual Network ID", ppNetwork x),
       ("Network ID in transaction body", ppNetwork y)
     ]
-ppUtxoPredicateFailure (Alonzo.OutsideForecast x) =
+ppUtxoPredicateFailure (OutsideForecast x) =
   ppRecord "OutsideForecast" [("slot number outside consensus forecast range", ppSlotNo x)]
-ppUtxoPredicateFailure (Alonzo.TooManyCollateralInputs x y) =
+ppUtxoPredicateFailure (TooManyCollateralInputs x y) =
   ppRecord
     "TooManyCollateralInputs"
     [ ("Max allowed collateral inputs", ppNatural x),
       ("Number of collateral inputs", ppNatural y)
     ]
-ppUtxoPredicateFailure (Alonzo.NoCollateralInputs) =
+ppUtxoPredicateFailure (NoCollateralInputs) =
   ppSexp "NoCollateralInputs" []
 
 instance
   ( PrettyCore era,
-    PrettyA (PredicateFailure (Core.EraRule "UTXOS" era)),
-    PrettyA (Core.TxOut era) -- From ppUTxO FIXME
+    PrettyA (PredicateFailure (EraRule "UTXOS" era)),
+    PrettyA (TxOut era) -- From ppUTxO FIXME
   ) =>
-  PrettyA (Alonzo.UtxoPredicateFailure era)
+  PrettyA (AlonzoUtxoPredFailure era)
   where
   prettyA = ppUtxoPredicateFailure
 
@@ -382,8 +401,8 @@ instance
 -- Predicate Failure for Alonzo UTXOS
 
 ppUtxosPredicateFailure ::
-  PrettyA (PredicateFailure (Core.EraRule "PPUP" era)) =>
-  UtxosPredicateFailure era ->
+  PrettyA (PredicateFailure (EraRule "PPUP" era)) =>
+  AlonzoUtxosPredFailure era ->
   PDoc
 ppUtxosPredicateFailure (ValidationTagMismatch isvalid tag) =
   ppRecord
@@ -395,7 +414,7 @@ ppUtxosPredicateFailure (CollectErrors es) =
   ppRecord' mempty [("When collecting inputs for twophase scripts, these went wrong.", ppList ppCollectError es)]
 ppUtxosPredicateFailure (UpdateFailure p) = prettyA p
 
-instance PrettyA (PredicateFailure (Core.EraRule "PPUP" era)) => PrettyA (UtxosPredicateFailure era) where
+instance PrettyA (PredicateFailure (EraRule "PPUP" era)) => PrettyA (AlonzoUtxosPredFailure era) where
   prettyA = ppUtxosPredicateFailure
 
 ppCollectError :: CollectError crypto -> PDoc
@@ -428,9 +447,9 @@ instance PrettyA FailureDescription where
 ppUtxoPFShelley ::
   forall era.
   ( PrettyCore era,
-    PrettyA (PredicateFailure (Core.EraRule "PPUP" era))
+    PrettyA (PredicateFailure (EraRule "PPUP" era))
   ) =>
-  Shelley.UtxoPredicateFailure era ->
+  Shelley.ShelleyUtxoPredFailure era ->
   PDoc
 ppUtxoPFShelley (Shelley.BadInputsUTxO x) =
   ppSexp "BadInputsUTxO" [ppSet ppTxIn x]
@@ -479,16 +498,16 @@ ppUtxoPFShelley (Shelley.OutputBootAddrAttrsTooBig xs) =
 
 instance
   ( PrettyCore era,
-    PrettyA (PredicateFailure (Core.EraRule "PPUP" era))
+    PrettyA (PredicateFailure (EraRule "PPUP" era))
   ) =>
-  PrettyA (Shelley.UtxoPredicateFailure era)
+  PrettyA (Shelley.ShelleyUtxoPredFailure era)
   where
   prettyA = ppUtxoPFShelley
 
 -- =======================================
 -- Predicate Failure for Shelley PPUP
 
-ppPpupPredicateFailure :: Shelley.PpupPredicateFailure era -> PDoc
+ppPpupPredicateFailure :: Shelley.ShelleyPpupPredFailure era -> PDoc
 ppPpupPredicateFailure (Shelley.NonGenesisUpdatePPUP x y) =
   ppRecord
     "NonGenesisUpdatePPUP"
@@ -505,7 +524,7 @@ ppPpupPredicateFailure (Shelley.PPUpdateWrongEpoch x y z) =
 ppPpupPredicateFailure (Shelley.PVCannotFollowPPUP x) =
   ppRecord "PVCannotFollowPPUP" [("the first bad protocol version", ppProtVer x)]
 
-instance PrettyA (Shelley.PpupPredicateFailure era) where
+instance PrettyA (Shelley.ShelleyPpupPredFailure era) where
   prettyA = ppPpupPredicateFailure
 
 -- =====================================================
@@ -514,9 +533,9 @@ instance PrettyA (Shelley.PpupPredicateFailure era) where
 ppUtxoPFMary ::
   forall era.
   ( PrettyCore era,
-    PrettyA (PredicateFailure (Core.EraRule "PPUP" era))
+    PrettyA (PredicateFailure (EraRule "PPUP" era))
   ) =>
-  Mary.UtxoPredicateFailure era ->
+  Mary.ShelleyMAUtxoPredFailure era ->
   PDoc
 ppUtxoPFMary (Mary.BadInputsUTxO txins) =
   ppSexp "BadInputsUTxO" [ppSet ppTxIn txins]
@@ -571,9 +590,9 @@ ppUtxoPFMary (Mary.OutputTooBigUTxO outs) =
 
 instance
   ( PrettyCore era,
-    PrettyA (PredicateFailure (Core.EraRule "PPUP" era))
+    PrettyA (PredicateFailure (EraRule "PPUP" era))
   ) =>
-  PrettyA (Mary.UtxoPredicateFailure era)
+  PrettyA (Mary.ShelleyMAUtxoPredFailure era)
   where
   prettyA = ppUtxoPFMary
 
@@ -581,11 +600,8 @@ instance
 -- Probably should be moved elsewhere
 
 -- LedgerState.hs
-ppWitHashes :: WitHashes crypto -> PDoc
-ppWitHashes (WitHashes hs) = ppSexp "WitHashes" [ppSet ppKeyHash hs]
-
-instance PrettyA (WitHashes crypto) where
-  prettyA = ppWitHashes
+ppWitHashes :: Set (KeyHash 'Witness crypto) -> PDoc
+ppWitHashes hs = ppSexp "WitHashes" [ppSet ppKeyHash hs]
 
 -- Defined in ‘Cardano.Ledger.Alonzo.Tx’
 ppScriptPurpose :: ScriptPurpose crypto -> PDoc
@@ -610,14 +626,17 @@ dotsF _f _x = ppString "..."
 ppMyWay :: (Typeable keyrole, CC.Crypto c) => WitVKey keyrole c -> PDoc
 ppMyWay (wvk@(WitVKey vkey _)) = ppSexp "MyWay" [ppKeyHash (hashKey vkey), ppWitVKey wvk]
 
-ppCoreWitnesses :: Proof era -> Core.Witnesses era -> PDoc
-ppCoreWitnesses (Alonzo _) x = ppTxWitness x
+ppCoreWitnesses :: Proof era -> Witnesses era -> PDoc
+ppCoreWitnesses (Conway _) x = ppTxWitness x
 ppCoreWitnesses (Babbage _) x = ppTxWitness x
+ppCoreWitnesses (Alonzo _) x = ppTxWitness x
 ppCoreWitnesses (Mary _) x = ppWitnessSetHKD x
 ppCoreWitnesses (Allegra _) x = ppWitnessSetHKD x
 ppCoreWitnesses (Shelley _) x = ppWitnessSetHKD x
 
-ppCoreScript :: Proof era -> Core.Script era -> PDoc
+ppCoreScript :: Proof era -> Script era -> PDoc
+ppCoreScript (Conway _) (PlutusScript _ x) = ppString (show x)
+ppCoreScript (Conway _) (TimelockScript x) = ppTimelock x
 ppCoreScript (Babbage _) (PlutusScript _ x) = ppString (show x)
 ppCoreScript (Babbage _) (TimelockScript x) = ppTimelock x
 ppCoreScript (Alonzo _) (PlutusScript _ x) = ppString (show x)
@@ -629,19 +648,19 @@ ppCoreScript (Shelley _) x = ppMultiSig x
 -- =======================================================
 
 ppLedgersPredicateFailure ::
-  PrettyA (PredicateFailure (Core.EraRule "LEDGER" era)) => LedgersPredicateFailure era -> PDoc
+  PrettyA (PredicateFailure (EraRule "LEDGER" era)) => ShelleyLedgersPredFailure era -> PDoc
 ppLedgersPredicateFailure (LedgerFailure x) = prettyA x
 
 instance
-  PrettyA (PredicateFailure (Core.EraRule "LEDGER" era)) =>
-  PrettyA (LedgersPredicateFailure era)
+  PrettyA (PredicateFailure (EraRule "LEDGER" era)) =>
+  PrettyA (ShelleyLedgersPredFailure era)
   where
   prettyA = ppLedgersPredicateFailure
 
 -- ================
 ppBbodyPredicateFailure ::
-  PrettyA (PredicateFailure (Core.EraRule "LEDGERS" era)) =>
-  BbodyPredicateFailure era ->
+  PrettyA (PredicateFailure (EraRule "LEDGERS" era)) =>
+  ShelleyBbodyPredFailure era ->
   PDoc
 ppBbodyPredicateFailure (WrongBlockBodySizeBBODY x y) =
   ppRecord
@@ -659,18 +678,18 @@ ppBbodyPredicateFailure (LedgersFailure x) =
   ppSexp "LedgersFailure" [prettyA x]
 
 instance
-  PrettyA (PredicateFailure (Core.EraRule "LEDGERS" era)) =>
-  PrettyA (BbodyPredicateFailure era)
+  PrettyA (PredicateFailure (EraRule "LEDGERS" era)) =>
+  PrettyA (ShelleyBbodyPredFailure era)
   where
   prettyA = ppBbodyPredicateFailure
 
 -- ================
 
 ppAlonzoBbodyPredFail ::
-  PrettyA (PredicateFailure (Core.EraRule "LEDGERS" era)) =>
-  AlonzoBbodyPredFail era ->
+  PrettyA (PredicateFailure (EraRule "LEDGERS" era)) =>
+  AlonzoBbodyPredFailure era ->
   PDoc
-ppAlonzoBbodyPredFail (ShelleyInAlonzoPredFail x) =
+ppAlonzoBbodyPredFail (ShelleyInAlonzoBbodyPredFailure x) =
   ppSexp "ShelleyInAlonzoPredFail" [ppBbodyPredicateFailure x]
 ppAlonzoBbodyPredFail (TooManyExUnits e1 e2) =
   ppRecord
@@ -680,38 +699,38 @@ ppAlonzoBbodyPredFail (TooManyExUnits e1 e2) =
     ]
 
 instance
-  PrettyA (PredicateFailure (Core.EraRule "LEDGERS" era)) =>
-  PrettyA (AlonzoBbodyPredFail era)
+  PrettyA (PredicateFailure (EraRule "LEDGERS" era)) =>
+  PrettyA (AlonzoBbodyPredFailure era)
   where
   prettyA = ppAlonzoBbodyPredFail
 
 -- ===============
 ppTickPredicateFailure ::
-  ( NewEpochPredicateFailure era ~ PredicateFailure (Core.EraRule "NEWEPOCH" era),
-    EpochPredicateFailure era ~ PredicateFailure (Core.EraRule "EPOCH" era),
-    UpecPredicateFailure era ~ PredicateFailure (Core.EraRule "UPEC" era)
+  ( ShelleyNewEpochPredFailure era ~ PredicateFailure (EraRule "NEWEPOCH" era),
+    ShelleyEpochPredFailure era ~ PredicateFailure (EraRule "EPOCH" era),
+    ShelleyUpecPredFailure era ~ PredicateFailure (EraRule "UPEC" era)
   ) =>
-  TickPredicateFailure era ->
+  ShelleyTickPredFailure era ->
   PDoc
 ppTickPredicateFailure (NewEpochFailure x) = ppNewEpochPredicateFailure x
 ppTickPredicateFailure (RupdFailure _) =
   ppString "RupdPredicateFailure has no constructors"
 
 instance
-  ( NewEpochPredicateFailure era ~ PredicateFailure (Core.EraRule "NEWEPOCH" era),
-    EpochPredicateFailure era ~ PredicateFailure (Core.EraRule "EPOCH" era),
-    UpecPredicateFailure era ~ PredicateFailure (Core.EraRule "UPEC" era)
+  ( ShelleyNewEpochPredFailure era ~ PredicateFailure (EraRule "NEWEPOCH" era),
+    ShelleyEpochPredFailure era ~ PredicateFailure (EraRule "EPOCH" era),
+    ShelleyUpecPredFailure era ~ PredicateFailure (EraRule "UPEC" era)
   ) =>
-  PrettyA (TickPredicateFailure era)
+  PrettyA (ShelleyTickPredFailure era)
   where
   prettyA = ppTickPredicateFailure
 
 -- ===============
 ppNewEpochPredicateFailure ::
-  ( EpochPredicateFailure era ~ PredicateFailure (Core.EraRule "EPOCH" era),
-    UpecPredicateFailure era ~ PredicateFailure (Core.EraRule "UPEC" era)
+  ( ShelleyEpochPredFailure era ~ PredicateFailure (EraRule "EPOCH" era),
+    ShelleyUpecPredFailure era ~ PredicateFailure (EraRule "UPEC" era)
   ) =>
-  NewEpochPredicateFailure era ->
+  ShelleyNewEpochPredFailure era ->
   PDoc
 ppNewEpochPredicateFailure (EpochFailure x) = ppEpochPredicateFailure x
 ppNewEpochPredicateFailure (CorruptRewardUpdate x) =
@@ -720,19 +739,19 @@ ppNewEpochPredicateFailure (MirFailure _) =
   ppString "MirPredicateFailure has no constructors"
 
 instance
-  ( NewEpochPredicateFailure era ~ PredicateFailure (Core.EraRule "NEWEPOCH" era),
-    EpochPredicateFailure era ~ PredicateFailure (Core.EraRule "EPOCH" era),
-    UpecPredicateFailure era ~ PredicateFailure (Core.EraRule "UPEC" era)
+  ( ShelleyNewEpochPredFailure era ~ PredicateFailure (EraRule "NEWEPOCH" era),
+    ShelleyEpochPredFailure era ~ PredicateFailure (EraRule "EPOCH" era),
+    ShelleyUpecPredFailure era ~ PredicateFailure (EraRule "UPEC" era)
   ) =>
-  PrettyA (NewEpochPredicateFailure era)
+  PrettyA (ShelleyNewEpochPredFailure era)
   where
   prettyA = ppNewEpochPredicateFailure
 
 -- ===============
 ppEpochPredicateFailure ::
-  ( UpecPredicateFailure era ~ PredicateFailure (Core.EraRule "UPEC" era)
+  ( ShelleyUpecPredFailure era ~ PredicateFailure (EraRule "UPEC" era)
   ) =>
-  EpochPredicateFailure era ->
+  ShelleyEpochPredFailure era ->
   PDoc
 ppEpochPredicateFailure (PoolReapFailure _) =
   ppString "PoolreapPredicateFailure has no constructors"
@@ -741,25 +760,25 @@ ppEpochPredicateFailure (SnapFailure _) =
 ppEpochPredicateFailure (UpecFailure x) = ppUpecPredicateFailure x
 
 instance
-  ( EpochPredicateFailure era ~ PredicateFailure (Core.EraRule "EPOCH" era),
-    UpecPredicateFailure era ~ PredicateFailure (Core.EraRule "UPEC" era)
+  ( ShelleyEpochPredFailure era ~ PredicateFailure (EraRule "EPOCH" era),
+    ShelleyUpecPredFailure era ~ PredicateFailure (EraRule "UPEC" era)
   ) =>
-  PrettyA (EpochPredicateFailure era)
+  PrettyA (ShelleyEpochPredFailure era)
   where
   prettyA = ppEpochPredicateFailure
 
 -- ===============
-ppUpecPredicateFailure :: UpecPredicateFailure era -> PDoc
+ppUpecPredicateFailure :: ShelleyUpecPredFailure era -> PDoc
 ppUpecPredicateFailure (NewPpFailure x) = ppNewppPredicateFailure x
 
 instance
-  (UpecPredicateFailure era ~ PredicateFailure (Core.EraRule "UPEC" era)) =>
-  PrettyA (UpecPredicateFailure era)
+  (ShelleyUpecPredFailure era ~ PredicateFailure (EraRule "UPEC" era)) =>
+  PrettyA (ShelleyUpecPredFailure era)
   where
   prettyA = ppUpecPredicateFailure
 
 -- ===============
-ppNewppPredicateFailure :: NewppPredicateFailure era -> PDoc
+ppNewppPredicateFailure :: ShelleyNewppPredFailure era -> PDoc
 ppNewppPredicateFailure (UnexpectedDepositPot c1 c2) =
   ppRecord
     "UnexpectedDepositPot"
@@ -767,16 +786,16 @@ ppNewppPredicateFailure (UnexpectedDepositPot c1 c2) =
       ("The deposit pot", ppCoin c2)
     ]
 
-instance PrettyA (NewppPredicateFailure era) where prettyA = ppNewppPredicateFailure
+instance PrettyA (ShelleyNewppPredFailure era) where prettyA = ppNewppPredicateFailure
 
 -- ===================
 
 ppBbodyState ::
-  ( PrettyA (Core.TxOut era),
-    PrettyA (Core.PParams era),
-    PrettyA (State (Core.EraRule "PPUP" era))
+  ( PrettyA (TxOut era),
+    PrettyA (PParams era),
+    PrettyA (State (EraRule "PPUP" era))
   ) =>
-  BbodyState era ->
+  ShelleyBbodyState era ->
   PDoc
 ppBbodyState (BbodyState ls (BlocksMade mp)) =
   ppRecord
@@ -786,18 +805,18 @@ ppBbodyState (BbodyState ls (BlocksMade mp)) =
     ]
 
 instance
-  ( PrettyA (Core.TxOut era),
-    PrettyA (Core.PParams era),
-    PrettyA (State (Core.EraRule "PPUP" era))
+  ( PrettyA (TxOut era),
+    PrettyA (PParams era),
+    PrettyA (State (EraRule "PPUP" era))
   ) =>
-  PrettyA (BbodyState era)
+  PrettyA (ShelleyBbodyState era)
   where
   prettyA = ppBbodyState
 
 -- =======================================================
 -- Summaries
 
-txBodyFieldSummary :: Era era => TxBodyField era -> [(Text, PDoc)]
+txBodyFieldSummary :: EraTxBody era => TxBodyField era -> [(Text, PDoc)]
 txBodyFieldSummary txb = case txb of
   (Inputs s) -> [("Inputs", ppInt (Set.size s))]
   (Collateral s) -> [("Collateral", ppInt (Set.size s))]
@@ -817,7 +836,7 @@ txBodyFieldSummary txb = case txb of
   (Txnetworkid (SJust x)) -> [("Network id", ppNetwork x)]
   _ -> []
 
-bodySummary :: Era era => Proof era -> Core.TxBody era -> PDoc
+bodySummary :: EraTxBody era => Proof era -> TxBody era -> PDoc
 bodySummary proof body =
   ppRecord
     "TxBody"
@@ -831,13 +850,13 @@ witnessFieldSummary wit = case wit of
   (DataWits m) -> ("Data Witnesses", ppInt (Map.size (unTxDats m)))
   (RdmrWits (Redeemers' m)) -> ("Redeemer Witnesses", ppInt (Map.size m))
 
-witnessSummary :: Proof era -> Core.Witnesses era -> PDoc
+witnessSummary :: Proof era -> Witnesses era -> PDoc
 witnessSummary proof wits =
   ppRecord
     "Witnesses"
     (map witnessFieldSummary (abstractWitnesses proof wits))
 
-txFieldSummary :: Era era => Proof era -> TxField era -> [PDoc]
+txFieldSummary :: EraTxBody era => Proof era -> TxField era -> [PDoc]
 txFieldSummary proof tx = case tx of
   (Body b) -> [bodySummary proof b]
   (BodyI xs) -> [ppRecord "TxBody" (concat (map txBodyFieldSummary xs))]
@@ -847,7 +866,7 @@ txFieldSummary proof tx = case tx of
   (Valid (IsValid b)) -> [ppSexp "IsValid" [ppBool b]]
   _ -> []
 
-txSummary :: Era era => Proof era -> Core.Tx era -> PDoc
+txSummary :: EraTx era => Proof era -> Tx era -> PDoc
 txSummary proof tx =
   ppSexp "Tx" (concat (map (txFieldSummary proof) (abstractTx proof tx)))
 
@@ -860,34 +879,38 @@ trim x = ppString (take 10 (show x))
 txInSummary :: TxIn era -> PDoc
 txInSummary (TxIn (TxId h) n) = ppSexp "TxIn" [trim (ppSafeHash h), ppInt (txIxToInt n)]
 
-txOutSummary :: Proof era -> Core.TxOut era -> PDoc
-txOutSummary p@(Babbage _) (Babbage.TxOut addr v d s) =
+txOutSummary :: Proof era -> TxOut era -> PDoc
+txOutSummary p@(Conway _) (BabbageTxOut addr v d s) =
   ppSexp "TxOut" [addrSummary addr, pcCoreValue p v, datumSummary d, ppStrictMaybe (scriptSummary p) s]
-txOutSummary p@(Alonzo _) (Alonzo.TxOut addr v md) =
+txOutSummary p@(Babbage _) (BabbageTxOut addr v d s) =
+  ppSexp "TxOut" [addrSummary addr, pcCoreValue p v, datumSummary d, ppStrictMaybe (scriptSummary p) s]
+txOutSummary p@(Alonzo _) (AlonzoTxOut addr v md) =
   ppSexp "TxOut" [addrSummary addr, pcCoreValue p v, ppStrictMaybe dataHashSummary md]
-txOutSummary p@(Mary _) (Shelley.TxOut addr v) = ppSexp "TxOut" [addrSummary addr, pcCoreValue p v]
-txOutSummary p@(Allegra _) (Shelley.TxOut addr v) = ppSexp "TxOut" [addrSummary addr, pcCoreValue p v]
-txOutSummary p@(Shelley _) (Shelley.TxOut addr v) = ppSexp "TxOut" [addrSummary addr, pcCoreValue p v]
+txOutSummary p@(Mary _) (ShelleyTxOut addr v) = ppSexp "TxOut" [addrSummary addr, pcCoreValue p v]
+txOutSummary p@(Allegra _) (ShelleyTxOut addr v) = ppSexp "TxOut" [addrSummary addr, pcCoreValue p v]
+txOutSummary p@(Shelley _) (ShelleyTxOut addr v) = ppSexp "TxOut" [addrSummary addr, pcCoreValue p v]
 
-datumSummary :: Babbage.Datum era -> PDoc
-datumSummary Babbage.NoDatum = ppString "NoDatum"
-datumSummary (Babbage.DatumHash h) = ppSexp "DHash" [trim (ppSafeHash h)]
-datumSummary (Babbage.Datum b) = dataSummary (binaryDataToData b)
+datumSummary :: Datum era -> PDoc
+datumSummary NoDatum = ppString "NoDatum"
+datumSummary (DatumHash h) = ppSexp "DHash" [trim (ppSafeHash h)]
+datumSummary (Datum b) = dataSummary (binaryDataToData b)
 
 dataSummary :: Cardano.Ledger.Alonzo.Data.Data era -> PDoc
 dataSummary (Data x) = plutusDataSummary x
 
-plutusDataSummary :: PlutusCore.Data.Data -> PDoc
-plutusDataSummary (Constr n ds) = (ppString (show n)) <> ppList plutusDataSummary ds
-plutusDataSummary (Map ds) = ppString "Map" <> ppList (ppPair plutusDataSummary plutusDataSummary) ds
-plutusDataSummary (List xs) = ppList plutusDataSummary xs
-plutusDataSummary (I n) = ppInteger n
-plutusDataSummary (B bs) = trim (ppLong bs)
+plutusDataSummary :: Plutus.Data -> PDoc
+plutusDataSummary (Plutus.Constr n ds) = (ppString (show n)) <> ppList plutusDataSummary ds
+plutusDataSummary (Plutus.Map ds) = ppString "Map" <> ppList (ppPair plutusDataSummary plutusDataSummary) ds
+plutusDataSummary (Plutus.List xs) = ppList plutusDataSummary xs
+plutusDataSummary (Plutus.I n) = ppInteger n
+plutusDataSummary (Plutus.B bs) = trim (ppLong bs)
 
-vSummary :: Value c -> PDoc
-vSummary (Value n m) = ppSexp "Value" [ppInteger n, ppString ("num tokens = " ++ show (Map.size m))]
+vSummary :: MaryValue c -> PDoc
+vSummary (MaryValue n m) =
+  ppSexp "Value" [ppInteger n, ppString ("num tokens = " ++ show (Map.size m))]
 
-scriptSummary :: forall era. Proof era -> Core.Script era -> PDoc
+scriptSummary :: forall era. Proof era -> Script era -> PDoc
+scriptSummary p@(Conway _) script = plutusSummary p script
 scriptSummary p@(Babbage _) script = plutusSummary p script
 scriptSummary p@(Alonzo _) script = plutusSummary p script
 scriptSummary (Mary _) script = timelockSummary script
@@ -954,10 +977,15 @@ multiSigSummary (SS.RequireAllOf ps) = ppSexp "AllOf" (map multiSigSummary ps)
 multiSigSummary (SS.RequireAnyOf ps) = ppSexp "AnyOf" (map multiSigSummary ps)
 multiSigSummary (SS.RequireMOf m ps) = ppSexp "MOf" (ppInt m : map multiSigSummary ps)
 
-plutusSummary :: forall era. Proof era -> Script era -> PDoc
-plutusSummary (Babbage _) s@(PlutusScript lang _) = (ppString (show lang ++ " ")) <> scriptHashSummary (hashScript @era s)
+plutusSummary :: forall era. Proof era -> AlonzoScript era -> PDoc
+plutusSummary (Conway _) s@(PlutusScript lang _) =
+  ppString (show lang ++ " ") <> scriptHashSummary (hashScript @era s)
+plutusSummary (Conway _) (TimelockScript x) = timelockSummary x
+plutusSummary (Babbage _) s@(PlutusScript lang _) =
+  ppString (show lang ++ " ") <> scriptHashSummary (hashScript @era s)
 plutusSummary (Babbage _) (TimelockScript x) = timelockSummary x
-plutusSummary (Alonzo _) s@(PlutusScript lang _) = (ppString (show lang ++ " ")) <> scriptHashSummary (hashScript @era s)
+plutusSummary (Alonzo _) s@(PlutusScript lang _) =
+  ppString (show lang ++ " ") <> scriptHashSummary (hashScript @era s)
 plutusSummary (Alonzo _) (TimelockScript x) = timelockSummary x
 plutusSummary other _ = ppString ("Plutus script in era " ++ show other ++ "???")
 
@@ -1054,7 +1082,8 @@ pcAddr (AddrBootstrap _) = ppString "Bootstrap"
 
 instance c ~ Crypto era => PrettyC (Addr c) era where prettyC _ = pcAddr
 
-pcCoreValue :: Proof era -> Core.Value era -> PDoc
+pcCoreValue :: Proof era -> Value era -> PDoc
+pcCoreValue (Conway _) v = vSummary v
 pcCoreValue (Babbage _) v = vSummary v
 pcCoreValue (Alonzo _) v = vSummary v
 pcCoreValue (Mary _) v = vSummary v
@@ -1066,31 +1095,32 @@ pcCoin (Coin n) = hsep [ppString "₳", ppInteger n]
 
 instance PrettyC Coin era where prettyC _ = pcCoin
 
-pcValue :: Value c -> PDoc
-pcValue (Value n m) = ppSexp "Value" [ppInteger n, ppString ("num tokens = " ++ show (Map.size m))]
+pcValue :: MaryValue c -> PDoc
+pcValue (MaryValue n m) = ppSexp "Value" [ppInteger n, ppString ("num tokens = " ++ show (Map.size m))]
 
-instance c ~ Crypto era => PrettyC (Value c) era where prettyC _ = pcValue
+instance c ~ Crypto era => PrettyC (MaryValue c) era where
+  prettyC _ = pcValue
 
-pcDatum :: Era era => Babbage.Datum era -> PDoc
-pcDatum Babbage.NoDatum = ppString "NoDatum"
-pcDatum (Babbage.DatumHash h) = ppSexp "DHash" [trim (ppSafeHash h)]
-pcDatum (Babbage.Datum b) = pcData (binaryDataToData b)
+pcDatum :: Era era => Datum era -> PDoc
+pcDatum NoDatum = ppString "NoDatum"
+pcDatum (DatumHash h) = ppSexp "DHash" [trim (ppSafeHash h)]
+pcDatum (Datum b) = pcData (binaryDataToData b)
 
-instance Era era => PrettyC (Babbage.Datum era) era where prettyC _ = pcDatum
+instance Era era => PrettyC (Datum era) era where prettyC _ = pcDatum
 
-pcData :: forall era. Era era => Alonzo.Data era -> PDoc
-pcData d@(Data (Constr n _)) =
+pcData :: forall era. Era era => Data era -> PDoc
+pcData d@(Data (Plutus.Constr n _)) =
   ppSexp (pack ("Constr" ++ show n)) [ppString "Hash", trim $ ppSafeHash (hashData d)]
-pcData d@(Data (Map _)) =
+pcData d@(Data (Plutus.Map _)) =
   ppSexp "Map" [ppString "Hash", trim $ ppSafeHash (hashData d)]
-pcData d@(Data (List _)) =
+pcData d@(Data (Plutus.List _)) =
   ppSexp "List" [ppString "Hash", trim $ ppSafeHash (hashData d)]
-pcData d@(Data (I n)) =
+pcData d@(Data (Plutus.I n)) =
   ppSexp "I" [ppInteger n, ppString "Hash", trim $ ppSafeHash (hashData d)]
-pcData d@(Data (B bytes)) =
+pcData d@(Data (Plutus.B bytes)) =
   ppSexp "B" [trim (viaShow bytes), ppString "Hash", trim $ ppSafeHash (hashData d)]
 
-instance Era era => PrettyC (Alonzo.Data era) era where prettyC _ = pcData
+instance Era era => PrettyC (Data era) era where prettyC _ = pcData
 
 pcTimelock :: forall era. Reflect era => PDoc -> Timelock (Crypto era) -> PDoc
 pcTimelock hash (RequireSignature akh) = ppSexp "Signature" [keyHashSummary akh, hash]
@@ -1109,14 +1139,18 @@ pcMultiSig h (SS.RequireMOf m _) = ppSexp "MOf" [ppInt m, h]
 pcScriptHash :: ScriptHash era -> PDoc
 pcScriptHash (ScriptHash h) = trim (ppHash h)
 
-pcHashScript :: forall era. Reflect era => Proof era -> Core.Script era -> PDoc
+pcHashScript :: forall era. Reflect era => Proof era -> Script era -> PDoc
+pcHashScript (Conway _) s = ppString "Hash " <> pcScriptHash (hashScript @era s)
 pcHashScript (Babbage _) s = ppString "Hash " <> pcScriptHash (hashScript @era s)
 pcHashScript (Alonzo _) s = ppString "Hash " <> pcScriptHash (hashScript @era s)
 pcHashScript (Mary _) s = ppString "Hash " <> pcScriptHash (hashScript @era s)
 pcHashScript (Allegra _) s = ppString "Hash " <> pcScriptHash (hashScript @era s)
 pcHashScript (Shelley _) s = ppString "Hash " <> pcScriptHash (hashScript @era s)
 
-pcScript :: forall era. Reflect era => Proof era -> Core.Script era -> PDoc
+pcScript :: forall era. Reflect era => Proof era -> Script era -> PDoc
+pcScript p@(Conway _) s@(TimelockScript t) = pcTimelock @era (pcHashScript @era p s) t
+pcScript p@(Conway _) s@(PlutusScript v _) =
+  parens (hsep [ppString ("PlutusScript " <> show v <> " "), pcHashScript p s])
 pcScript p@(Babbage _) s@(TimelockScript t) = pcTimelock @era (pcHashScript @era p s) t
 pcScript p@(Babbage _) s@(PlutusScript v _) =
   parens (hsep [ppString ("PlutusScript " <> show v <> " "), pcHashScript p s])
@@ -1130,16 +1164,18 @@ pcScript p@(Shelley _) s = pcMultiSig @era (pcHashScript @era p s) s
 pcDataHash :: DataHash era -> PDoc
 pcDataHash dh = trim (ppSafeHash dh)
 
-pcTxOut :: Reflect era => Proof era -> Core.TxOut era -> PDoc
-pcTxOut p@(Babbage _) (Babbage.TxOut addr v d s) =
+pcTxOut :: Reflect era => Proof era -> TxOut era -> PDoc
+pcTxOut p@(Conway _) (BabbageTxOut addr v d s) =
   ppSexp "TxOut" [pcAddr addr, pcValue v, pcDatum d, ppStrictMaybe (pcScript p) s]
-pcTxOut (Alonzo _) (Alonzo.TxOut addr v md) =
+pcTxOut p@(Babbage _) (BabbageTxOut addr v d s) =
+  ppSexp "TxOut" [pcAddr addr, pcValue v, pcDatum d, ppStrictMaybe (pcScript p) s]
+pcTxOut (Alonzo _) (AlonzoTxOut addr v md) =
   ppSexp "TxOut" [pcAddr addr, pcValue v, ppStrictMaybe pcDataHash md]
-pcTxOut p@(Mary _) (Shelley.TxOut addr v) =
+pcTxOut p@(Mary _) (ShelleyTxOut addr v) =
   ppSexp "TxOut" [pcAddr addr, pcCoreValue p v]
-pcTxOut p@(Allegra _) (Shelley.TxOut addr v) =
+pcTxOut p@(Allegra _) (ShelleyTxOut addr v) =
   ppSexp "TxOut" [pcAddr addr, pcCoreValue p v]
-pcTxOut p@(Shelley _) (Shelley.TxOut addr v) =
+pcTxOut p@(Shelley _) (ShelleyTxOut addr v) =
   ppSexp "TxOut" [pcAddr addr, pcCoreValue p v]
 
 pcUTxO :: Reflect era => Proof era -> UTxO era -> PDoc
@@ -1217,13 +1253,13 @@ pcTxBodyField proof x = case x of
   WppHash SNothing -> []
   WppHash (SJust h) -> [("integrity hash", trim (ppSafeHash h))]
   AdHash SNothing -> []
-  AdHash (SJust (Alonzo.AuxiliaryDataHash h)) -> [("aux data hash", trim (ppSafeHash h))]
+  AdHash (SJust (AuxiliaryDataHash h)) -> [("aux data hash", trim (ppSafeHash h))]
   Txnetworkid SNothing -> []
   Txnetworkid (SJust nid) -> [("network id", pcNetwork nid)]
 
-pcTxField :: Reflect era => Proof era -> TxField era -> [(Text, PDoc)]
+pcTxField :: forall era. Reflect era => Proof era -> TxField era -> [(Text, PDoc)]
 pcTxField proof x = case x of
-  Body b -> [("txbody hash", ppSafeHash (hashAnnotated b)), ("body", pcTxBody proof b)]
+  Body b -> [("txbody hash", ppSafeHash (hashAnnotated @(Crypto era) @EraIndependentTxBody b)), ("body", pcTxBody proof b)]
   BodyI xs -> [("body", ppRecord "TxBody" (concat (map (pcTxBodyField proof) xs)))]
   Witnesses w -> [("witnesses", pcWitnesses proof w)]
   WitnessesI ws -> [("witnesses", ppRecord "Witnesses" (concat (map (pcWitnessesField proof) ws)))]
@@ -1250,19 +1286,19 @@ pcWitVKey (WitVKey vk@(VKey x) sig) = ppSexp "WitVKey" [ppString keystring, ppSt
     hash = pcKeyHash (hashKey vk)
     sigstring = show sig
 
-pcWitnesses :: Reflect era => Proof era -> Core.Witnesses era -> PDoc
+pcWitnesses :: Reflect era => Proof era -> Witnesses era -> PDoc
 pcWitnesses proof wits = ppRecord "Witnesses" pairs
   where
     fields = abstractWitnesses proof wits
     pairs = concat (map (pcWitnessesField proof) fields)
 
-pcTx :: Reflect era => Proof era -> Core.Tx era -> PDoc
+pcTx :: Reflect era => Proof era -> Tx era -> PDoc
 pcTx proof tx = ppRecord "Tx" pairs
   where
     fields = abstractTx proof tx
     pairs = concat (map (pcTxField proof) fields)
 
-pcTxBody :: Reflect era => Proof era -> Core.TxBody era -> PDoc
+pcTxBody :: Reflect era => Proof era -> TxBody era -> PDoc
 pcTxBody proof txbody = ppRecord "TxBody" pairs
   where
     fields = abstractTxBody proof txbody

@@ -1,7 +1,7 @@
 cabal-version: 2.2
 
 name:                cardano-ledger-shelley
-version:             0.1.0.0
+version:             0.1.1.2
 description:         Shelley Ledger Executable Model
 license:             Apache-2.0
 author:              IOHK Formal Methods Team
@@ -14,7 +14,7 @@ source-repository head
   subdir:   eras/shelley/impl
 
 common base
-  build-depends:      base >= 4.12 && < 4.15
+  build-depends:      base >= 4.12 && < 4.17
 
 common project-config
   default-language:   Haskell2010
@@ -32,7 +32,6 @@ library
   exposed-modules:
     Cardano.Ledger.Chain
     Cardano.Ledger.Shelley
-    Cardano.Ledger.Shelley.Constraints
     Cardano.Ledger.Shelley.Address.Bootstrap
     Cardano.Ledger.Shelley.API
     Cardano.Ledger.Shelley.API.ByronTranslation
@@ -53,6 +52,7 @@ library
     Cardano.Ledger.Shelley.Metadata
     Cardano.Ledger.Shelley.Orphans
     Cardano.Ledger.Shelley.PoolRank
+    Cardano.Ledger.Shelley.PoolParams
     Cardano.Ledger.Shelley.PParams
     Cardano.Ledger.Shelley.Rewards
     Cardano.Ledger.Shelley.RewardProvenance
@@ -83,6 +83,13 @@ library
     Cardano.Ledger.Shelley.Tx
     Cardano.Ledger.Shelley.TxBody
     Cardano.Ledger.Shelley.UTxO
+  other-modules:
+    Cardano.Ledger.Shelley.Era
+    Cardano.Ledger.Shelley.LedgerState.Types
+    Cardano.Ledger.Shelley.LedgerState.DPState
+    Cardano.Ledger.Shelley.LedgerState.IncrementalStake
+    Cardano.Ledger.Shelley.LedgerState.NewEpochState
+    Cardano.Ledger.Shelley.LedgerState.PulsingReward
   hs-source-dirs: src
   build-depends:
     aeson >= 2,
@@ -95,15 +102,14 @@ library
     cardano-data,
     cardano-ledger-byron,
     cardano-ledger-core,
-    cardano-prelude,
     cardano-slotting,
     cborg,
     vector-map,
-    constraints,
     containers,
     data-default-class,
     deepseq,
     groups,
+    heapwords,
     iproute,
     mtl,
     microlens,

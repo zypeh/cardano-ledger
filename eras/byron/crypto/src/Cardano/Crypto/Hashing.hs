@@ -9,6 +9,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE StandaloneKindSignatures #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -64,6 +65,7 @@ import Cardano.Binary
     serialize,
     withWordSize,
   )
+import Cardano.HeapWords
 import Cardano.Prelude
 import Crypto.Hash (Blake2b_256, Digest, HashAlgorithm, hashDigestSize)
 import qualified Crypto.Hash as Hash
@@ -82,6 +84,7 @@ import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.ByteString.Short as SBS
+import Data.String (String)
 import qualified Data.Text.Encoding as T
 import Formatting (Format, bprint, build, fitLeft, later, sformat, (%.))
 import qualified Formatting.Buildable as B (Buildable (..))
@@ -95,6 +98,7 @@ import qualified Prelude
 -- | Hash wrapper with phantom type for more type-safety
 --
 --   Made abstract in order to support different algorithms
+type AbstractHash :: Type -> Type -> Type
 newtype AbstractHash algo a = AbstractHash SBS.ShortByteString
   deriving (Eq, Ord, Generic, NFData, NoThunks)
 
@@ -119,7 +123,7 @@ instance ToJSON (AbstractHash algo a) where
   toJSON = toJSON . sformat hashHexF
 
 instance HashAlgorithm algo => FromJSON (AbstractHash algo a) where
-  parseJSON = toAesonError . readEither <=< parseJSON
+  parseJSON = toAesonError . readEither @_ @String <=< parseJSON
 
 instance
   (HashAlgorithm algo, FromJSON (AbstractHash algo a)) =>
@@ -243,6 +247,7 @@ abstractHashToShort (AbstractHash h) = h
 --------------------------------------------------------------------------------
 
 -- | The type of our commonly used hash, Blake2b 256
+type Hash :: Type -> Type
 type Hash = AbstractHash Blake2b_256
 
 {-# DEPRECATED hash "Use serializeCborHash or hash the annotation instead." #-}

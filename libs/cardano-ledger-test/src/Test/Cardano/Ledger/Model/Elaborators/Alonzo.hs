@@ -15,28 +15,23 @@ import Cardano.Crypto.Util (SignableRepresentation)
 import Cardano.Ledger.Alonzo (AlonzoEra)
 import Cardano.Ledger.Alonzo.Genesis as Alonzo (AlonzoGenesis (..))
 import Cardano.Ledger.Alonzo.Language (Language (..))
-import Cardano.Ledger.Alonzo.PParams (PParams' (..))
-import Cardano.Ledger.Alonzo.Rules.Utxo
-  ( UtxoPredicateFailure (..),
-  )
-import Cardano.Ledger.Alonzo.Rules.Utxow
-  ( UtxowPredicateFail (..),
-  )
+import Cardano.Ledger.Alonzo.PParams (AlonzoPParamsHKD (..))
+import Cardano.Ledger.Alonzo.Rules (AlonzoUtxoPredFailure (..), AlonzoUtxowPredFailure (..))
 import Cardano.Ledger.Alonzo.Scripts (ExUnits (..))
 import qualified Cardano.Ledger.Alonzo.Scripts as Alonzo
 import Cardano.Ledger.Alonzo.Translation ()
 import qualified Cardano.Ledger.Alonzo.Tx as Alonzo
-import qualified Cardano.Ledger.Alonzo.TxBody as Alonzo
+import Cardano.Ledger.Alonzo.TxBody (AlonzoTxBody (AlonzoTxBody), AlonzoTxOut (AlonzoTxOut))
 import qualified Cardano.Ledger.Alonzo.TxWitness as Alonzo
 import Cardano.Ledger.Crypto (DSIGN, KES)
 import Cardano.Ledger.Shelley.API.Genesis (initialState)
 import Cardano.Ledger.Shelley.API.Mempool (ApplyTxError (..))
 import qualified Cardano.Ledger.Shelley.LedgerState as LedgerState
 import Cardano.Ledger.Shelley.Rules.Ledger
-  ( LedgerPredicateFailure (..),
+  ( ShelleyLedgerPredFailure (..),
   )
 import Cardano.Ledger.Shelley.Rules.Utxow
-  ( UtxowPredicateFailure (..),
+  ( ShelleyUtxowPredFailure (..),
   )
 import Cardano.Ledger.ShelleyMA.Timelocks (ValidityInterval (..))
 import Cardano.Protocol.TPraos.API (PraosCrypto)
@@ -92,7 +87,7 @@ instance
           ApplyBlockTransitionError_Tx $
             ApplyTxError
               [ UtxowFailure
-                  ( WrappedShelleyEraFailure
+                  ( ShelleyInAlonzoUtxowPredFailure
                       (UtxoFailure (ValueNotConservedUTxO x' y'))
                   )
               ]
@@ -116,10 +111,10 @@ instance
 
   makeTimelockScript _ (SupportsTimelock x) = Alonzo.TimelockScript x
   makePlutusScript _ (SupportsPlutus x) = x -- Alonzo.PlutusScript
-  makeExtendedTxOut _ (Alonzo.TxOut a v _) (SupportsPlutus dh) = Alonzo.TxOut a v (SJust dh)
+  makeExtendedTxOut _ (AlonzoTxOut a v _) (SupportsPlutus dh) = AlonzoTxOut a v (SJust dh)
 
   makeTxBody nes (TxBodyArguments maxTTL fee ins outs dcerts wdrl (SupportsMint mint) (SupportsPlutus redeemers) (SupportsPlutus cins) (SupportsPlutus _)) =
-    Alonzo.TxBody
+    AlonzoTxBody
       { Alonzo.inputs = ins,
         Alonzo.collateral = cins,
         Alonzo.outputs = outs,
@@ -146,4 +141,4 @@ instance
               Alonzo.txdats = dats,
               Alonzo.txrdmrs = rdmr
             }
-     in (Alonzo.ValidatedTx realTxBody witSet isValid SNothing)
+     in (Alonzo.AlonzoTx realTxBody witSet isValid SNothing)

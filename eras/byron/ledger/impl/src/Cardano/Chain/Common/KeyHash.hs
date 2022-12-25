@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE StandaloneKindSignatures #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -15,6 +16,7 @@ import Cardano.Binary (FromCBOR, ToCBOR)
 import Cardano.Chain.Common.AddressHash
 import Cardano.Crypto (decodeAbstractHash, hashHexF)
 import Cardano.Crypto.Signing (VerificationKey)
+import Cardano.HeapWords
 import Cardano.Prelude
 import Formatting (formatToString)
 import Formatting.Buildable (Buildable)
@@ -27,6 +29,7 @@ import Text.JSON.Canonical
   )
 
 -- | A 'KeyHash' refers to a 'VerificationKey'
+type KeyHash :: Type
 newtype KeyHash = KeyHash
   { unKeyHash :: AddressHash VerificationKey
   }

@@ -1,6 +1,6 @@
 cabal-version:      2.4
 name:               cardano-protocol-tpraos
-version:            0.1.0.0
+version:            0.1.1.2
 description:        Cardano Protocol: Transitional Praos
 bug-reports:        https://github.com/input-output-hk/cardano-ledger/issues
 
@@ -16,7 +16,7 @@ source-repository head
 
 common base
   build-depends:
-    base >= 4.12 && < 4.15
+    base >= 4.12 && < 4.17
 
 common project-config
   default-language: Haskell2010
@@ -52,6 +52,7 @@ library
     cardano-crypto-class,
     cardano-ledger-alonzo,
     cardano-ledger-babbage,
+    cardano-ledger-conway,
     cardano-ledger-core,
     cardano-ledger-shelley,
     cardano-ledger-shelley-ma,

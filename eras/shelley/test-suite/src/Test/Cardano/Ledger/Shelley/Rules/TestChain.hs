@@ -43,12 +43,10 @@ import Cardano.Ledger.Block
   )
 import Cardano.Ledger.Coin
 import Cardano.Ledger.Compactible (fromCompact, toCompact)
-import qualified Cardano.Ledger.Core as Core
+import Cardano.Ledger.Core
 import Cardano.Ledger.Credential (Credential (..), StakeReference (StakeRefBase, StakeRefPtr))
-import Cardano.Ledger.Era (Era (..), SupportsSegWit (fromTxSeq))
 import Cardano.Ledger.Keys (KeyHash, KeyRole (StakePool, Staking, Witness))
-import Cardano.Ledger.Shelley.API (ApplyBlock, DELEG)
-import Cardano.Ledger.Shelley.Constraints (UsesPParams, UsesValue)
+import Cardano.Ledger.Shelley.API (ApplyBlock, ShelleyDELEG)
 import Cardano.Ledger.Shelley.EpochBoundary (SnapShot (..), Stake (..), obligation)
 import Cardano.Ledger.Shelley.LedgerState
   ( DPState (..),
@@ -77,11 +75,9 @@ import Cardano.Ledger.Shelley.LedgerState
 import Cardano.Ledger.Shelley.Rewards (sumRewards)
 import Cardano.Ledger.Shelley.Rules.Deleg (DelegEnv (..))
 import Cardano.Ledger.Shelley.Rules.Ledger (LedgerEnv (..))
-import Cardano.Ledger.Shelley.Rules.Pool (POOL, PoolEnv (..))
+import Cardano.Ledger.Shelley.Rules.Pool (PoolEnv (..), ShelleyPOOL)
 import Cardano.Ledger.Shelley.Rules.Upec (votedValue)
-import Cardano.Ledger.Shelley.Scripts (ScriptHash)
-import Cardano.Ledger.Shelley.Tx hiding (TxIn)
-import Cardano.Ledger.Shelley.TxBody
+import Cardano.Ledger.Shelley.TxBody hiding (TxBody, TxOut)
 import Cardano.Ledger.Shelley.UTxO (UTxO (..), balance, totalDeposits, txins, txouts, pattern UTxO)
 import Cardano.Ledger.TxIn (TxIn (..))
 import Cardano.Ledger.UnifiedMap (ViewMap)
@@ -95,7 +91,6 @@ import Cardano.Protocol.TPraos.BHeader
   )
 import Cardano.Slotting.Slot (EpochNo)
 import Control.Monad.Trans.Reader (ReaderT)
-import Control.Provenance (runProvM)
 import Control.SetAlgebra (dom, eval, (∩), (▷), (◁))
 import Control.State.Transition
 import Control.State.Transition.Trace
@@ -115,7 +110,6 @@ import Data.Functor.Identity (Identity)
 import Data.Map (Map)
 import qualified Data.Map.Strict as Map
 import Data.Proxy
-import Data.Sequence.Strict (StrictSeq)
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.TreeDiff.QuickCheck (ediffEq)
@@ -123,6 +117,8 @@ import qualified Data.UMap as UM
 import qualified Data.VMap as VMap
 import Data.Word (Word64)
 import GHC.Records (HasField (..))
+import Lens.Micro hiding (ix)
+import Lens.Micro.Extras (view)
 import Test.Cardano.Ledger.Shelley.Generator.Block (tickChainState)
 import Test.Cardano.Ledger.Shelley.Generator.Core (GenEnv)
 import Test.Cardano.Ledger.Shelley.Generator.EraGen (EraGen (..))
@@ -180,9 +176,9 @@ type TestingLedger era ledger =
   ( BaseM ledger ~ ReaderT Globals Identity,
     Environment ledger ~ LedgerEnv era,
     State ledger ~ LedgerState era,
-    Signal ledger ~ Core.Tx era,
-    Embed (Core.EraRule "DELEGS" era) ledger,
-    Embed (Core.EraRule "UTXOW" era) ledger,
+    Signal ledger ~ Tx era,
+    Embed (EraRule "DELEGS" era) ledger,
+    Embed (EraRule "UTXOW" era) ledger,
     STS ledger
   )
 
@@ -196,11 +192,8 @@ collisionFreeComplete ::
   ( EraGen era,
     ChainProperty era,
     TestingLedger era ledger,
-    Default (State (Core.EraRule "PPUP" era)),
-    QC.HasTrace (CHAIN era) (GenEnv era),
-    HasField "inputs" (Core.TxBody era) (Set (TxIn (Crypto era))),
-    HasField "addrWits" (Core.Witnesses era) (Set (WitVKey 'Witness (Crypto era))),
-    HasField "scriptWits" (Core.Witnesses era) (Map (ScriptHash (Crypto era)) (Core.Script era))
+    Default (State (EraRule "PPUP" era)),
+    QC.HasTrace (CHAIN era) (GenEnv era)
   ) =>
   Property
 collisionFreeComplete =
@@ -221,7 +214,7 @@ stakeIncrTest ::
   forall era ledger.
   ( EraGen era,
     TestingLedger era ledger,
-    State (Core.EraRule "PPUP" era) ~ PPUPState era,
+    State (EraRule "PPUP" era) ~ PPUPState era,
     ChainProperty era,
     QC.HasTrace (CHAIN era) (GenEnv era)
   ) =>
@@ -237,9 +230,7 @@ stakeIncrTest =
 
 incrStakeComp ::
   forall era ledger.
-  ( ChainProperty era,
-    TestingLedger era ledger
-  ) =>
+  (EraSegWits era, ChainProperty era, TestingLedger era ledger) =>
   SourceSignalTarget (CHAIN era) ->
   Property
 incrStakeComp SourceSignalTarget {source = chainSt, signal = block} =
@@ -289,12 +280,9 @@ adaPreservationChain ::
   forall era ledger.
   ( EraGen era,
     TestingLedger era ledger,
-    State (Core.EraRule "PPUP" era) ~ PPUPState era,
+    State (EraRule "PPUP" era) ~ PPUPState era,
     ChainProperty era,
-    QC.HasTrace (CHAIN era) (GenEnv era),
-    HasField "inputs" (Core.TxBody era) (Set (TxIn (Crypto era))),
-    HasField "certs" (Core.TxBody era) (StrictSeq (DCert (Crypto era))),
-    HasField "wdrls" (Core.TxBody era) (Wdrl (Crypto era))
+    QC.HasTrace (CHAIN era) (GenEnv era)
   ) =>
   Property
 adaPreservationChain =
@@ -324,14 +312,12 @@ adaPreservationChain =
 -- ADA should be preserved for all state transitions in the generated trace
 checkPreservation ::
   forall era.
-  ( UsesValue era,
-    HasField "_protocolVersion" (Core.PParams era) ProtVer,
-    HasField "_keyDeposit" (Core.PParams era) Coin,
-    HasField "_poolDeposit" (Core.PParams era) Coin,
-    HasField "certs" (Core.TxBody era) (StrictSeq (DCert (Crypto era))),
-    State (Core.EraRule "PPUP" era) ~ PPUPState era,
-    HasField "wdrls" (Core.TxBody era) (Wdrl (Crypto era)),
-    UsesPParams era
+  ( EraSegWits era,
+    ShelleyEraTxBody era,
+    HasField "_protocolVersion" (PParams era) ProtVer,
+    HasField "_keyDeposit" (PParams era) Coin,
+    HasField "_poolDeposit" (PParams era) Coin,
+    State (EraRule "PPUP" era) ~ PPUPState era
   ) =>
   SourceSignalTarget (CHAIN era) ->
   Property
@@ -411,7 +397,7 @@ checkPreservation SourceSignalTarget {source, target, signal} =
     rewardUpdateMsgs = case ru' of
       SNothing -> []
       SJust ru'' ->
-        let (ru, _) = runShelleyBase . runProvM . completeRupd $ ru''
+        let (ru, _rewevent) = runShelleyBase (completeRupd ru'')
             regRewards = Map.filterWithKey (\kh _ -> UM.member kh oldRAs) (rs ru)
          in [ "\n\nSum of new rewards\n",
               show (sumRewards prevPP (rs ru)),
@@ -430,7 +416,7 @@ checkPreservation SourceSignalTarget {source, target, signal} =
                 deltaT ru
                   <> deltaF ru
                   <> deltaR ru
-                  <> (toDeltaCoin $ sumRewards prevPP (rs ru))
+                  <> toDeltaCoin (sumRewards prevPP (rs ru))
             ]
 
     txs' = toList $ (fromTxSeq @era . bbody) signal
@@ -439,19 +425,19 @@ checkPreservation SourceSignalTarget {source, target, signal} =
     dispTx (tx, ix) =
       "\nTransaction " ++ show ix
         ++ "\nfee :"
-        ++ (show $ getField @"txfee" $ getField @"body" tx)
+        ++ show (tx ^. bodyTxL . feeTxBodyL)
         ++ "\nwithdrawals: "
-        ++ (show $ getField @"wdrls" $ getField @"body" tx)
+        ++ show (tx ^. bodyTxL . wdrlsTxBodyL)
         ++ "\ncerts: "
-        ++ (show . (map dispCert) . toList $ getField @"certs" $ getField @"body" tx)
+        ++ show (map dispCert . toList $ tx ^. bodyTxL . certsTxBodyL)
         ++ "\n"
 
     dispCert (DCertDeleg (RegKey kh)) = "regkey " <> show kh
     dispCert (DCertDeleg (DeRegKey kh)) = "deregkey " <> show kh
     dispCert (DCertDeleg (Delegate (Delegation _ _))) = "deleg"
     dispCert (DCertPool (RegPool p)) =
-      if (_poolId p) `Map.member` pools
-        then ("PoolReg" <> (show . _poolId $ p))
+      if _poolId p `Map.member` pools
+        then "PoolReg" <> show (_poolId p)
         else "Pool Re-Reg"
     dispCert (DCertPool (RetirePool _ _)) = "retire"
     dispCert (DCertGenesis (GenesisDelegCert _ _ _)) = "gen"
@@ -460,11 +446,7 @@ checkPreservation SourceSignalTarget {source, target, signal} =
 -- If we are not at an Epoch Boundary (i.e. epoch source == epoch target)
 -- then the total rewards should change only by withdrawals
 checkWithdrawlBound ::
-  ( EraGen era,
-    HasField "wdrls" (Core.TxBody era) (Wdrl (Crypto era))
-  ) =>
-  SourceSignalTarget (CHAIN era) ->
-  Property
+  EraGen era => SourceSignalTarget (CHAIN era) -> Property
 checkWithdrawlBound SourceSignalTarget {source, signal, target} =
   counterexample "checkWithdrawlBound" $
     rewardDelta === withdrawals signal
@@ -494,8 +476,7 @@ utxoDepositsIncreaseByFeesWithdrawals ::
   forall era ledger.
   ( ChainProperty era,
     EraGen era,
-    TestingLedger era ledger,
-    HasField "wdrls" (Core.TxBody era) (Wdrl (Crypto era))
+    TestingLedger era ledger
   ) =>
   SourceSignalTarget (CHAIN era) ->
   Property
@@ -513,10 +494,7 @@ utxoDepositsIncreaseByFeesWithdrawals SourceSignalTarget {source, signal, target
 -- | If we are not at an Epoch Boundary, then (Utxo + Deposits + Fees)
 -- increases by sum of withdrawals for all transactions in a block
 potsSumIncreaseWdrlsPerBlock ::
-  ( ChainProperty era,
-    EraGen era,
-    HasField "wdrls" (Core.TxBody era) (Wdrl (Crypto era))
-  ) =>
+  (ChainProperty era, EraGen era) =>
   SourceSignalTarget (CHAIN era) ->
   Property
 potsSumIncreaseWdrlsPerBlock SourceSignalTarget {source, signal, target} =
@@ -535,8 +513,7 @@ potsSumIncreaseWdrlsPerTx ::
   forall era ledger.
   ( ChainProperty era,
     EraGen era,
-    TestingLedger era ledger,
-    HasField "wdrls" (Core.TxBody era) (Wdrl (Crypto era))
+    TestingLedger era ledger
   ) =>
   SourceSignalTarget (CHAIN era) ->
   Property
@@ -556,12 +533,13 @@ potsSumIncreaseWdrlsPerTx SourceSignalTarget {source = chainSt, signal = block} 
         } =
         property (hasFailedScripts tx)
           .||. (Val.coin (balance u') <+> d' <+> f') <-> (Val.coin (balance u) <+> d <+> f)
-          === fold (unWdrl (getField @"wdrls" (getField @"body" tx)))
+          === fold (unWdrl (tx ^. bodyTxL . wdrlsTxBodyL))
 
 -- | (Utxo + Deposits + Fees) increases by the reward delta
 potsSumIncreaseByRewardsPerTx ::
   forall era ledger.
   ( ChainProperty era,
+    EraSegWits era,
     TestingLedger era ledger
   ) =>
   SourceSignalTarget (CHAIN era) ->
@@ -592,8 +570,7 @@ potsRewardsDecreaseByWdrlsPerTx ::
   forall era ledger.
   ( ChainProperty era,
     EraGen era,
-    TestingLedger era ledger,
-    HasField "wdrls" (Core.TxBody era) (Wdrl (Crypto era))
+    TestingLedger era ledger
   ) =>
   SourceSignalTarget (CHAIN era) ->
   Property
@@ -613,7 +590,7 @@ potsRewardsDecreaseByWdrlsPerTx SourceSignalTarget {source = chainSt, signal = b
         } =
         let totalRewards = rewardsSum dpstate
             totalRewards' = rewardsSum dpstate'
-            txWithdrawals = fold (unWdrl (getField @"wdrls" (getField @"body" tx)))
+            txWithdrawals = fold (unWdrl (tx ^. bodyTxL . wdrlsTxBodyL))
          in conjoin
               [ counterexample
                   "A transaction should not increase the Rewards pot"
@@ -632,9 +609,7 @@ preserveBalance ::
   forall era ledger.
   ( ChainProperty era,
     EraGen era,
-    TestingLedger era ledger,
-    HasField "certs" (Core.TxBody era) (StrictSeq (DCert (Crypto era))),
-    HasField "wdrls" (Core.TxBody era) (Wdrl (Crypto era))
+    TestingLedger era ledger
   ) =>
   SourceSignalTarget (CHAIN era) ->
   Property
@@ -655,28 +630,27 @@ preserveBalance SourceSignalTarget {source = chainSt, signal = block} =
         failedScripts = property $ hasFailedScripts tx
         LedgerState (UTxOState {_utxo = u}) dstate = ledgerSt
         LedgerState (UTxOState {_utxo = u'}) _ = ledgerSt'
-        txb = getField @"body" tx
-        certs = toList (getField @"certs" txb)
+        txb = tx ^. bodyTxL
+        certs = toList (txb ^. certsTxBodyL)
         pools = _pParams . dpsPState $ dstate
         created =
           Val.coin (balance u')
-            <+> getField @"txfee" txb
+            <+> txb ^. feeTxBodyL
             <+> totalDeposits pp_ (`Map.notMember` pools) certs
         consumed_ =
           Val.coin (balance u)
             <+> keyRefunds pp_ txb
-            <+> fold (unWdrl (getField @"wdrls" txb))
+            <+> fold (unWdrl (txb ^. wdrlsTxBodyL))
 
 -- | Preserve balance restricted to TxIns and TxOuts of the Tx
 preserveBalanceRestricted ::
   forall era ledger.
   ( ChainProperty era,
     TestingLedger era ledger,
-    HasField "inputs" (Core.TxBody era) (Set (TxIn (Crypto era))),
-    HasField "certs" (Core.TxBody era) (StrictSeq (DCert (Crypto era))),
-    HasField "wdrls" (Core.TxBody era) (Wdrl (Crypto era)),
-    HasField "_keyDeposit" (Core.PParams era) Coin,
-    HasField "_poolDeposit" (Core.PParams era) Coin
+    ShelleyEraTxBody era,
+    EraSegWits era,
+    HasField "_keyDeposit" (PParams era) Coin,
+    HasField "_poolDeposit" (PParams era) Coin
   ) =>
   SourceSignalTarget (CHAIN era) ->
   Property
@@ -696,16 +670,16 @@ preserveBalanceRestricted SourceSignalTarget {source = chainSt, signal = block} 
         } =
         inps === outs
         where
-          txb = getField @"body" tx
+          txb = tx ^. bodyTxL
           pools = _pParams . dpsPState $ dstate
           inps =
-            Val.coin (balance @era (UTxO (Map.restrictKeys u (getField @"inputs" txb))))
+            Val.coin (balance @era (UTxO (Map.restrictKeys u (txb ^. inputsTxBodyL))))
               <> keyRefunds pp_ txb
-              <> fold (unWdrl (getField @"wdrls" txb))
+              <> fold (unWdrl (txb ^. wdrlsTxBodyL))
           outs =
-            let certs = toList (getField @"certs" txb)
+            let certs = toList (txb ^. certsTxBodyL)
              in Val.coin (balance (txouts @era txb))
-                  <> getField @"txfee" txb
+                  <> txb ^. feeTxBodyL
                   <> totalDeposits pp_ (`Map.notMember` pools) certs
 
 preserveOutputsTx ::
@@ -728,7 +702,7 @@ preserveOutputsTx SourceSignalTarget {source = chainSt, signal = block} =
         { target = LedgerState (UTxOState {_utxo = UTxO utxo}) _,
           signal = tx
         } =
-        let UTxO outs = txouts @era (getField @"body" tx)
+        let UTxO outs = txouts @era (tx ^. bodyTxL)
          in property $
               hasFailedScripts tx
                 .||. counterexample "TxOuts are not a subset of UTxO" (outs `Map.isSubmapOf` utxo)
@@ -736,6 +710,7 @@ preserveOutputsTx SourceSignalTarget {source = chainSt, signal = block} =
 canRestrictUTxO ::
   forall era ledger.
   ( ChainProperty era,
+    EraSegWits era,
     TestingLedger era ledger
   ) =>
   SourceSignalTarget (CHAIN era) ->
@@ -764,8 +739,7 @@ eliminateTxInputs ::
   forall era ledger.
   ( ChainProperty era,
     EraGen era,
-    TestingLedger era ledger,
-    HasField "inputs" (Core.TxBody era) (Set (TxIn (Crypto era)))
+    TestingLedger era ledger
   ) =>
   SourceSignalTarget (CHAIN era) ->
   Property
@@ -783,7 +757,7 @@ eliminateTxInputs SourceSignalTarget {source = chainSt, signal = block} =
         } =
         property $
           hasFailedScripts tx
-            || Set.null (eval (txins @era (getField @"body" tx) ∩ Map.keysSet u'))
+            || Set.null (eval (txins @era (tx ^. bodyTxL) ∩ Map.keysSet u'))
 
 -- | Collision-Freeness of new TxIds - checks that all new outputs of a Tx are
 -- included in the new UTxO and that all TxIds are new.
@@ -808,7 +782,7 @@ newEntriesAndUniqueTxIns SourceSignalTarget {source = chainSt, signal = block} =
           signal = tx,
           target = LedgerState (UTxOState {_utxo = UTxO u'}) _
         } =
-        let UTxO outs = txouts @era (getField @"body" tx)
+        let UTxO outs = txouts @era (tx ^. bodyTxL)
             outIds = Set.map (\(TxIn _id _) -> _id) (Map.keysSet outs)
             oldIds = Set.map (\(TxIn _id _) -> _id) (Map.keysSet u)
          in property $
@@ -822,9 +796,7 @@ requiredMSigSignaturesSubset ::
   forall era ledger.
   ( ChainProperty era,
     EraGen era,
-    TestingLedger era ledger,
-    HasField "scriptWits" (Core.Witnesses era) (Map (ScriptHash (Crypto era)) (Core.Script era)),
-    HasField "addrWits" (Core.Witnesses era) (Set (WitVKey 'Witness (Crypto era)))
+    TestingLedger era ledger
   ) =>
   SourceSignalTarget (CHAIN era) ->
   Property
@@ -839,21 +811,18 @@ requiredMSigSignaturesSubset SourceSignalTarget {source = chainSt, signal = bloc
     signaturesSubset SourceSignalTarget {signal = tx} =
       let khs = keyHashSet tx
        in property $
-            all (existsReqKeyComb khs) (getField @"scriptWits" . getField @"wits" $ tx)
+            all (existsReqKeyComb khs) (tx ^. witsTxL . scriptWitsL)
 
     existsReqKeyComb keyHashes msig =
       any (\kl -> Set.fromList kl `Set.isSubsetOf` keyHashes) (scriptKeyCombinations (Proxy @era) msig)
-    keyHashSet :: Core.Tx era -> Set (KeyHash 'Witness (Crypto era))
+    keyHashSet :: Tx era -> Set (KeyHash 'Witness (Crypto era))
     keyHashSet tx_ =
-      Set.map witKeyHash (getField @"addrWits" . getField @"wits" $ tx_)
+      Set.map witVKeyHash (tx_ ^. witsTxL . addrWitsL)
 
 --- | Check for absence of double spend in a block
 noDoubleSpend ::
   forall era.
-  ( ChainProperty era,
-    EraGen era,
-    HasField "inputs" (Core.TxBody era) (Set (TxIn (Crypto era)))
-  ) =>
+  (ChainProperty era, EraGen era) =>
   SourceSignalTarget (CHAIN era) ->
   Property
 noDoubleSpend SourceSignalTarget {signal} =
@@ -862,10 +831,10 @@ noDoubleSpend SourceSignalTarget {signal} =
   where
     txs = toList $ (fromTxSeq @era . bbody) signal
 
-    getDoubleInputs :: [Core.Tx era] -> [(Core.Tx era, [Core.Tx era])]
+    getDoubleInputs :: [Tx era] -> [(Tx era, [Tx era])]
     getDoubleInputs [] = []
     getDoubleInputs (t : ts) = lookForDoubleSpends t ts ++ getDoubleInputs ts
-    lookForDoubleSpends :: Core.Tx era -> [Core.Tx era] -> [(Core.Tx era, [Core.Tx era])]
+    lookForDoubleSpends :: Tx era -> [Tx era] -> [(Tx era, [Tx era])]
     lookForDoubleSpends _ [] = []
     lookForDoubleSpends tx_j ts =
       [(tx_j, doubles) | not (null doubles)]
@@ -878,23 +847,21 @@ noDoubleSpend SourceSignalTarget {signal} =
                 ( \tx_i ->
                     not
                       ( hasFailedScripts tx_i
-                          || Set.disjoint inps_j (getField @"inputs" (getField @"body" tx_i))
+                          || Set.disjoint inps_j (tx_i ^. bodyTxL . inputsTxBodyL)
                       )
                 )
                 ts
-        inps_j = getField @"inputs" $ getField @"body" tx_j
+        inps_j = tx_j ^. bodyTxL . inputsTxBodyL
 
 withdrawals ::
   forall era.
-  ( EraGen era,
-    HasField "wdrls" (Core.TxBody era) (Wdrl (Crypto era))
-  ) =>
+  EraGen era =>
   Block (BHeader (Crypto era)) era ->
   Coin
 withdrawals (UnserialisedBlock _ txseq) =
   foldl'
     ( \c tx ->
-        let wdrls = unWdrl $ getField @"wdrls" (getField @"body" tx)
+        let wdrls = unWdrl $ tx ^. bodyTxL . wdrlsTxBodyL
          in if hasFailedScripts tx then c else c <> fold wdrls
     )
     (Coin 0)
@@ -902,9 +869,7 @@ withdrawals (UnserialisedBlock _ txseq) =
 
 txFees ::
   forall era ledger.
-  ( EraGen era,
-    TestingLedger era ledger
-  ) =>
+  (EraGen era, TestingLedger era ledger) =>
   Trace ledger ->
   Coin
 txFees ledgerTr =
@@ -948,10 +913,9 @@ feesNonDecreasing SourceSignalTarget {source, target} =
 poolProperties ::
   forall era.
   ( EraGen era,
-    Default (State (Core.EraRule "PPUP" era)),
+    Default (State (EraRule "PPUP" era)),
     ChainProperty era,
-    QC.HasTrace (CHAIN era) (GenEnv era),
-    HasField "certs" (Core.TxBody era) (StrictSeq (DCert (Crypto era)))
+    QC.HasTrace (CHAIN era) (GenEnv era)
   ) =>
   Property
 poolProperties =
@@ -967,9 +931,10 @@ poolProperties =
 -- retirement.
 poolRetirement ::
   ( ChainProperty era,
-    HasField "certs" (Core.TxBody era) (StrictSeq (DCert (Crypto era))),
-    HasField "_eMax" (Core.PParams era) EpochNo,
-    HasField "_minPoolCost" (Core.PParams era) Coin
+    EraSegWits era,
+    ShelleyEraTxBody era,
+    HasField "_eMax" (PParams era) EpochNo,
+    HasField "_minPoolCost" (PParams era) Coin
   ) =>
   SourceSignalTarget (CHAIN era) ->
   Property
@@ -986,9 +951,10 @@ poolRetirement SourceSignalTarget {source = chainSt, signal = block} =
 -- in the retiring map.
 poolRegistration ::
   ( ChainProperty era,
-    HasField "certs" (Core.TxBody era) (StrictSeq (DCert (Crypto era))),
-    HasField "_eMax" (Core.PParams era) EpochNo,
-    HasField "_minPoolCost" (Core.PParams era) Coin
+    EraSegWits era,
+    ShelleyEraTxBody era,
+    HasField "_eMax" (PParams era) EpochNo,
+    HasField "_minPoolCost" (PParams era) Coin
   ) =>
   SourceSignalTarget (CHAIN era) ->
   Property
@@ -1002,9 +968,10 @@ poolRegistration (SourceSignalTarget {source = chainSt, signal = block}) =
 -- POOL` transition.
 poolStateIsInternallyConsistent ::
   ( ChainProperty era,
-    HasField "certs" (Core.TxBody era) (StrictSeq (DCert (Crypto era))),
-    HasField "_eMax" (Core.PParams era) EpochNo,
-    HasField "_minPoolCost" (Core.PParams era) Coin
+    EraSegWits era,
+    ShelleyEraTxBody era,
+    HasField "_eMax" (PParams era) EpochNo,
+    HasField "_minPoolCost" (PParams era) Coin
   ) =>
   SourceSignalTarget (CHAIN era) ->
   Property
@@ -1023,10 +990,9 @@ poolStateIsInternallyConsistent (SourceSignalTarget {source = chainSt, signal = 
 delegProperties ::
   forall era.
   ( EraGen era,
-    Default (State (Core.EraRule "PPUP" era)),
+    Default (State (EraRule "PPUP" era)),
     QC.HasTrace (CHAIN era) (GenEnv era),
-    ChainProperty era,
-    HasField "certs" (Core.TxBody era) (StrictSeq (DCert (Crypto era)))
+    ChainProperty era
   ) =>
   Property
 delegProperties =
@@ -1034,7 +1000,7 @@ delegProperties =
     conjoin $
       map chainProp (sourceSignalTargets tr)
   where
-    delegProp :: DelegEnv era -> SourceSignalTarget (DELEG era) -> Property
+    delegProp :: DelegEnv era -> SourceSignalTarget (ShelleyDELEG era) -> Property
     delegProp denv delegSst =
       conjoin $
         [ TestDeleg.keyRegistration delegSst,
@@ -1059,6 +1025,7 @@ delegProperties =
 ledgerTraceFromBlock ::
   forall era ledger.
   ( ChainProperty era,
+    EraSegWits era,
     TestingLedger era ledger
   ) =>
   ChainState era ->
@@ -1078,6 +1045,7 @@ ledgerTraceFromBlock chainSt block =
 ledgerTraceFromBlockWithRestrictedUTxO ::
   forall era ledger.
   ( ChainProperty era,
+    EraSegWits era,
     TestingLedger era ledger
   ) =>
   ChainState era ->
@@ -1100,21 +1068,22 @@ ledgerTraceFromBlockWithRestrictedUTxO chainSt block =
 poolTraceFromBlock ::
   forall era.
   ( ChainProperty era,
-    HasField "certs" (Core.TxBody era) (StrictSeq (DCert (Crypto era))),
-    HasField "_eMax" (Core.PParams era) EpochNo,
-    HasField "_minPoolCost" (Core.PParams era) Coin
+    ShelleyEraTxBody era,
+    EraSegWits era,
+    HasField "_eMax" (PParams era) EpochNo,
+    HasField "_minPoolCost" (PParams era) Coin
   ) =>
   ChainState era ->
   Block (BHeader (Crypto era)) era ->
-  (ChainState era, Trace (POOL era))
+  (ChainState era, Trace (ShelleyPOOL era))
 poolTraceFromBlock chainSt block =
   ( tickedChainSt,
     runShelleyBase $
-      Trace.closure @(POOL era) poolEnv poolSt0 poolCerts
+      Trace.closure @(ShelleyPOOL era) poolEnv poolSt0 poolCerts
   )
   where
     (tickedChainSt, ledgerEnv, ledgerSt0, txs) = ledgerTraceBase chainSt block
-    certs = concatMap (toList . getField @"certs" . getField @"body")
+    certs = concatMap (toList . view certsTxBodyL . view bodyTxL)
     poolCerts = filter poolCert (certs txs)
     poolEnv =
       let (LedgerEnv s _ pp _) = ledgerEnv
@@ -1129,19 +1098,20 @@ poolTraceFromBlock chainSt block =
 delegTraceFromBlock ::
   forall era.
   ( ChainProperty era,
-    HasField "certs" (Core.TxBody era) (StrictSeq (DCert (Crypto era)))
+    ShelleyEraTxBody era,
+    EraSegWits era
   ) =>
   ChainState era ->
   Block (BHeader (Crypto era)) era ->
-  (DelegEnv era, Trace (DELEG era))
+  (DelegEnv era, Trace (ShelleyDELEG era))
 delegTraceFromBlock chainSt block =
   ( delegEnv,
     runShelleyBase $
-      Trace.closure @(DELEG era) delegEnv delegSt0 blockCerts
+      Trace.closure @(ShelleyDELEG era) delegEnv delegSt0 blockCerts
   )
   where
     (_tickedChainSt, ledgerEnv, ledgerSt0, txs) = ledgerTraceBase chainSt block
-    certs = concatMap (reverse . toList . getField @"certs" . getField @"body")
+    certs = concatMap (reverse . toList . view certsTxBodyL . view bodyTxL)
     blockCerts = filter delegCert (certs txs)
     delegEnv =
       let (LedgerEnv s txIx pp reserves) = ledgerEnv
@@ -1162,13 +1132,13 @@ delegTraceFromBlock chainSt block =
 -- transactions with the LEDGERS rule)
 ledgerTraceBase ::
   forall era.
-  ( Era era,
+  ( EraSegWits era,
     GetLedgerView era,
     ApplyBlock era
   ) =>
   ChainState era ->
   Block (BHeader (Crypto era)) era ->
-  (ChainState era, LedgerEnv era, LedgerState era, [Core.Tx era])
+  (ChainState era, LedgerEnv era, LedgerState era, [Tx era])
 ledgerTraceBase chainSt block =
   ( tickedChainSt,
     LedgerEnv slot minBound pp_ (esAccountState nes),
@@ -1203,7 +1173,7 @@ chainSstWithTick ::
 chainSstWithTick ledgerTr =
   map applyTick (sourceSignalTargets ledgerTr)
   where
-    applyTick sst@(SourceSignalTarget {source = chainSt, signal = block}) =
+    applyTick sst@SourceSignalTarget {source = chainSt, signal = block} =
       let bh = bheader block
           slot = (bheaderSlotNo . bhbody) bh
        in sst {target = tickChainState @era slot chainSt}
@@ -1215,7 +1185,7 @@ chainSstWithTick ledgerTr =
 removedAfterPoolreap ::
   forall era.
   ( ChainProperty era,
-    Default (State (Core.EraRule "PPUP" era)),
+    Default (State (EraRule "PPUP" era)),
     EraGen era,
     QC.HasTrace (CHAIN era) (GenEnv era)
   ) =>
@@ -1240,7 +1210,7 @@ removedAfterPoolreap =
 forAllChainTrace ::
   forall era prop.
   ( Testable prop,
-    Default (State (Core.EraRule "PPUP" era)),
+    Default (State (EraRule "PPUP" era)),
     EraGen era,
     QC.HasTrace (CHAIN era) (GenEnv era)
   ) =>
@@ -1273,7 +1243,7 @@ forEachEpochTrace ::
   ( EraGen era,
     Testable prop,
     QC.HasTrace (CHAIN era) (GenEnv era),
-    Default (State (Core.EraRule "PPUP" era))
+    Default (State (EraRule "PPUP" era))
   ) =>
   Int ->
   Word64 ->
@@ -1297,7 +1267,7 @@ atEpoch ::
   ( EraGen era,
     Testable prop,
     QC.HasTrace (CHAIN era) (GenEnv era),
-    Default (State (Core.EraRule "PPUP" era))
+    Default (State (EraRule "PPUP" era))
   ) =>
   (LedgerState era -> LedgerState era -> prop) ->
   Property
@@ -1314,7 +1284,7 @@ ledgerStateFromChainState = esLState . nesEs . chainNes
 
 testIncrementalStake ::
   forall era.
-  (Era era) =>
+  EraTxOut era =>
   LedgerState era ->
   LedgerState era ->
   Property
@@ -1332,7 +1302,7 @@ incrementalStakeProp ::
   forall era.
   ( EraGen era,
     QC.HasTrace (CHAIN era) (GenEnv era),
-    Default (State (Core.EraRule "PPUP" era))
+    Default (State (EraRule "PPUP" era))
   ) =>
   Proxy era ->
   Property
@@ -1348,7 +1318,7 @@ tersediffincremental message (Stake a) (Stake c) =
 --   Now it is called in the tests to see that its incremental analog 'incrementalStakeDistr' agrees.
 stakeDistr ::
   forall era.
-  Era era =>
+  EraTxOut era =>
   UTxO era ->
   DState (Crypto era) ->
   PState (Crypto era) ->
@@ -1376,8 +1346,7 @@ stakeDistr u ds ps =
 --   incremental analog. See 'incrementalAggregateUtxoCoinByCredential'
 aggregateUtxoCoinByCredential ::
   forall era.
-  ( Era era
-  ) =>
+  EraTxOut era =>
   Map Ptr (Credential 'Staking (Crypto era)) ->
   UTxO era ->
   Map (Credential 'Staking (Crypto era)) Coin ->
@@ -1386,8 +1355,8 @@ aggregateUtxoCoinByCredential ptrs (UTxO u) initial =
   Map.foldl' accum initial u
   where
     accum ans out =
-      let c = Val.coin (getField @"value" out)
-       in case getTxOutAddr out of
+      let c = out ^. coinTxOutL
+       in case out ^. addrTxOutL of
             Addr _ _ (StakeRefPtr p)
               | Just cred <- Map.lookup p ptrs -> Map.insertWith (<>) cred c ans
             Addr _ _ (StakeRefBase hk) -> Map.insertWith (<>) hk c ans

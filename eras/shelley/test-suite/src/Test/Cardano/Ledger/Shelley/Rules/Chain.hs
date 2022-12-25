@@ -60,7 +60,6 @@ import Cardano.Ledger.Shelley.AdaPots
     totalAdaES,
     totalAdaPotsES,
   )
-import Cardano.Ledger.Shelley.Constraints (UsesValue)
 import Cardano.Ledger.Shelley.EpochBoundary (emptySnapShots)
 import Cardano.Ledger.Shelley.LedgerState
   ( AccountState (..),
@@ -76,12 +75,12 @@ import Cardano.Ledger.Shelley.LedgerState
     _genDelegs,
   )
 import Cardano.Ledger.Shelley.Rules.Bbody
-  ( BBODY,
-    BbodyEnv (..),
-    BbodyPredicateFailure,
-    BbodyState (..),
+  ( BbodyEnv (..),
+    ShelleyBBODY,
+    ShelleyBbodyPredFailure,
+    ShelleyBbodyState (..),
   )
-import Cardano.Ledger.Shelley.Rules.Tick (TICK, TickEvent, TickPredicateFailure)
+import Cardano.Ledger.Shelley.Rules.Tick (ShelleyTICK, ShelleyTickEvent, ShelleyTickPredFailure)
 import Cardano.Ledger.Shelley.UTxO (UTxO (..))
 import Cardano.Ledger.Slot (EpochNo)
 import Cardano.Protocol.TPraos.BHeader
@@ -188,7 +187,7 @@ instance
 
 -- | Creates a valid initial chain state
 initialShelleyState ::
-  ( Era era,
+  ( Core.EraTxOut era,
     Default (State (Core.EraRule "PPUP" era)),
     Default (StashedAVVMAddresses era)
   ) =>
@@ -244,7 +243,7 @@ instance
   ( Era era,
     Embed (Core.EraRule "BBODY" era) (CHAIN era),
     Environment (Core.EraRule "BBODY" era) ~ BbodyEnv era,
-    State (Core.EraRule "BBODY" era) ~ BbodyState era,
+    State (Core.EraRule "BBODY" era) ~ ShelleyBbodyState era,
     Signal (Core.EraRule "BBODY" era) ~ Block (BHeaderView (Crypto era)) era,
     Embed (Core.EraRule "TICKN" era) (CHAIN era),
     Environment (Core.EraRule "TICKN" era) ~ TicknEnv,
@@ -287,7 +286,7 @@ chainTransition ::
     STS (CHAIN era),
     Embed (Core.EraRule "BBODY" era) (CHAIN era),
     Environment (Core.EraRule "BBODY" era) ~ BbodyEnv era,
-    State (Core.EraRule "BBODY" era) ~ BbodyState era,
+    State (Core.EraRule "BBODY" era) ~ ShelleyBbodyState era,
     Signal (Core.EraRule "BBODY" era) ~ Block (BHeaderView (Crypto era)) era,
     Embed (Core.EraRule "TICKN" era) (CHAIN era),
     Environment (Core.EraRule "TICKN" era) ~ TicknEnv,
@@ -380,11 +379,11 @@ chainTransition =
 instance
   ( Era era,
     Era era,
-    STS (BBODY era),
-    PredicateFailure (Core.EraRule "BBODY" era) ~ BbodyPredicateFailure era,
-    Event (Core.EraRule "BBODY" era) ~ Event (BBODY era)
+    STS (ShelleyBBODY era),
+    PredicateFailure (Core.EraRule "BBODY" era) ~ ShelleyBbodyPredFailure era,
+    Event (Core.EraRule "BBODY" era) ~ Event (ShelleyBBODY era)
   ) =>
-  Embed (BBODY era) (CHAIN era)
+  Embed (ShelleyBBODY era) (CHAIN era)
   where
   wrapFailed = BbodyFailure
   wrapEvent = BbodyEvent
@@ -403,11 +402,11 @@ instance
 instance
   ( Era era,
     Era era,
-    STS (TICK era),
-    PredicateFailure (Core.EraRule "TICK" era) ~ TickPredicateFailure era,
-    Event (Core.EraRule "TICK" era) ~ TickEvent era
+    STS (ShelleyTICK era),
+    PredicateFailure (Core.EraRule "TICK" era) ~ ShelleyTickPredFailure era,
+    Event (Core.EraRule "TICK" era) ~ ShelleyTickEvent era
   ) =>
-  Embed (TICK era) (CHAIN era)
+  Embed (ShelleyTICK era) (CHAIN era)
   where
   wrapFailed = TickFailure
   wrapEvent = TickEvent
@@ -425,13 +424,13 @@ instance
 
 -- | Calculate the total ada pots in the chain state
 totalAdaPots ::
-  UsesValue era =>
+  Core.EraTxOut era =>
   ChainState era ->
   AdaPots
 totalAdaPots = totalAdaPotsES . nesEs . chainNes
 
 -- | Calculate the total ada in the chain state
-totalAda :: UsesValue era => ChainState era -> Coin
+totalAda :: Core.EraTxOut era => ChainState era -> Coin
 totalAda = totalAdaES . nesEs . chainNes
 
 ppChainState :: PP.CanPrettyPrintLedgerState era => ChainState era -> PP.PDoc

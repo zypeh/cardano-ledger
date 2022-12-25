@@ -10,38 +10,37 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module Cardano.Ledger.Alonzo.Rules.Bbody
   ( AlonzoBBODY,
-    AlonzoBbodyPredFail (..),
+    AlonzoBbodyPredFailure (..),
     AlonzoBbodyEvent (..),
     bbodyTransition,
   )
 where
 
 import Cardano.Binary (FromCBOR (..), ToCBOR (..))
+import Cardano.Ledger.Alonzo.Era (AlonzoBBODY)
 import Cardano.Ledger.Alonzo.Scripts (ExUnits (..), pointWiseExUnits)
-import qualified Cardano.Ledger.Alonzo.Tx as Alonzo (ValidatedTx, totExUnits)
-import Cardano.Ledger.Alonzo.TxSeq (txSeqTxns)
-import qualified Cardano.Ledger.Alonzo.TxSeq as Alonzo (TxSeq)
-import Cardano.Ledger.Alonzo.TxWitness (TxWitness)
+import Cardano.Ledger.Alonzo.Tx (AlonzoTx, totExUnits)
+import Cardano.Ledger.Alonzo.TxSeq (AlonzoTxSeq, txSeqTxns)
+import Cardano.Ledger.Alonzo.TxWitness (AlonzoEraWitnesses (..))
 import Cardano.Ledger.BHeaderView (BHeaderView (..), isOverlaySlot)
 import Cardano.Ledger.BaseTypes (ShelleyBase, UnitInterval, epochInfoPure)
 import Cardano.Ledger.Block (Block (..))
-import qualified Cardano.Ledger.Core as Core
-import Cardano.Ledger.Era (Era (Crypto), SupportsSegWit (..))
+import Cardano.Ledger.Core
 import qualified Cardano.Ledger.Era as Era
 import Cardano.Ledger.Keys (DSignable, Hash, coerceKeyRole)
 import Cardano.Ledger.Shelley.BlockChain (bBodySize, incrBlocks)
 import Cardano.Ledger.Shelley.LedgerState (LedgerState)
 import Cardano.Ledger.Shelley.Rules.Bbody
   ( BbodyEnv (..),
-    BbodyEvent (..),
-    BbodyPredicateFailure (..),
-    BbodyState (..),
+    ShelleyBbodyEvent (..),
+    ShelleyBbodyPredFailure (..),
+    ShelleyBbodyState (..),
   )
-import Cardano.Ledger.Shelley.Rules.Ledgers (LedgersEnv (..))
-import Cardano.Ledger.Shelley.TxBody (EraIndependentTxBody)
+import Cardano.Ledger.Shelley.Rules.Ledgers (ShelleyLedgersEnv (..))
 import Cardano.Ledger.Slot (epochInfoEpoch, epochInfoFirst)
 import Control.Monad.Trans.Reader (asks)
 import Control.State.Transition
@@ -66,8 +65,8 @@ import NoThunks.Class (NoThunks (..))
 -- =======================================
 -- A new PredicateFailure type
 
-data AlonzoBbodyPredFail era
-  = ShelleyInAlonzoPredFail (BbodyPredicateFailure era)
+data AlonzoBbodyPredFailure era
+  = ShelleyInAlonzoBbodyPredFailure (ShelleyBbodyPredFailure era)
   | TooManyExUnits
       !ExUnits
       -- ^ Computed Sum of ExUnits for all plutus scripts
@@ -76,68 +75,65 @@ data AlonzoBbodyPredFail era
   deriving (Generic)
 
 newtype AlonzoBbodyEvent era
-  = ShelleyInAlonzoEvent (BbodyEvent era)
+  = ShelleyInAlonzoEvent (ShelleyBbodyEvent era)
 
 deriving instance
-  (Era era, Show (PredicateFailure (Core.EraRule "LEDGERS" era))) =>
-  Show (AlonzoBbodyPredFail era)
+  (Era era, Show (PredicateFailure (EraRule "LEDGERS" era))) =>
+  Show (AlonzoBbodyPredFailure era)
 
 deriving instance
-  (Era era, Eq (PredicateFailure (Core.EraRule "LEDGERS" era))) =>
-  Eq (AlonzoBbodyPredFail era)
+  (Era era, Eq (PredicateFailure (EraRule "LEDGERS" era))) =>
+  Eq (AlonzoBbodyPredFailure era)
 
 deriving anyclass instance
-  (Era era, NoThunks (PredicateFailure (Core.EraRule "LEDGERS" era))) =>
-  NoThunks (AlonzoBbodyPredFail era)
+  (Era era, NoThunks (PredicateFailure (EraRule "LEDGERS" era))) =>
+  NoThunks (AlonzoBbodyPredFailure era)
 
 instance
   ( Typeable era,
-    ToCBOR (BbodyPredicateFailure era)
+    ToCBOR (ShelleyBbodyPredFailure era)
   ) =>
-  ToCBOR (AlonzoBbodyPredFail era)
+  ToCBOR (AlonzoBbodyPredFailure era)
   where
-  toCBOR (ShelleyInAlonzoPredFail x) = encode (Sum ShelleyInAlonzoPredFail 0 !> To x)
+  toCBOR (ShelleyInAlonzoBbodyPredFailure x) = encode (Sum ShelleyInAlonzoBbodyPredFailure 0 !> To x)
   toCBOR (TooManyExUnits x y) = encode (Sum TooManyExUnits 1 !> To x !> To y)
 
 instance
   ( Typeable era,
-    FromCBOR (BbodyPredicateFailure era) -- TODO why is there no FromCBOR for (BbodyPredicateFailure era)
+    FromCBOR (ShelleyBbodyPredFailure era) -- TODO why is there no FromCBOR for (ShelleyBbodyPredFailure era)
   ) =>
-  FromCBOR (AlonzoBbodyPredFail era)
+  FromCBOR (AlonzoBbodyPredFailure era)
   where
   fromCBOR = decode (Summands "AlonzoBbodyPredFail" dec)
     where
-      dec 0 = SumD ShelleyInAlonzoPredFail <! From
+      dec 0 = SumD ShelleyInAlonzoBbodyPredFailure <! From
       dec 1 = SumD TooManyExUnits <! From <! From
       dec n = Invalid n
 
 -- ========================================
 -- The STS instance
 
--- | The uninhabited type that marks the STS Alonzo Era instance.
-data AlonzoBBODY era
-
 bbodyTransition ::
   forall (someBBODY :: Type -> Type) era.
   ( -- Conditions that the Abstract someBBODY must meet
     STS (someBBODY era),
     Signal (someBBODY era) ~ Block (BHeaderView (Crypto era)) era,
-    PredicateFailure (someBBODY era) ~ AlonzoBbodyPredFail era,
+    PredicateFailure (someBBODY era) ~ AlonzoBbodyPredFailure era,
     BaseM (someBBODY era) ~ ShelleyBase,
-    State (someBBODY era) ~ BbodyState era,
+    State (someBBODY era) ~ ShelleyBbodyState era,
     Environment (someBBODY era) ~ BbodyEnv era,
     -- Conditions to be an instance of STS
-    Embed (Core.EraRule "LEDGERS" era) (someBBODY era),
-    Environment (Core.EraRule "LEDGERS" era) ~ LedgersEnv era,
-    State (Core.EraRule "LEDGERS" era) ~ LedgerState era,
-    Signal (Core.EraRule "LEDGERS" era) ~ Seq (Core.Tx era),
+    Embed (EraRule "LEDGERS" era) (someBBODY era),
+    Environment (EraRule "LEDGERS" era) ~ ShelleyLedgersEnv era,
+    State (EraRule "LEDGERS" era) ~ LedgerState era,
+    Signal (EraRule "LEDGERS" era) ~ Seq (Tx era),
     -- Conditions to define the rule in this Era
-    HasField "_d" (Core.PParams era) UnitInterval,
-    HasField "_maxBlockExUnits" (Core.PParams era) ExUnits,
-    Era era, -- supplies WellFormed HasField, and Crypto constraints
-    Era.TxSeq era ~ Alonzo.TxSeq era,
-    Core.Tx era ~ Alonzo.ValidatedTx era,
-    Core.Witnesses era ~ TxWitness era
+    HasField "_d" (PParams era) UnitInterval,
+    HasField "_maxBlockExUnits" (PParams era) ExUnits,
+    EraSegWits era,
+    AlonzoEraWitnesses era,
+    Era.TxSeq era ~ AlonzoTxSeq era,
+    Tx era ~ AlonzoTx era
   ) =>
   TransitionRule (someBBODY era)
 bbodyTransition =
@@ -153,17 +149,17 @@ bbodyTransition =
             actualBodyHash = hashTxSeq @era txsSeq
 
         actualBodySize == fromIntegral (bhviewBSize bh)
-          ?! ShelleyInAlonzoPredFail
+          ?! ShelleyInAlonzoBbodyPredFailure
             ( WrongBlockBodySizeBBODY actualBodySize (fromIntegral $ bhviewBSize bh)
             )
 
         actualBodyHash == bhviewBHash bh
-          ?! ShelleyInAlonzoPredFail
+          ?! ShelleyInAlonzoBbodyPredFailure
             ( InvalidBodyHashBBODY @era actualBodyHash (bhviewBHash bh)
             )
 
         ls' <-
-          trans @(Core.EraRule "LEDGERS" era) $
+          trans @(EraRule "LEDGERS" era) $
             TRC (LedgersEnv (bhviewSlot bh) pp account, ls, StrictSeq.fromStrict txs)
 
         -- Note that this may not actually be a stake pool - it could be a
@@ -183,7 +179,7 @@ bbodyTransition =
 
         {- ∑(tx ∈ txs)(totExunits tx) ≤ maxBlockExUnits pp  -}
         let txTotal, ppMax :: ExUnits
-            txTotal = foldMap Alonzo.totExUnits txs
+            txTotal = foldMap totExUnits txs
             ppMax = getField @"_maxBlockExUnits" pp
         pointWiseExUnits (<=) txTotal ppMax ?! TooManyExUnits txTotal ppMax
 
@@ -198,24 +194,23 @@ bbodyTransition =
 
 instance
   ( DSignable (Crypto era) (Hash (Crypto era) EraIndependentTxBody),
-    Embed (Core.EraRule "LEDGERS" era) (AlonzoBBODY era),
-    Environment (Core.EraRule "LEDGERS" era) ~ LedgersEnv era,
-    State (Core.EraRule "LEDGERS" era) ~ LedgerState era,
-    Signal (Core.EraRule "LEDGERS" era) ~ Seq (Alonzo.ValidatedTx era),
-    Era era,
-    Core.Tx era ~ Alonzo.ValidatedTx era,
-    HasField "_d" (Core.PParams era) UnitInterval,
-    HasField "_maxBlockExUnits" (Core.PParams era) ExUnits,
-    Era.TxSeq era ~ Alonzo.TxSeq era,
-    Core.Tx era ~ Alonzo.ValidatedTx era,
-    Core.Witnesses era ~ TxWitness era,
-    SupportsSegWit era
+    Embed (EraRule "LEDGERS" era) (AlonzoBBODY era),
+    Environment (EraRule "LEDGERS" era) ~ ShelleyLedgersEnv era,
+    State (EraRule "LEDGERS" era) ~ LedgerState era,
+    Signal (EraRule "LEDGERS" era) ~ Seq (AlonzoTx era),
+    AlonzoEraWitnesses era,
+    Tx era ~ AlonzoTx era,
+    HasField "_d" (PParams era) UnitInterval,
+    HasField "_maxBlockExUnits" (PParams era) ExUnits,
+    Era.TxSeq era ~ AlonzoTxSeq era,
+    Tx era ~ AlonzoTx era,
+    EraSegWits era
   ) =>
   STS (AlonzoBBODY era)
   where
   type
     State (AlonzoBBODY era) =
-      BbodyState era
+      ShelleyBbodyState era
 
   type
     Signal (AlonzoBBODY era) =
@@ -225,7 +220,7 @@ instance
 
   type BaseM (AlonzoBBODY era) = ShelleyBase
 
-  type PredicateFailure (AlonzoBBODY era) = AlonzoBbodyPredFail era
+  type PredicateFailure (AlonzoBBODY era) = AlonzoBbodyPredFailure era
   type Event (AlonzoBBODY era) = AlonzoBbodyEvent era
 
   initialRules = []
@@ -234,12 +229,12 @@ instance
 instance
   ( Era era,
     BaseM ledgers ~ ShelleyBase,
-    ledgers ~ Core.EraRule "LEDGERS" era,
+    ledgers ~ EraRule "LEDGERS" era,
     STS ledgers,
     DSignable (Crypto era) (Hash (Crypto era) EraIndependentTxBody),
     Era era
   ) =>
   Embed ledgers (AlonzoBBODY era)
   where
-  wrapFailed = ShelleyInAlonzoPredFail . LedgersFailure
+  wrapFailed = ShelleyInAlonzoBbodyPredFailure . LedgersFailure
   wrapEvent = ShelleyInAlonzoEvent . LedgersEvent

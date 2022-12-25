@@ -93,7 +93,6 @@ import Cardano.Ledger.Shelley.UTxO (UTxO (..))
 import Cardano.Ledger.Slot (EpochNo (..))
 import Cardano.Ledger.TxIn (TxId (..), TxIn (..))
 import Control.Monad.Trans ()
-import Control.Provenance (runProvM)
 import Control.State.Transition (STS (State))
 import Data.Default.Class (Default (def))
 import Data.Map.Strict (Map)
@@ -229,6 +228,7 @@ nonMyopicZero :: NonMyopic crypto
 nonMyopicZero = NonMyopic Map.empty mempty
 
 pPUPStateZeroByProof :: Proof era -> State (Core.EraRule "PPUP" era)
+pPUPStateZeroByProof (Conway _) = PPUPState proposedPPUpdatesZero proposedPPUpdatesZero
 pPUPStateZeroByProof (Babbage _) = PPUPState proposedPPUpdatesZero proposedPPUpdatesZero
 pPUPStateZeroByProof (Alonzo _) = PPUPState proposedPPUpdatesZero proposedPPUpdatesZero
 pPUPStateZeroByProof (Mary _) = PPUPState proposedPPUpdatesZero proposedPPUpdatesZero
@@ -236,6 +236,7 @@ pPUPStateZeroByProof (Allegra _) = PPUPState proposedPPUpdatesZero proposedPPUpd
 pPUPStateZeroByProof (Shelley _) = PPUPState proposedPPUpdatesZero proposedPPUpdatesZero
 
 pParamsZeroByProof :: Proof era -> Core.PParams era
+pParamsZeroByProof (Conway _) = def
 pParamsZeroByProof (Babbage _) = def
 pParamsZeroByProof (Alonzo _) = def
 pParamsZeroByProof (Mary _) = def
@@ -270,6 +271,7 @@ newEpochStateZero =
 
 stashedAVVMAddressesZero :: Proof era -> StashedAVVMAddresses era
 stashedAVVMAddressesZero (Shelley _) = utxoZero
+stashedAVVMAddressesZero (Conway _) = ()
 stashedAVVMAddressesZero (Babbage _) = ()
 stashedAVVMAddressesZero (Alonzo _) = ()
 stashedAVVMAddressesZero (Mary _) = ()
@@ -387,7 +389,7 @@ abstract x =
 
 complete :: PulsingRewUpdate crypto -> RewardUpdate crypto
 complete (Complete r) = r
-complete (Pulsing rewsnap pulser) = fst $ runShelleyBase $ runProvM (completeRupd (Pulsing rewsnap pulser))
+complete (Pulsing rewsnap pulser) = fst $ runShelleyBase (completeRupd (Pulsing rewsnap pulser))
 
 -- =====================================================================
 

@@ -1,5 +1,17 @@
 # Contributing to the Cardano Ledger
 
+## Branching Model
+
+We use [trunk based developement](https://trunkbaseddevelopment.com/).
+In particular, releases will be handled by release branches,
+starting with `release/1.0.x`.
+Normal development will branch off of master and be merged back to master.
+Only bug-fixes can be cherry-picked onto the release branches.
+
+We use tags on the release branches to indicate patches, of the form `ledger/a.b.c`.
+We also use tags to indicate what version of the ledger was used in
+cardano-node releases, of the form `node/a.b.c` (possible with a `rc` or `rc1`, etc).
+
 ## Building
 
 See the [Readme](https://github.com/input-output-hk/cardano-ledger#building) for instructions on building.
@@ -183,7 +195,8 @@ The blank line separating the summary from the body is critical
 various tools like `log`, `shortlog` and `rebase` can get
 confused if you run the two together.
 
-Explain the problem that this commit is solving.
+Explain the problem that this commit is solving,
+and use one commit per conceptual change.
 Focus on why you are making this change as opposed to how (the code explains that).
 Are there side effects or other unintuitive consequences of this
 change? Here's the place to explain them.

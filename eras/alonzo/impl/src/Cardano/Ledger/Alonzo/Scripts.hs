@@ -15,19 +15,23 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
--- Needed for (NoThunks PV1.EvaluationContext)
-{-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module Cardano.Ledger.Alonzo.Scripts
   ( Tag (..),
-    Script (TimelockScript, PlutusScript),
+    AlonzoScript (TimelockScript, PlutusScript),
+    Script,
     txscriptfee,
     isPlutusScript,
     pointWiseExUnits,
+    validScript,
+    transProtocolVersion,
 
     -- * Cost Model
     CostModel,
     mkCostModel,
+    costModelParamsNames,
+    costModelParamsNamesSet,
     getCostModelLanguage,
     getCostModelParams,
     getEvaluationContext,
@@ -35,30 +39,34 @@ module Cardano.Ledger.Alonzo.Scripts
     ExUnits',
     Prices (..),
     hashCostModel,
-    assertWellFormedCostModelParams,
+    PV1.assertWellFormedCostModelParams,
     decodeCostModelMap,
     decodeCostModel,
     CostModels (..),
-    CostModelApplyError (..),
+    PV1.CostModelApplyError (..),
+    -- contentsEq,
   )
 where
 
 import Cardano.Binary (DecoderError (..), FromCBOR (fromCBOR), ToCBOR (toCBOR), serialize')
+import Cardano.Ledger.Alonzo.Era
 import Cardano.Ledger.Alonzo.Language (Language (..))
-import Cardano.Ledger.BaseTypes (BoundedRational (unboundRational), NonNegativeInterval)
+import Cardano.Ledger.BaseTypes (BoundedRational (unboundRational), NonNegativeInterval, ProtVer (..))
 import Cardano.Ledger.Coin (Coin (..))
+import Cardano.Ledger.Core (Era (Crypto), EraScript, Phase (..), PhaseRep (..), PhasedScript (..), SomeScript)
 import qualified Cardano.Ledger.Core as Core
 import qualified Cardano.Ledger.Crypto as CC (Crypto)
-import Cardano.Ledger.Era (Era (Crypto), ValidateScript (hashScript))
 import Cardano.Ledger.SafeHash
   ( HashWithCrypto (..),
     SafeHash,
     SafeToHash (..),
   )
 import Cardano.Ledger.Serialization (mapToCBOR)
+import Cardano.Ledger.Shelley (nativeMultiSigTag)
 import Cardano.Ledger.ShelleyMA.Timelocks (Timelock)
 import Control.DeepSeq (NFData (..), deepseq, rwhnf)
 import Control.Monad (when)
+import Control.Monad.Trans.Writer (WriterT (runWriterT))
 import Data.ByteString.Short (ShortByteString, fromShort)
 import Data.Coders
   ( Annotator,
@@ -77,6 +85,7 @@ import Data.Coders
     (<*!),
   )
 import Data.DerivingVia (InstantiatedAt (..))
+import Data.Either (isRight)
 import Data.Int (Int64)
 import Data.Map (Map)
 import qualified Data.Map.Strict as Map
@@ -84,13 +93,26 @@ import Data.Measure (BoundedMeasure, Measure)
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Text (Text)
+import qualified Data.Text as Text
 import Data.Typeable (Proxy (..), Typeable)
 import Data.Word (Word64, Word8)
 import GHC.Generics (Generic)
-import NoThunks.Class (InspectHeapNamed (..), NoThunks (..))
+import NoThunks.Class (InspectHeapNamed (..), NoThunks)
 import Numeric.Natural (Natural)
-import Plutus.V1.Ledger.Api as PV1 hiding (Map, Script)
-import Plutus.V2.Ledger.Api as PV2 (costModelParamNames, mkEvaluationContext)
+import PlutusCore.Evaluation.Machine.CostModelInterface (CostModelApplyWarn)
+import PlutusLedgerApi.Common (showParamName)
+import qualified PlutusLedgerApi.V1 as PV1
+  ( CostModelApplyError (..),
+    EvaluationContext,
+    ParamName,
+    ProtocolVersion (ProtocolVersion),
+    ScriptDecodeError,
+    assertScriptWellFormed,
+    assertWellFormedCostModelParams,
+    mkEvaluationContext,
+  )
+import qualified PlutusLedgerApi.V2 as PV2 (ParamName, assertScriptWellFormed, mkEvaluationContext)
+import PlutusPrelude (enumerate)
 
 -- | Marker indicating the part of a transaction for which this script is acting
 -- as a validator.
@@ -113,30 +135,49 @@ instance NFData Tag where
 -- =======================================================
 
 -- | Scripts in the Alonzo Era, Either a Timelock script or a Plutus script.
-data Script era
+data AlonzoScript era
   = TimelockScript (Timelock (Crypto era))
   | PlutusScript Language ShortByteString
-  deriving (Eq, Generic, Ord)
+  deriving (Eq, Generic)
 
-instance (ValidateScript era, Core.Script era ~ Script era) => Show (Script era) where
+type Script era = AlonzoScript era
+
+{-# DEPRECATED Script "Use `AlonzoScript` instead" #-}
+
+instance (EraScript era, Core.Script era ~ AlonzoScript era) => Show (AlonzoScript era) where
   show (TimelockScript x) = "TimelockScript " ++ show x
-  show s@(PlutusScript v _) = "PlutusScript " ++ show v ++ " " ++ show (hashScript @era s)
+  show s@(PlutusScript v _) = "PlutusScript " ++ show v ++ " " ++ show (Core.hashScript @era s)
 
 deriving via
-  InspectHeapNamed "Script" (Script era)
+  InspectHeapNamed "AlonzoScript" (AlonzoScript era)
   instance
-    NoThunks (Script era)
+    NoThunks (AlonzoScript era)
 
-instance NFData (Script era)
+instance NFData (AlonzoScript era)
 
 -- | Both constructors know their original bytes
-instance SafeToHash (Script era) where
+instance SafeToHash (AlonzoScript era) where
   originalBytes (TimelockScript t) = originalBytes t
   originalBytes (PlutusScript _ bs) = fromShort bs
 
-isPlutusScript :: Script era -> Bool
+type instance SomeScript 'PhaseOne (AlonzoEra c) = Timelock c
+
+type instance SomeScript 'PhaseTwo (AlonzoEra c) = (Language, ShortByteString)
+
+isPlutusScript :: AlonzoScript era -> Bool
 isPlutusScript (PlutusScript _ _) = True
 isPlutusScript (TimelockScript _) = False
+
+instance CC.Crypto c => EraScript (AlonzoEra c) where
+  type Script (AlonzoEra c) = AlonzoScript (AlonzoEra c)
+  phaseScript PhaseOneRep (TimelockScript s) = Just (Phase1Script s)
+  phaseScript PhaseTwoRep (PlutusScript lang bytes) = Just (Phase2Script lang bytes)
+  phaseScript _ _ = Nothing
+  scriptPrefixTag script =
+    case script of
+      TimelockScript _ -> nativeMultiSigTag -- "\x00"
+      PlutusScript PlutusV1 _ -> "\x01"
+      PlutusScript PlutusV2 _ -> "\x02"
 
 -- ===========================================
 
@@ -144,7 +185,7 @@ isPlutusScript (TimelockScript _) = False
 -- of space in memory and execution time.
 --
 -- The ledger itself uses 'ExUnits' Natural' exclusively, but the flexibility here
--- alows the consensus layer to translate the execution units into something
+-- allows the consensus layer to translate the execution units into something
 -- equivalent to 'ExUnits (Inf Natural)'. This is needed in order to provide
 -- a 'BoundedMeasure' instance, which itself is needed for the alonzo instance of
 -- 'TxLimits' (in consensus).
@@ -199,11 +240,15 @@ pointWiseExUnits oper (ExUnits m1 s1) (ExUnits m2 s2) = (m1 `oper` m2) && (s1 `o
 -- =====================================
 
 -- | A language dependent cost model for the Plutus evaluator.
--- Note that the `EvaluationContext` is entirely dependent on the
+-- Note that the `PV1.EvaluationContext` is entirely dependent on the
 -- cost model parameters (ie the `Map` `Text` `Integer`) and that
 -- this type uses the smart constructor `mkCostModel`
 -- to hide the evaluation context.
-data CostModel = CostModel !Language !(Map Text Integer) !PV1.EvaluationContext
+data CostModel = CostModel
+  { cmLanguage :: !Language,
+    cmMap :: !(Map Text Integer),
+    cmEvalCtx :: !PV1.EvaluationContext
+  }
   deriving (Generic)
 
 -- | Note that this Eq instance ignores the evaluation context, which is
@@ -241,15 +286,18 @@ instance NFData CostModel where
 
 -- | Convert cost model parameters to a cost model, making use of the
 --  conversion function mkEvaluationContext from the Plutus API.
-mkCostModel :: Language -> Map Text Integer -> Either CostModelApplyError CostModel
-mkCostModel PlutusV1 cm =
-  case PV1.mkEvaluationContext cm of
-    Right evalCtx -> Right (CostModel PlutusV1 cm evalCtx)
+mkCostModel :: Language -> Map Text Integer -> Either PV1.CostModelApplyError CostModel
+mkCostModel lang cm =
+  case eCostModel of
+    Right (evalCtx, _) -> Right (CostModel lang cm evalCtx)
     Left e -> Left e
-mkCostModel PlutusV2 cm =
-  case PV2.mkEvaluationContext cm of
-    Right evalCtx -> Right (CostModel PlutusV2 cm evalCtx)
-    Left e -> Left e
+  where
+    mkEvaluationContext =
+      case lang of
+        PlutusV1 -> PV1.mkEvaluationContext
+        PlutusV2 -> PV2.mkEvaluationContext
+    eCostModel :: Either PV1.CostModelApplyError (PV1.EvaluationContext, [CostModelApplyWarn])
+    eCostModel = runWriterT (mkEvaluationContext (Map.elems cm))
 
 getCostModelLanguage :: CostModel -> Language
 getCostModelLanguage (CostModel lang _ _) = lang
@@ -262,14 +310,19 @@ decodeCostModelMap = decodeMapByKey fromCBOR decodeCostModel
 
 decodeCostModel :: Language -> Decoder s CostModel
 decodeCostModel lang = do
+  let keys = costModelParamsNamesSet lang
   checked <- mkCostModel lang <$> decodeArrayAsMap keys fromCBOR
   case checked of
     Left e -> fail $ show e
     Right cm -> pure cm
-  where
-    keys = case lang of
-      PlutusV1 -> PV1.costModelParamNames
-      PlutusV2 -> PV2.costModelParamNames
+
+costModelParamsNames :: Language -> [Text]
+costModelParamsNames = \case
+  PlutusV1 -> Text.pack . showParamName <$> enumerate @PV1.ParamName
+  PlutusV2 -> Text.pack . showParamName <$> enumerate @PV2.ParamName
+
+costModelParamsNamesSet :: Language -> Set.Set Text
+costModelParamsNamesSet = Set.fromList . costModelParamsNames
 
 decodeArrayAsMap :: Ord a => Set a -> Decoder s b -> Decoder s (Map a b)
 decodeArrayAsMap keys decodeValue = do
@@ -384,10 +437,7 @@ encodeScript (TimelockScript i) = Sum TimelockScript 0 !> To i
 encodeScript (PlutusScript PlutusV1 s) = Sum (PlutusScript PlutusV1) 1 !> To s
 encodeScript (PlutusScript PlutusV2 s) = Sum (PlutusScript PlutusV2) 2 !> To s
 
-instance
-  (CC.Crypto (Crypto era), Typeable (Crypto era), Typeable era) =>
-  FromCBOR (Annotator (Script era))
-  where
+instance Era era => FromCBOR (Annotator (Script era)) where
   fromCBOR = decode (Summands "Alonzo Script" decodeScript)
     where
       decodeScript :: Word -> Decode 'Open (Annotator (Script era))
@@ -395,3 +445,23 @@ instance
       decodeScript 1 = Ann (SumD $ PlutusScript PlutusV1) <*! Ann From
       decodeScript 2 = Ann (SumD $ PlutusScript PlutusV2) <*! Ann From
       decodeScript n = Invalid n
+
+-- | Test that every Alonzo script represents a real Script.
+--     Run deepseq to see that there are no infinite computations and that
+--     every Plutus Script unflattens into a real PV1.Script
+validScript :: ProtVer -> Script era -> Bool
+validScript pv script =
+  case script of
+    TimelockScript sc -> deepseq sc True
+    PlutusScript lang bytes ->
+      let assertScriptWellFormed =
+            case lang of
+              PlutusV1 -> PV1.assertScriptWellFormed
+              PlutusV2 -> PV2.assertScriptWellFormed
+          eWellFormed :: Either PV1.ScriptDecodeError ()
+          eWellFormed = assertScriptWellFormed (transProtocolVersion pv) bytes
+       in isRight eWellFormed
+
+transProtocolVersion :: ProtVer -> PV1.ProtocolVersion
+transProtocolVersion (ProtVer major minor) =
+  PV1.ProtocolVersion (fromIntegral major) (fromIntegral minor)

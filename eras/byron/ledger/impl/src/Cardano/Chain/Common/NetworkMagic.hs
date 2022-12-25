@@ -2,6 +2,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE StandaloneKindSignatures #-}
 {-# LANGUAGE TypeApplications #-}
 
 module Cardano.Chain.Common.NetworkMagic
@@ -24,6 +25,7 @@ import Cardano.Crypto.ProtocolMagic
     RequiresNetworkMagic (..),
     getProtocolMagic,
   )
+import Cardano.HeapWords
 import Cardano.Prelude hiding ((%))
 import Data.Aeson (ToJSON)
 import Formatting (bprint, build, (%))
@@ -34,6 +36,7 @@ import NoThunks.Class (NoThunks (..))
 -- NetworkMagic
 --------------------------------------------------------------------------------
 
+type NetworkMagic :: Type
 data NetworkMagic
   = NetworkMainOrStage
   | NetworkTestnet {-# UNPACK #-} !Word32

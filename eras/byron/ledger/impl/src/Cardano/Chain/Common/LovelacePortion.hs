@@ -1,11 +1,13 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NumDecimals #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE StandaloneKindSignatures #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Cardano.Chain.Common.LovelacePortion
@@ -16,6 +18,7 @@ module Cardano.Chain.Common.LovelacePortion
 where
 
 import Cardano.Binary (FromCBOR (..), ToCBOR (..))
+import Cardano.HeapWords
 import Cardano.Prelude
 import Control.Monad (fail)
 import qualified Data.Aeson as Aeson
@@ -42,6 +45,7 @@ import Text.JSON.Canonical (FromJSON (..), ToJSON (..))
 -- genesis file.
 --
 -- It is interpreted as a 'Rational' via the provided conversion functions.
+type LovelacePortion :: Type
 newtype LovelacePortion = LovelacePortion
   { unLovelacePortion :: Word64
   }

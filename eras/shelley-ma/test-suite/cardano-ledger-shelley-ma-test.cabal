@@ -1,7 +1,7 @@
 cabal-version: 2.2
 
 name:                cardano-ledger-shelley-ma-test
-version:             0.1.0.0
+version:             0.1.1.2
 synopsis:            Shelley ledger with multiasset and time lock support.
 description:
   This package extends the Shelley ledger with support for
@@ -14,7 +14,7 @@ copyright:           2020 Input Output (Hong Kong) Ltd.
 category:            Network
 build-type:          Simple
 
-extra-source-files:
+data-files:
   cddl-files/shelley-ma.cddl
   cddl-files/real/crypto.cddl
   cddl-files/mock/extras.cddl
@@ -25,7 +25,7 @@ source-repository head
   subdir:   eras/shelley-ma/test-suite
 
 common base
-  build-depends:      base >= 4.12 && < 4.15
+  build-depends:      base >= 4.12 && < 4.17
 
 common project-config
   default-language:   Haskell2010
@@ -64,15 +64,16 @@ library
     cardano-ledger-pretty,
     cardano-ledger-shelley-ma,
     cardano-slotting,
-    cborg,
     containers,
     generic-random,
     hashable,
     mtl,
+    microlens,
     QuickCheck >= 2.13.2,
     cardano-ledger-shelley-test,
     cardano-ledger-shelley,
     cardano-strict-containers,
+    small-steps,
     tasty-hunit,
     tasty-quickcheck,
     tasty,
@@ -97,6 +98,7 @@ test-suite cardano-ledger-shelley-ma-test
       Test.Cardano.Ledger.ShelleyMA.Serialisation.CDDL
       Test.Cardano.Ledger.ShelleyMA.Serialisation.Golden.Encoding
       Test.Cardano.Ledger.ShelleyMA.Serialisation.Timelocks
+      Paths_cardano_ledger_shelley_ma_test
   -- We set a bound here so that we're alerted of potential space
   -- leaks in our generators (or test) code.
   --
@@ -119,6 +121,7 @@ test-suite cardano-ledger-shelley-ma-test
       containers,
       data-default-class,
       mtl,
+      microlens,
       QuickCheck,
       cardano-ledger-shelley-test,
       cardano-ledger-shelley,

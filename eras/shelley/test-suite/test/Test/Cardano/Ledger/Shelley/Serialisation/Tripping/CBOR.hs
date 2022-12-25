@@ -48,7 +48,6 @@ import Cardano.Ledger.CompactAddress (fromCborAddr, fromCborRewardAcnt)
 import Cardano.Ledger.Compactible (Compactible (..))
 import qualified Cardano.Ledger.Shelley.API as Ledger
 import Cardano.Ledger.Shelley.Genesis (ShelleyGenesis)
-import Cardano.Ledger.Shelley.RewardProvenance (RewardProvenance)
 import Cardano.Ledger.Shelley.RewardUpdate
   ( FreeVars (..),
     Pulser,
@@ -155,16 +154,16 @@ prop_roundtrip_Header = roundtrip' toCBOR ((. Full) . runAnnotator <$> fromCBOR)
 prop_roundtrip_BlockHeaderHash :: TP.HashHeader Mock.C_Crypto -> Property
 prop_roundtrip_BlockHeaderHash = roundtrip toCBOR fromCBOR
 
-prop_roundtrip_TxBody :: Ledger.TxBody Mock.C -> Property
+prop_roundtrip_TxBody :: Ledger.ShelleyTxBody Mock.C -> Property
 prop_roundtrip_TxBody = roundtrip' toCBOR ((. Full) . runAnnotator <$> fromCBOR)
 
-prop_roundtrip_Tx :: Ledger.Tx Mock.C -> Property
+prop_roundtrip_Tx :: Ledger.ShelleyTx Mock.C -> Property
 prop_roundtrip_Tx = roundtrip' toCBOR ((. Full) . runAnnotator <$> fromCBOR)
 
 prop_roundtrip_TxId :: Ledger.TxId Mock.C_Crypto -> Property
 prop_roundtrip_TxId = roundtrip toCBOR fromCBOR
 
-prop_roundtrip_TxOut :: Ledger.TxOut Mock.C -> Property
+prop_roundtrip_TxOut :: Ledger.ShelleyTxOut Mock.C -> Property
 prop_roundtrip_TxOut = roundtrip toCBOR fromCBOR
 
 prop_roundtrip_BootstrapWitness ::
@@ -173,7 +172,7 @@ prop_roundtrip_BootstrapWitness =
   roundtrip' toCBOR ((. Full) . runAnnotator <$> fromCBOR)
 
 prop_roundtrip_LEDGER_PredicateFails ::
-  [STS.PredicateFailure (STS.LEDGERS Mock.C)] -> Property
+  [STS.PredicateFailure (STS.ShelleyLEDGERS Mock.C)] -> Property
 prop_roundtrip_LEDGER_PredicateFails = roundtrip toCBOR fromCBOR
 
 prop_roundtrip_PrtclState :: STS.PrtclState Mock.C_Crypto -> Property
@@ -205,9 +204,6 @@ prop_roundtrip_Coin_1 = roundtrip (toCBOR . fromJust . toCompact) fromCBOR
 
 prop_roundtrip_Coin_2 :: Coin -> Property
 prop_roundtrip_Coin_2 = roundtrip toCBOR (fromCompact <$> fromCBOR)
-
-prop_roundtrip_RewardProvenance :: RewardProvenance Mock.C_Crypto -> Property
-prop_roundtrip_RewardProvenance = roundtrip toCBOR fromCBOR
 
 prop_roundtrip_RewardUpdate :: RewardUpdate Mock.C_Crypto -> Property
 prop_roundtrip_RewardUpdate = roundtrip toCBOR fromCBOR
@@ -280,7 +276,6 @@ tests =
       testProperty "roundtrip Shelley Genesis" prop_roundtrip_ShelleyGenesis,
       testProperty "roundtrip coin compactcoin cbor" prop_roundtrip_Coin_1,
       testProperty "roundtrip coin cbor compactcoin" prop_roundtrip_Coin_2,
-      testProperty "roundtrip reward provenance" prop_roundtrip_RewardProvenance,
       pulsingTest
     ]
 

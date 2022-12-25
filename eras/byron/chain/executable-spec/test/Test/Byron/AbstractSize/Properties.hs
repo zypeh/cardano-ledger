@@ -2,7 +2,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 
-module Test.Byron.AbstractSize.Properties (testAbstractSize) where
+module Test.Byron.AbstractSize.Properties (testAbstractSize, testProperty) where
 
 import Byron.Spec.Chain.STS.Block (Block (..), BlockBody (..), BlockHeader (..))
 import Byron.Spec.Chain.STS.Rule.Chain (CHAIN)
@@ -22,10 +22,15 @@ import qualified Data.Set as Set
 import Data.Typeable (TypeRep, Typeable, typeOf)
 import Data.Word (Word64)
 import Hedgehog (MonadTest, Property, diff, forAll, property, withTests, (===))
+import Hedgehog.Internal.Property (PropertyName (..))
 import Numeric.Natural (Natural)
-import Test.Tasty (TestTree, testGroup)
+import Test.Tasty (TestName, TestTree, testGroup)
 import Test.Tasty.HUnit (Assertion, testCase, (@?=))
-import Test.Tasty.Hedgehog
+import Test.Tasty.Hedgehog hiding (testProperty)
+
+-- | testProperty has been deprecated. We make our own version here.
+testProperty :: TestName -> Property -> TestTree
+testProperty s p = testPropertyNamed s (Hedgehog.Internal.Property.PropertyName s) p
 
 --------------------------------------------------------------------------------
 -- Example typeReps for Block/Header/Body

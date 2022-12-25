@@ -5,7 +5,7 @@ module Main
   )
 where
 
-import Test.Byron.Spec.Ledger.AbstractSize.Properties (testTxHasTypeReps)
+import Test.Byron.Spec.Ledger.AbstractSize.Properties (testProperty, testTxHasTypeReps)
 import qualified Test.Byron.Spec.Ledger.Core.Generators.Properties as CoreGen
 import Test.Byron.Spec.Ledger.Delegation.Examples (deleg)
 import qualified Test.Byron.Spec.Ledger.Delegation.Properties as DELEG
@@ -15,7 +15,6 @@ import qualified Test.Byron.Spec.Ledger.UTxO.Properties as UTxO
 import Test.Byron.Spec.Ledger.Update.Examples (upiendExamples)
 import qualified Test.Byron.Spec.Ledger.Update.Properties as UPDATE
 import Test.Tasty (TestTree, defaultMain, localOption, testGroup)
-import Test.Tasty.Hedgehog (testProperty)
 import Test.Tasty.Ingredients.ConsoleReporter (UseColor (Auto))
 
 main :: IO ()

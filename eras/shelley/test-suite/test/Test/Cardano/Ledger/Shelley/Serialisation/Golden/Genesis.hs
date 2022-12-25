@@ -23,16 +23,18 @@ import Cardano.Ledger.Keys (hashKey, hashVerKeyVRF, vKey)
 import Cardano.Ledger.Shelley (ShelleyEra)
 import qualified Cardano.Ledger.Shelley.API as L
 import Cardano.Ledger.Shelley.Genesis
-import Cardano.Ledger.Shelley.PParams (PParams' (..), emptyPParams)
+import Cardano.Ledger.Shelley.PParams (ShelleyPParamsHKD (..), emptyPParams)
 import Cardano.Slotting.Slot (EpochSize (..))
 import Data.Aeson
 import qualified Data.ByteString.Char8 as BS (pack)
+import qualified Data.ListMap as LM
 import qualified Data.Map.Strict as Map
 import Data.Maybe (fromJust)
 import Data.Scientific (Scientific)
 import qualified Data.Sequence.Strict as StrictSeq
 import qualified Data.Set as Set
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
+import Paths_cardano_ledger_shelley_test
 import Test.Cardano.Ledger.Shelley.ConcreteCryptoTypes (StandardCrypto)
 import qualified Test.Cardano.Ledger.Shelley.Examples.Cast as Cast
 import Test.Cardano.Ledger.Shelley.Utils
@@ -53,7 +55,8 @@ goldenTestJSON actual expectedFile =
       val @?= expected
 
 golden_json_ShelleyGenesis :: Assertion
-golden_json_ShelleyGenesis = goldenTestJSON example "test/Golden/ShelleyGenesis"
+golden_json_ShelleyGenesis =
+  goldenTestJSON example =<< getDataFileName "test/Golden/ShelleyGenesis"
   where
     example :: ShelleyGenesis (ShelleyEra StandardCrypto)
     example = exampleShelleyGenesis
@@ -214,7 +217,7 @@ exampleShelleyGenesis =
             _maxBHSize = 217569
           },
       sgGenDelegs = Map.fromList [(genesisVerKeyHash, genDelegPair)],
-      sgInitialFunds = Map.fromList [(initialFundedAddress, initialFunds)],
+      sgInitialFunds = LM.ListMap [(initialFundedAddress, initialFunds)],
       sgStaking = staking
     }
   where
@@ -274,11 +277,11 @@ exampleShelleyGenesis =
     staking =
       ShelleyGenesisStaking
         { sgsPools =
-            Map.fromList
+            LM.ListMap
               [ (L.KeyHash "f583a45e4947c102091b96170ef50ef0cf8edb62666193a2163247bb", poolParams)
               ],
           sgsStake =
-            Map.fromList
+            LM.ListMap
               [ ( L.KeyHash "83a192dec0e8da2188e520d0c536a69a747cf173a3df16a6daa94d86",
                   L.KeyHash "649eda82bf644d34a6925f24ea4c4c36d27e51de1b44ef47e3560be7"
                 )

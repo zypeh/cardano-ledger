@@ -6,114 +6,118 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Cardano.Ledger.Shelley.Rules.NewEpoch
-  ( NEWEPOCH,
-    NewEpochPredicateFailure (..),
-    NewEpochEvent (..),
+  ( ShelleyNEWEPOCH,
+    ShelleyNewEpochPredFailure (..),
+    ShelleyNewEpochEvent (..),
     PredicateFailure,
     calculatePoolDistr,
+    calculatePoolDistr',
   )
 where
 
 import Cardano.Ledger.BaseTypes
-import Cardano.Ledger.Coin
+  ( BlocksMade (BlocksMade),
+    ProtVer,
+    ShelleyBase,
+    StrictMaybe (SJust, SNothing),
+  )
+import Cardano.Ledger.Coin (Coin (Coin), toDeltaCoin)
 import Cardano.Ledger.Compactible (fromCompact)
-import qualified Cardano.Ledger.Core as Core
+import Cardano.Ledger.Core
 import Cardano.Ledger.Credential (Credential)
-import Cardano.Ledger.Era (Crypto, Era)
-import Cardano.Ledger.Keys (KeyRole (Staking))
+import Cardano.Ledger.Keys (KeyHash, KeyRole (StakePool, Staking))
 import Cardano.Ledger.PoolDistr (IndividualPoolStake (..), PoolDistr (..))
 import Cardano.Ledger.Shelley.AdaPots (AdaPots, totalAdaPotsES)
-import Cardano.Ledger.Shelley.Constraints (UsesTxOut, UsesValue)
 import Cardano.Ledger.Shelley.EpochBoundary
 import Cardano.Ledger.Shelley.LedgerState
 import Cardano.Ledger.Shelley.Rewards (Reward, sumRewards)
 import Cardano.Ledger.Shelley.Rules.Epoch
-import Cardano.Ledger.Shelley.Rules.Mir
+import Cardano.Ledger.Shelley.Rules.Mir (ShelleyMIR, ShelleyMirEvent, ShelleyMirPredFailure)
 import Cardano.Ledger.Shelley.Rules.Rupd (RupdEvent (..))
-import Cardano.Ledger.Shelley.TxBody
-import Cardano.Ledger.Slot
+import Cardano.Ledger.Shelley.TxBody (PoolParams (_poolVrf))
+import Cardano.Ledger.Slot (EpochNo (EpochNo))
 import qualified Cardano.Ledger.Val as Val
-import Control.Provenance (runProvM)
 import Control.State.Transition
 import Data.Default.Class (Default, def)
 import qualified Data.Map.Strict as Map
-import Data.Ratio
+import Data.Ratio ((%))
 import Data.Set (Set)
 import Data.VMap as VMap
 import GHC.Generics (Generic)
-import GHC.Records
+import GHC.Records (HasField)
 import NoThunks.Class (NoThunks (..))
 
-data NEWEPOCH era
+data ShelleyNEWEPOCH era
 
-data NewEpochPredicateFailure era
-  = EpochFailure (PredicateFailure (Core.EraRule "EPOCH" era)) -- Subtransition Failures
+data ShelleyNewEpochPredFailure era
+  = EpochFailure (PredicateFailure (EraRule "EPOCH" era)) -- Subtransition Failures
   | CorruptRewardUpdate
       !(RewardUpdate (Crypto era)) -- The reward update which violates an invariant
-  | MirFailure (PredicateFailure (Core.EraRule "MIR" era)) -- Subtransition Failures
+  | MirFailure (PredicateFailure (EraRule "MIR" era)) -- Subtransition Failures
   deriving (Generic)
 
 deriving stock instance
-  ( Show (PredicateFailure (Core.EraRule "EPOCH" era)),
-    Show (PredicateFailure (Core.EraRule "MIR" era))
+  ( Show (PredicateFailure (EraRule "EPOCH" era)),
+    Show (PredicateFailure (EraRule "MIR" era))
   ) =>
-  Show (NewEpochPredicateFailure era)
+  Show (ShelleyNewEpochPredFailure era)
 
 deriving stock instance
-  ( Eq (PredicateFailure (Core.EraRule "EPOCH" era)),
-    Eq (PredicateFailure (Core.EraRule "MIR" era))
+  ( Eq (PredicateFailure (EraRule "EPOCH" era)),
+    Eq (PredicateFailure (EraRule "MIR" era))
   ) =>
-  Eq (NewEpochPredicateFailure era)
+  Eq (ShelleyNewEpochPredFailure era)
 
 instance
-  ( NoThunks (PredicateFailure (Core.EraRule "EPOCH" era)),
-    NoThunks (PredicateFailure (Core.EraRule "MIR" era))
+  ( NoThunks (PredicateFailure (EraRule "EPOCH" era)),
+    NoThunks (PredicateFailure (EraRule "MIR" era))
   ) =>
-  NoThunks (NewEpochPredicateFailure era)
+  NoThunks (ShelleyNewEpochPredFailure era)
 
-data NewEpochEvent era
-  = DeltaRewardEvent (Event (Core.EraRule "RUPD" era))
-  | RestrainedRewards EpochNo (Map.Map (Credential 'Staking (Crypto era)) (Set (Reward (Crypto era)))) (Set (Credential 'Staking (Crypto era)))
+data ShelleyNewEpochEvent era
+  = DeltaRewardEvent (Event (EraRule "RUPD" era))
+  | RestrainedRewards
+      EpochNo
+      (Map.Map (Credential 'Staking (Crypto era)) (Set (Reward (Crypto era))))
+      (Set (Credential 'Staking (Crypto era)))
   | TotalRewardEvent EpochNo (Map.Map (Credential 'Staking (Crypto era)) (Set (Reward (Crypto era))))
-  | EpochEvent (Event (Core.EraRule "EPOCH" era))
-  | MirEvent (Event (Core.EraRule "MIR" era))
+  | EpochEvent (Event (EraRule "EPOCH" era))
+  | MirEvent (Event (EraRule "MIR" era))
   | TotalAdaPotsEvent AdaPots
 
 instance
-  ( UsesTxOut era,
-    UsesValue era,
-    Embed (Core.EraRule "MIR" era) (NEWEPOCH era),
-    Embed (Core.EraRule "EPOCH" era) (NEWEPOCH era),
-    Environment (Core.EraRule "MIR" era) ~ (),
-    State (Core.EraRule "MIR" era) ~ EpochState era,
-    Signal (Core.EraRule "MIR" era) ~ (),
-    Event (Core.EraRule "RUPD" era) ~ RupdEvent (Crypto era),
-    Environment (Core.EraRule "EPOCH" era) ~ (),
-    State (Core.EraRule "EPOCH" era) ~ EpochState era,
-    Signal (Core.EraRule "EPOCH" era) ~ EpochNo,
+  ( EraTxOut era,
+    Embed (EraRule "MIR" era) (ShelleyNEWEPOCH era),
+    Embed (EraRule "EPOCH" era) (ShelleyNEWEPOCH era),
+    Environment (EraRule "MIR" era) ~ (),
+    State (EraRule "MIR" era) ~ EpochState era,
+    Signal (EraRule "MIR" era) ~ (),
+    Event (EraRule "RUPD" era) ~ RupdEvent (Crypto era),
+    Environment (EraRule "EPOCH" era) ~ (),
+    State (EraRule "EPOCH" era) ~ EpochState era,
+    Signal (EraRule "EPOCH" era) ~ EpochNo,
     Default (EpochState era),
-    HasField "_protocolVersion" (Core.PParams era) ProtVer,
-    Default (State (Core.EraRule "PPUP" era)),
-    Default (Core.PParams era),
+    HasField "_protocolVersion" (PParams era) ProtVer,
+    Default (State (EraRule "PPUP" era)),
+    Default (PParams era),
     Default (StashedAVVMAddresses era)
   ) =>
-  STS (NEWEPOCH era)
+  STS (ShelleyNEWEPOCH era)
   where
-  type State (NEWEPOCH era) = NewEpochState era
+  type State (ShelleyNEWEPOCH era) = NewEpochState era
 
-  type Signal (NEWEPOCH era) = EpochNo
+  type Signal (ShelleyNEWEPOCH era) = EpochNo
 
-  type Environment (NEWEPOCH era) = ()
+  type Environment (ShelleyNEWEPOCH era) = ()
 
-  type BaseM (NEWEPOCH era) = ShelleyBase
-  type PredicateFailure (NEWEPOCH era) = NewEpochPredicateFailure era
-  type Event (NEWEPOCH era) = NewEpochEvent era
+  type BaseM (ShelleyNEWEPOCH era) = ShelleyBase
+  type PredicateFailure (ShelleyNEWEPOCH era) = ShelleyNewEpochPredFailure era
+  type Event (ShelleyNEWEPOCH era) = ShelleyNewEpochEvent era
 
   initialRules =
     [ pure $
@@ -131,24 +135,22 @@ instance
 
 newEpochTransition ::
   forall era.
-  ( Embed (Core.EraRule "MIR" era) (NEWEPOCH era),
-    Embed (Core.EraRule "EPOCH" era) (NEWEPOCH era),
-    Event (Core.EraRule "RUPD" era) ~ RupdEvent (Crypto era),
-    Environment (Core.EraRule "MIR" era) ~ (),
-    State (Core.EraRule "MIR" era) ~ EpochState era,
-    Signal (Core.EraRule "MIR" era) ~ (),
-    Environment (Core.EraRule "EPOCH" era) ~ (),
-    State (Core.EraRule "EPOCH" era) ~ EpochState era,
-    Signal (Core.EraRule "EPOCH" era) ~ EpochNo,
-    HasField "_protocolVersion" (Core.PParams era) ProtVer,
-    UsesTxOut era,
-    UsesValue era,
-    Default (State (Core.EraRule "PPUP" era)),
-    Default (Core.PParams era),
+  ( EraTxOut era,
+    Embed (EraRule "MIR" era) (ShelleyNEWEPOCH era),
+    Embed (EraRule "EPOCH" era) (ShelleyNEWEPOCH era),
+    Environment (EraRule "MIR" era) ~ (),
+    State (EraRule "MIR" era) ~ EpochState era,
+    Signal (EraRule "MIR" era) ~ (),
+    Environment (EraRule "EPOCH" era) ~ (),
+    State (EraRule "EPOCH" era) ~ EpochState era,
+    Signal (EraRule "EPOCH" era) ~ EpochNo,
+    HasField "_protocolVersion" (PParams era) ProtVer,
+    Default (State (EraRule "PPUP" era)),
+    Default (PParams era),
     Default (StashedAVVMAddresses era),
-    Event (Core.EraRule "RUPD" era) ~ RupdEvent (Crypto era)
+    Event (EraRule "RUPD" era) ~ RupdEvent (Crypto era)
   ) =>
-  TransitionRule (NEWEPOCH era)
+  TransitionRule (ShelleyNEWEPOCH era)
 newEpochTransition = do
   TRC
     ( _,
@@ -171,12 +173,12 @@ newEpochTransition = do
       es' <- case ru of
         SNothing -> pure es
         SJust p@(Pulsing _ _) -> do
-          (ans, event) <- liftSTS (runProvM $ completeRupd p)
+          (ans, event) <- liftSTS (completeRupd p)
           tellReward (DeltaRewardEvent (RupdEvent e event))
           updateRewards ans
         SJust (Complete ru') -> updateRewards ru'
-      es'' <- trans @(Core.EraRule "MIR" era) $ TRC ((), es', ())
-      es''' <- trans @(Core.EraRule "EPOCH" era) $ TRC ((), es'', e)
+      es'' <- trans @(EraRule "MIR" era) $ TRC ((), es', ())
+      es''' <- trans @(EraRule "EPOCH" era) $ TRC ((), es'', e)
       let adaPots = totalAdaPotsES es'''
       tellEvent $ TotalAdaPotsEvent adaPots
       let ss = esSnapshots es'''
@@ -192,12 +194,18 @@ newEpochTransition = do
           }
 
 -- | tell a RupdEvent as a DeltaRewardEvent only if the map is non-empty
-tellReward :: (Event (Core.EraRule "RUPD" era) ~ RupdEvent (Crypto era)) => NewEpochEvent era -> Rule (NEWEPOCH era) rtype ()
+tellReward ::
+  (Event (EraRule "RUPD" era) ~ RupdEvent (Crypto era)) =>
+  ShelleyNewEpochEvent era ->
+  Rule (ShelleyNEWEPOCH era) rtype ()
 tellReward (DeltaRewardEvent (RupdEvent _ m)) | Map.null m = pure ()
 tellReward x = tellEvent x
 
 calculatePoolDistr :: SnapShot crypto -> PoolDistr crypto
-calculatePoolDistr (SnapShot stake delegs poolParams) =
+calculatePoolDistr = calculatePoolDistr' (const True)
+
+calculatePoolDistr' :: forall crypto. (KeyHash 'StakePool crypto -> Bool) -> SnapShot crypto -> PoolDistr crypto
+calculatePoolDistr' includeHash (SnapShot stake delegs poolParams) =
   let Coin total = sumAllStake stake
       -- total could be zero (in particular when shrinking)
       nonZeroTotal = if total == 0 then 1 else total
@@ -206,7 +214,8 @@ calculatePoolDistr (SnapShot stake delegs poolParams) =
           [ (d, c % nonZeroTotal)
             | (hk, compactCoin) <- VMap.toAscList (unStake stake),
               let Coin c = fromCompact compactCoin,
-              Just d <- [VMap.lookup hk delegs]
+              Just d <- [VMap.lookup hk delegs],
+              includeHash d
           ]
    in PoolDistr $
         Map.intersectionWith
@@ -215,13 +224,11 @@ calculatePoolDistr (SnapShot stake delegs poolParams) =
           (toMap (VMap.map _poolVrf poolParams))
 
 instance
-  ( UsesTxOut era,
-    UsesValue era,
-    STS (EPOCH era),
-    PredicateFailure (Core.EraRule "EPOCH" era) ~ EpochPredicateFailure era,
-    Event (Core.EraRule "EPOCH" era) ~ EpochEvent era
+  ( STS (ShelleyEPOCH era),
+    PredicateFailure (EraRule "EPOCH" era) ~ ShelleyEpochPredFailure era,
+    Event (EraRule "EPOCH" era) ~ ShelleyEpochEvent era
   ) =>
-  Embed (EPOCH era) (NEWEPOCH era)
+  Embed (ShelleyEPOCH era) (ShelleyNEWEPOCH era)
   where
   wrapFailed = EpochFailure
   wrapEvent = EpochEvent
@@ -229,10 +236,10 @@ instance
 instance
   ( Era era,
     Default (EpochState era),
-    PredicateFailure (Core.EraRule "MIR" era) ~ MirPredicateFailure era,
-    Event (Core.EraRule "MIR" era) ~ MirEvent era
+    PredicateFailure (EraRule "MIR" era) ~ ShelleyMirPredFailure era,
+    Event (EraRule "MIR" era) ~ ShelleyMirEvent era
   ) =>
-  Embed (MIR era) (NEWEPOCH era)
+  Embed (ShelleyMIR era) (ShelleyNEWEPOCH era)
   where
   wrapFailed = MirFailure
   wrapEvent = MirEvent

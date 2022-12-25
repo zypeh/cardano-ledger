@@ -7,17 +7,13 @@ module Test.Cardano.Ledger.Alonzo.Serialisation.Tripping where
 
 import Cardano.Binary
 import Cardano.Ledger.Alonzo (AlonzoEra)
-import Cardano.Ledger.Alonzo.Data (AuxiliaryData, BinaryData, Data (..))
-import Cardano.Ledger.Alonzo.PParams (PParams, PParamsUpdate)
-import Cardano.Ledger.Alonzo.Rules.Utxo (UtxoPredicateFailure)
-import Cardano.Ledger.Alonzo.Rules.Utxos (UtxosPredicateFailure)
-import Cardano.Ledger.Alonzo.Rules.Utxow (UtxowPredicateFail)
-import Cardano.Ledger.Alonzo.Scripts (CostModels, Script)
-import Cardano.Ledger.Alonzo.TxBody (TxBody)
+import Cardano.Ledger.Alonzo.Data (BinaryData, Data (..))
+import Cardano.Ledger.Alonzo.Rules (AlonzoUtxoPredFailure, AlonzoUtxosPredFailure, AlonzoUtxowPredFailure)
+import Cardano.Ledger.Alonzo.Scripts (CostModels)
 import Cardano.Ledger.Alonzo.TxWitness (TxWitness)
 import Cardano.Ledger.Block (Block)
+import Cardano.Ledger.Core
 import Cardano.Ledger.Shelley.Metadata (Metadata)
-import qualified Cardano.Ledger.Shelley.Tx as LTX
 import Cardano.Protocol.TPraos.BHeader (BHeader)
 import qualified Data.ByteString.Base16.Lazy as Base16
 import qualified Data.ByteString.Lazy.Char8 as BSL
@@ -90,16 +86,16 @@ tests =
         tripping @(PParamsUpdate (AlonzoEra C_Crypto)),
       testProperty "alonzo/AuxiliaryData" $
         trippingAnn @(AuxiliaryData (AlonzoEra C_Crypto)),
-      testProperty "alonzo/UtxowPredicateFail" $
-        tripping @(UtxowPredicateFail (AlonzoEra C_Crypto)),
-      testProperty "alonzo/UtxoPredicateFailure" $
-        tripping @(UtxoPredicateFailure (AlonzoEra C_Crypto)),
-      testProperty "alonzo/UtxosPredicateFailure" $
-        tripping @(UtxosPredicateFailure (AlonzoEra C_Crypto)),
+      testProperty "alonzo/AlonzoUtxowPredFailure" $
+        tripping @(AlonzoUtxowPredFailure (AlonzoEra C_Crypto)),
+      testProperty "alonzo/AlonzoUtxoPredFailure" $
+        tripping @(AlonzoUtxoPredFailure (AlonzoEra C_Crypto)),
+      testProperty "alonzo/AlonzoUtxosPredFailure" $
+        tripping @(AlonzoUtxosPredFailure (AlonzoEra C_Crypto)),
       testProperty "Script" $
         trippingAnn @(Script (AlonzoEra C_Crypto)),
       testProperty "alonzo/Tx" $
-        trippingAnn @(LTX.Tx (AlonzoEra C_Crypto)),
+        trippingAnn @(Tx (AlonzoEra C_Crypto)),
       testProperty "alonzo/Block" $
         trippingAnn @(Block (BHeader C_Crypto) (AlonzoEra C_Crypto))
     ]

@@ -24,16 +24,14 @@ where
 
 import Cardano.Ledger.BaseTypes
   ( BlocksMade (..),
-    BoundedRational (..),
     Globals (..),
     Network (..),
     Nonce,
     StrictMaybe (..),
-    epochInfoPure,
     mkCertIxPartial,
     (⭒),
   )
-import Cardano.Ledger.Block (Block, bheader)
+import Cardano.Ledger.Block (Block, bheader, txid)
 import Cardano.Ledger.Coin (Coin (..), DeltaCoin (..), addDeltaCoin, toDeltaCoin)
 import Cardano.Ledger.Compactible
 import Cardano.Ledger.Credential (Credential, Ptr (..))
@@ -46,7 +44,6 @@ import Cardano.Ledger.PoolDistr
   )
 import Cardano.Ledger.SafeHash (hashAnnotated)
 import Cardano.Ledger.Shelley (ShelleyEra)
-import Cardano.Ledger.Shelley.API (getRewardProvenance)
 import qualified Cardano.Ledger.Shelley.EpochBoundary as EB
 import Cardano.Ledger.Shelley.LedgerState
   ( NewEpochState (..),
@@ -57,7 +54,7 @@ import Cardano.Ledger.Shelley.LedgerState
     emptyRewardUpdate,
     startStep,
   )
-import Cardano.Ledger.Shelley.PParams (PParams' (..))
+import Cardano.Ledger.Shelley.PParams (ShelleyPParamsHKD (..))
 import Cardano.Ledger.Shelley.PoolRank
   ( Likelihood (..),
     NonMyopic (..),
@@ -65,10 +62,9 @@ import Cardano.Ledger.Shelley.PoolRank
     leaderProbability,
     likelihood,
   )
-import qualified Cardano.Ledger.Shelley.RewardProvenance as RP
 import Cardano.Ledger.Shelley.Rewards (Reward (..), RewardType (..))
 import Cardano.Ledger.Shelley.Tx
-  ( Tx (..),
+  ( ShelleyTx (..),
     WitnessSetHKD (..),
   )
 import Cardano.Ledger.Shelley.TxBody
@@ -81,24 +77,21 @@ import Cardano.Ledger.Shelley.TxBody
     PoolCert (..),
     PoolParams (..),
     RewardAcnt (..),
-    TxBody (..),
-    TxOut (..),
+    ShelleyTxBody (..),
+    ShelleyTxOut (..),
     Wdrl (..),
   )
 import Cardano.Ledger.Shelley.UTxO (UTxO (..), makeWitnessesVKey)
 import Cardano.Ledger.Slot
   ( BlockNo (..),
     EpochNo (..),
-    EpochSize (unEpochSize),
     SlotNo (..),
-    epochInfoSize,
   )
-import Cardano.Ledger.TxIn (TxIn (..), mkTxInPartial, txid)
+import Cardano.Ledger.TxIn (TxIn (..), mkTxInPartial)
 import Cardano.Ledger.Val ((<+>), (<->), (<×>))
 import qualified Cardano.Ledger.Val as Val
 import Cardano.Protocol.TPraos.BHeader (BHeader, bhHash, hashHeaderToNonce)
 import Cardano.Protocol.TPraos.OCert (KESPeriod (..))
-import Control.Provenance (runProvM)
 import Data.Default.Class (def)
 import Data.Group (invert)
 import qualified Data.Map.Strict as Map
@@ -107,7 +100,7 @@ import qualified Data.Sequence.Strict as StrictSeq
 import qualified Data.Set as Set
 import GHC.Exts (fromList)
 import GHC.Stack (HasCallStack)
-import Test.Cardano.Ledger.Shelley.ConcreteCryptoTypes (C_Crypto, ExMock)
+import Test.Cardano.Ledger.Shelley.ConcreteCryptoTypes (ExMock)
 import Test.Cardano.Ledger.Shelley.Examples (CHAINExample (..), testCHAINExample)
 import qualified Test.Cardano.Ledger.Shelley.Examples.Cast as Cast
 import qualified Test.Cardano.Ledger.Shelley.Examples.Combinators as C
@@ -139,7 +132,7 @@ import Test.Cardano.Ledger.Shelley.Utils
     testGlobals,
   )
 import Test.Tasty (TestTree, testGroup)
-import Test.Tasty.HUnit (Assertion, testCase, (@?=))
+import Test.Tasty.HUnit (testCase)
 
 aliceInitCoin :: Coin
 aliceInitCoin = Coin 10_000_000_000_000_000
@@ -165,8 +158,8 @@ initUTxO :: Cr.Crypto c => UTxO (ShelleyEra c)
 initUTxO =
   genesisCoins
     genesisId
-    [ TxOut Cast.aliceAddr (Val.inject aliceInitCoin),
-      TxOut Cast.bobAddr (Val.inject bobInitCoin)
+    [ ShelleyTxOut Cast.aliceAddr (Val.inject aliceInitCoin),
+      ShelleyTxOut Cast.bobAddr (Val.inject bobInitCoin)
     ]
 
 initStPoolLifetime :: forall c. Cr.Crypto c => ChainState (ShelleyEra c)
@@ -191,11 +184,11 @@ dariaMIR = Coin 99
 feeTx1 :: Coin
 feeTx1 = Coin 3
 
-txbodyEx1 :: Cr.Crypto c => TxBody (ShelleyEra c)
+txbodyEx1 :: Cr.Crypto c => ShelleyTxBody (ShelleyEra c)
 txbodyEx1 =
-  TxBody
+  ShelleyTxBody
     (Set.fromList [TxIn genesisId minBound])
-    (StrictSeq.fromList [TxOut Cast.aliceAddr (Val.inject aliceCoinEx1)])
+    (StrictSeq.fromList [ShelleyTxOut Cast.aliceAddr (Val.inject aliceCoinEx1)])
     ( StrictSeq.fromList
         ( [ DCertDeleg (RegKey Cast.aliceSHK),
             DCertDeleg (RegKey Cast.bobSHK),
@@ -221,9 +214,9 @@ txbodyEx1 =
     SNothing
     SNothing
 
-txEx1 :: forall c. (ExMock (Crypto (ShelleyEra c))) => Tx (ShelleyEra c)
+txEx1 :: forall c. (ExMock (Crypto (ShelleyEra c))) => ShelleyTx (ShelleyEra c)
 txEx1 =
-  Tx
+  ShelleyTx
     txbodyEx1
     mempty
       { addrWits =
@@ -297,14 +290,14 @@ aliceCoinEx2Ptr = aliceCoinEx1 <-> (aliceCoinEx2Base <+> feeTx2)
 
 -- | The transaction delegates Alice's and Bob's stake to Alice's pool.
 --   Additionally, we split Alice's ADA between a base address and a pointer address.
-txbodyEx2 :: forall c. Cr.Crypto c => TxBody (ShelleyEra c)
+txbodyEx2 :: forall c. Cr.Crypto c => ShelleyTxBody (ShelleyEra c)
 txbodyEx2 =
-  TxBody
+  ShelleyTxBody
     { _inputs = Set.fromList [TxIn (txid (txbodyEx1 @c)) minBound],
       _outputs =
         StrictSeq.fromList
-          [ TxOut Cast.aliceAddr (Val.inject aliceCoinEx2Base),
-            TxOut Cast.alicePtrAddr (Val.inject aliceCoinEx2Ptr)
+          [ ShelleyTxOut Cast.aliceAddr (Val.inject aliceCoinEx2Base),
+            ShelleyTxOut Cast.alicePtrAddr (Val.inject aliceCoinEx2Ptr)
           ],
       _certs =
         StrictSeq.fromList
@@ -318,9 +311,9 @@ txbodyEx2 =
       _mdHash = SNothing
     }
 
-txEx2 :: forall c. (ExMock (Crypto (ShelleyEra c))) => Tx (ShelleyEra c)
+txEx2 :: forall c. (ExMock (Crypto (ShelleyEra c))) => ShelleyTx (ShelleyEra c)
 txEx2 =
-  Tx
+  ShelleyTx
     txbodyEx2
     mempty
       { addrWits =
@@ -356,7 +349,7 @@ makePulser ::
   PulsingRewUpdate (Crypto era)
 makePulser bs cs = p
   where
-    (p, _) =
+    p =
       startStep
         (epochSize $ EpochNo 0)
         bs
@@ -378,7 +371,7 @@ makeCompletedPulser ::
   BlocksMade (Crypto era) ->
   ChainState era ->
   PulsingRewUpdate (Crypto era)
-makeCompletedPulser bs cs = Complete . fst . runShelleyBase . runProvM . completeRupd $ makePulser bs cs
+makeCompletedPulser bs cs = Complete . fst . runShelleyBase . completeRupd $ makePulser bs cs
 
 pulserEx2 :: forall c. (ExMock (Crypto (ShelleyEra c))) => PulsingRewUpdate c
 pulserEx2 = makeCompletedPulser (BlocksMade mempty) expectedStEx1
@@ -468,11 +461,11 @@ feeTx4 = Coin 5
 aliceCoinEx4Base :: Coin
 aliceCoinEx4Base = aliceCoinEx2Base <-> feeTx4
 
-txbodyEx4 :: forall c. Cr.Crypto c => TxBody (ShelleyEra c)
+txbodyEx4 :: forall c. Cr.Crypto c => ShelleyTxBody (ShelleyEra c)
 txbodyEx4 =
-  TxBody
+  ShelleyTxBody
     { _inputs = Set.fromList [TxIn (txid txbodyEx2) minBound],
-      _outputs = StrictSeq.fromList [TxOut Cast.aliceAddr (Val.inject aliceCoinEx4Base)],
+      _outputs = StrictSeq.fromList [ShelleyTxOut Cast.aliceAddr (Val.inject aliceCoinEx4Base)],
       _certs =
         StrictSeq.fromList
           [DCertDeleg (Delegate $ Delegation Cast.carlSHK (hk Cast.alicePoolKeys))],
@@ -483,9 +476,9 @@ txbodyEx4 =
       _mdHash = SNothing
     }
 
-txEx4 :: forall c. (ExMock (Crypto (ShelleyEra c))) => Tx (ShelleyEra c)
+txEx4 :: forall c. (ExMock (Crypto (ShelleyEra c))) => ShelleyTx (ShelleyEra c)
 txEx4 =
-  Tx
+  ShelleyTx
     txbodyEx4
     mempty
       { addrWits =
@@ -794,38 +787,6 @@ expectedStEx8 =
 poolLifetime8 :: (ExMock (Crypto (ShelleyEra c))) => CHAINExample (BHeader c) (ShelleyEra c)
 poolLifetime8 = CHAINExample expectedStEx7 blockEx8 (Right expectedStEx8)
 
-rewardInfoEx8 :: RP.RewardProvenance C_Crypto
-rewardInfoEx8 = snd $ getRewardProvenance testGlobals (chainNes expectedStEx8)
-
-rewardInfoTest :: Assertion
-rewardInfoTest = rewardInfoEx8 @?= expected
-  where
-    expected =
-      RP.RewardProvenance
-        { RP.spe = unEpochSize . runShelleyBase $ epochInfoSize (epochInfoPure testGlobals) (EpochNo 0),
-          RP.blocks =
-            BlocksMade $
-              Map.singleton (_poolId $ Cast.alicePoolParams) 1,
-          RP.maxLL = supply,
-          RP.deltaR1 = rpot,
-          RP.deltaR2 = Coin 1256640000001,
-          RP.r = rewardPot8,
-          RP.totalStake = totstake,
-          RP.blocksCount = 1,
-          RP.d = unboundRational $ _d ppEx,
-          RP.expBlocks = 45,
-          RP.eta = 1 % 45,
-          RP.rPot = rpot,
-          RP.deltaT1 = deltaT8',
-          RP.activeStake = activestake,
-          RP.pools = mempty,
-          RP.desirabilities = mempty
-        }
-    rpot = Coin 1586666666666
-    supply = Coin . fromIntegral . maxLovelaceSupply $ testGlobals
-    totstake = supply <-> reserves7
-    activestake = aliceCoinEx2Base <> aliceCoinEx2Ptr <> bobInitCoin
-
 --
 -- Block 9, Slot 410, Epoch 4
 --
@@ -891,11 +852,11 @@ bobAda10 =
     <+> _keyDeposit ppEx
     <-> feeTx10
 
-txbodyEx10 :: Cr.Crypto c => TxBody (ShelleyEra c)
+txbodyEx10 :: Cr.Crypto c => ShelleyTxBody (ShelleyEra c)
 txbodyEx10 =
-  TxBody
+  ShelleyTxBody
     (Set.fromList [mkTxInPartial genesisId 1])
-    (StrictSeq.singleton $ TxOut Cast.bobAddr (Val.inject bobAda10))
+    (StrictSeq.singleton $ ShelleyTxOut Cast.bobAddr (Val.inject bobAda10))
     (StrictSeq.fromList [DCertDeleg (DeRegKey Cast.bobSHK)])
     (Wdrl $ Map.singleton (RewardAcnt Testnet Cast.bobSHK) bobRAcnt8)
     feeTx10
@@ -903,9 +864,9 @@ txbodyEx10 =
     SNothing
     SNothing
 
-txEx10 :: forall c. (ExMock (Crypto (ShelleyEra c))) => Tx (ShelleyEra c)
+txEx10 :: forall c. (ExMock (Crypto (ShelleyEra c))) => ShelleyTx (ShelleyEra c)
 txEx10 =
-  Tx
+  ShelleyTx
     txbodyEx10
     mempty
       { addrWits =
@@ -956,11 +917,11 @@ aliceCoinEx11Ptr = aliceCoinEx4Base <-> feeTx11
 aliceRetireEpoch :: EpochNo
 aliceRetireEpoch = EpochNo 5
 
-txbodyEx11 :: forall c. Cr.Crypto c => TxBody (ShelleyEra c)
+txbodyEx11 :: forall c. Cr.Crypto c => ShelleyTxBody (ShelleyEra c)
 txbodyEx11 =
-  TxBody
+  ShelleyTxBody
     (Set.fromList [TxIn (txid txbodyEx4) minBound])
-    (StrictSeq.singleton $ TxOut Cast.alicePtrAddr (Val.inject aliceCoinEx11Ptr))
+    (StrictSeq.singleton $ ShelleyTxOut Cast.alicePtrAddr (Val.inject aliceCoinEx11Ptr))
     (StrictSeq.fromList [DCertPool (RetirePool (hk Cast.alicePoolKeys) aliceRetireEpoch)])
     (Wdrl Map.empty)
     feeTx11
@@ -968,9 +929,9 @@ txbodyEx11 =
     SNothing
     SNothing
 
-txEx11 :: forall c. (ExMock (Crypto (ShelleyEra c))) => Tx (ShelleyEra c)
+txEx11 :: forall c. ExMock (Crypto (ShelleyEra c)) => ShelleyTx (ShelleyEra c)
 txEx11 =
-  Tx
+  ShelleyTx
     txbodyEx11
     mempty
       { addrWits =
@@ -1121,6 +1082,5 @@ poolLifetimeExample =
       testCase "apply a nontrivial rewards" $ testCHAINExample poolLifetime9,
       testCase "drain reward account and deregister" $ testCHAINExample poolLifetime10,
       testCase "stage stake pool retirement" $ testCHAINExample poolLifetime11,
-      testCase "reap stake pool" $ testCHAINExample poolLifetime12,
-      testCase "reward info" rewardInfoTest
+      testCase "reap stake pool" $ testCHAINExample poolLifetime12
     ]

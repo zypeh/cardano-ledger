@@ -3,6 +3,7 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE StandaloneKindSignatures #-}
 
 -- | The UTxO is large and is kept in-memory. It is important to use as
 -- small a representation as possible to keep overall memory use reasonable.
@@ -36,6 +37,7 @@ import Cardano.Chain.Common.Compact
 import Cardano.Chain.Common.Lovelace (Lovelace)
 import Cardano.Chain.UTxO.Tx (TxId, TxIn (..), TxOut (..))
 import Cardano.Crypto.Hashing (hashToBytes, unsafeHashFromBytes)
+import Cardano.HeapWords
 import Cardano.Prelude
 import Data.Binary.Get (Get, getWord64le, runGet)
 import Data.Binary.Put (Put, putWord64le, runPut)
@@ -49,6 +51,7 @@ import NoThunks.Class (NoThunks (..))
 -- | A compact in-memory representation for a 'TxIn'.
 --
 -- Convert using 'toCompactTxIn' and 'fromCompactTxIn'.
+type CompactTxIn :: Type
 data CompactTxIn
   = CompactTxInUtxo
       {-# UNPACK #-} !CompactTxId
@@ -105,6 +108,7 @@ fromCompactTxIn (CompactTxInUtxo compactTxId txIndex) =
 -- Convert using 'toCompactTxId' and 'fromCompactTxId'.
 --
 -- Compared to a normal 'TxId', this takes 5 heap words rather than 12.
+type CompactTxId :: Type
 data CompactTxId
   = CompactTxId
       {-# UNPACK #-} !Word64
@@ -182,6 +186,7 @@ fromCompactTxId =
 -- | A compact in-memory representation for a 'TxOut'.
 --
 -- Convert using 'toCompactTxOut' and 'fromCompactTxOut'.
+type CompactTxOut :: Type
 data CompactTxOut
   = CompactTxOut
       {-# UNPACK #-} !CompactAddress

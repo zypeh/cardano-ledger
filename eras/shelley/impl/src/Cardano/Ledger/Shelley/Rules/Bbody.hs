@@ -11,11 +11,11 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module Cardano.Ledger.Shelley.Rules.Bbody
-  ( BBODY,
-    BbodyState (..),
+  ( ShelleyBBODY,
+    ShelleyBbodyState (..),
     BbodyEnv (..),
-    BbodyPredicateFailure (..),
-    BbodyEvent (..),
+    ShelleyBbodyPredFailure (..),
+    ShelleyBbodyEvent (..),
     PredicateFailure,
     State,
   )
@@ -24,19 +24,14 @@ where
 import Cardano.Ledger.BHeaderView (BHeaderView (..), isOverlaySlot)
 import Cardano.Ledger.BaseTypes (BlocksMade, ShelleyBase, UnitInterval, epochInfoPure)
 import Cardano.Ledger.Block (Block (..))
-import qualified Cardano.Ledger.Core as Core
-import Cardano.Ledger.Era (Era (Crypto), SupportsSegWit (fromTxSeq, hashTxSeq))
-import qualified Cardano.Ledger.Era as Era
-import Cardano.Ledger.Hashes (EraIndependentBlockBody, EraIndependentTxBody)
+import Cardano.Ledger.Core
 import Cardano.Ledger.Keys (DSignable, Hash, coerceKeyRole)
-import Cardano.Ledger.Serialization (ToCBORGroup)
 import Cardano.Ledger.Shelley.BlockChain (bBodySize, incrBlocks)
-import Cardano.Ledger.Shelley.Constraints (UsesAuxiliary, UsesTxBody)
 import Cardano.Ledger.Shelley.LedgerState
   ( AccountState,
     LedgerState,
   )
-import Cardano.Ledger.Shelley.Rules.Ledgers (LedgersEnv (..))
+import Cardano.Ledger.Shelley.Rules.Ledgers (ShelleyLedgersEnv (..))
 import Cardano.Ledger.Slot (epochInfoEpoch, epochInfoFirst)
 import Control.Monad.Trans.Reader (asks)
 import Control.State.Transition
@@ -52,98 +47,95 @@ import Control.State.Transition
 import Data.Sequence (Seq)
 import qualified Data.Sequence.Strict as StrictSeq
 import GHC.Generics (Generic)
-import GHC.Records
+import GHC.Records (HasField (..))
 import NoThunks.Class (NoThunks (..))
 
-data BBODY era
+data ShelleyBBODY era
 
-data BbodyState era
+data ShelleyBbodyState era
   = BbodyState (LedgerState era) (BlocksMade (Crypto era))
 
-deriving stock instance Show (LedgerState era) => Show (BbodyState era)
+deriving stock instance Show (LedgerState era) => Show (ShelleyBbodyState era)
 
-deriving stock instance Eq (LedgerState era) => Eq (BbodyState era)
+deriving stock instance Eq (LedgerState era) => Eq (ShelleyBbodyState era)
 
 data BbodyEnv era = BbodyEnv
-  { bbodyPp :: Core.PParams era,
+  { bbodyPp :: PParams era,
     bbodyAccount :: AccountState
   }
 
-data BbodyPredicateFailure era
+data ShelleyBbodyPredFailure era
   = WrongBlockBodySizeBBODY
       !Int -- Actual Body Size
       !Int -- Claimed Body Size in Header
   | InvalidBodyHashBBODY
       !(Hash (Crypto era) EraIndependentBlockBody) -- Actual Hash
       !(Hash (Crypto era) EraIndependentBlockBody) -- Claimed Hash
-  | LedgersFailure (PredicateFailure (Core.EraRule "LEDGERS" era)) -- Subtransition Failures
+  | LedgersFailure (PredicateFailure (EraRule "LEDGERS" era)) -- Subtransition Failures
   deriving (Generic)
 
-newtype BbodyEvent era
-  = LedgersEvent (Event (Core.EraRule "LEDGERS" era))
+newtype ShelleyBbodyEvent era
+  = LedgersEvent (Event (EraRule "LEDGERS" era))
 
 deriving stock instance
   ( Era era,
-    Show (PredicateFailure (Core.EraRule "LEDGERS" era))
+    Show (PredicateFailure (EraRule "LEDGERS" era))
   ) =>
-  Show (BbodyPredicateFailure era)
+  Show (ShelleyBbodyPredFailure era)
 
 deriving stock instance
   ( Era era,
-    Eq (PredicateFailure (Core.EraRule "LEDGERS" era))
+    Eq (PredicateFailure (EraRule "LEDGERS" era))
   ) =>
-  Eq (BbodyPredicateFailure era)
+  Eq (ShelleyBbodyPredFailure era)
 
 instance
   ( Era era,
-    NoThunks (PredicateFailure (Core.EraRule "LEDGERS" era))
+    NoThunks (PredicateFailure (EraRule "LEDGERS" era))
   ) =>
-  NoThunks (BbodyPredicateFailure era)
+  NoThunks (ShelleyBbodyPredFailure era)
 
 instance
-  ( UsesTxBody era,
-    UsesAuxiliary era,
-    ToCBORGroup (Era.TxSeq era),
+  ( EraSegWits era,
     DSignable (Crypto era) (Hash (Crypto era) EraIndependentTxBody),
-    Embed (Core.EraRule "LEDGERS" era) (BBODY era),
-    Environment (Core.EraRule "LEDGERS" era) ~ LedgersEnv era,
-    State (Core.EraRule "LEDGERS" era) ~ LedgerState era,
-    Signal (Core.EraRule "LEDGERS" era) ~ Seq (Core.Tx era),
-    HasField "_d" (Core.PParams era) UnitInterval
+    Embed (EraRule "LEDGERS" era) (ShelleyBBODY era),
+    Environment (EraRule "LEDGERS" era) ~ ShelleyLedgersEnv era,
+    State (EraRule "LEDGERS" era) ~ LedgerState era,
+    Signal (EraRule "LEDGERS" era) ~ Seq (Tx era),
+    HasField "_d" (PParams era) UnitInterval
   ) =>
-  STS (BBODY era)
+  STS (ShelleyBBODY era)
   where
   type
-    State (BBODY era) =
-      BbodyState era
+    State (ShelleyBBODY era) =
+      ShelleyBbodyState era
 
   type
-    Signal (BBODY era) =
+    Signal (ShelleyBBODY era) =
       Block (BHeaderView (Crypto era)) era
 
-  type Environment (BBODY era) = BbodyEnv era
+  type Environment (ShelleyBBODY era) = BbodyEnv era
 
-  type BaseM (BBODY era) = ShelleyBase
+  type BaseM (ShelleyBBODY era) = ShelleyBase
 
-  type PredicateFailure (BBODY era) = BbodyPredicateFailure era
+  type PredicateFailure (ShelleyBBODY era) = ShelleyBbodyPredFailure era
 
-  type Event (BBODY era) = BbodyEvent era
+  type Event (ShelleyBBODY era) = ShelleyBbodyEvent era
 
   initialRules = []
   transitionRules = [bbodyTransition]
 
 bbodyTransition ::
   forall era.
-  ( STS (BBODY era),
-    UsesTxBody era,
-    ToCBORGroup (Era.TxSeq era),
-    Embed (Core.EraRule "LEDGERS" era) (BBODY era),
-    Environment (Core.EraRule "LEDGERS" era) ~ LedgersEnv era,
-    State (Core.EraRule "LEDGERS" era) ~ LedgerState era,
-    Signal (Core.EraRule "LEDGERS" era) ~ Seq (Core.Tx era),
-    HasField "_d" (Core.PParams era) UnitInterval
+  ( STS (ShelleyBBODY era),
+    EraSegWits era,
+    Embed (EraRule "LEDGERS" era) (ShelleyBBODY era),
+    Environment (EraRule "LEDGERS" era) ~ ShelleyLedgersEnv era,
+    State (EraRule "LEDGERS" era) ~ LedgerState era,
+    Signal (EraRule "LEDGERS" era) ~ Seq (Tx era),
+    HasField "_d" (PParams era) UnitInterval
   ) =>
-  TransitionRule (BBODY era)
+  TransitionRule (ShelleyBBODY era)
 bbodyTransition =
   judgmentContext
     >>= \( TRC
@@ -159,10 +151,11 @@ bbodyTransition =
         actualBodySize == fromIntegral (bhviewBSize bhview)
           ?! WrongBlockBodySizeBBODY actualBodySize (fromIntegral $ bhviewBSize bhview)
 
-        actualBodyHash == bhviewBHash bhview ?! InvalidBodyHashBBODY actualBodyHash (bhviewBHash bhview)
+        actualBodyHash == bhviewBHash bhview
+          ?! InvalidBodyHashBBODY actualBodyHash (bhviewBHash bhview)
 
         ls' <-
-          trans @(Core.EraRule "LEDGERS" era) $
+          trans @(EraRule "LEDGERS" era) $
             TRC (LedgersEnv (bhviewSlot bhview) pp account, ls, StrictSeq.fromStrict txs)
 
         -- Note that this may not actually be a stake pool - it could be a genesis key
@@ -174,25 +167,19 @@ bbodyTransition =
           ei <- asks epochInfoPure
           e <- epochInfoEpoch ei slot
           epochInfoFirst ei e
-        pure $
-          BbodyState
-            ls'
-            ( incrBlocks
-                (isOverlaySlot firstSlotNo (getField @"_d" pp) slot)
-                hkAsStakePool
-                b
-            )
+        let isOverlay = isOverlaySlot firstSlotNo (getField @"_d" pp) slot
+        pure $ BbodyState ls' (incrBlocks isOverlay hkAsStakePool b)
 
 instance
   forall era ledgers.
   ( Era era,
     BaseM ledgers ~ ShelleyBase,
-    ledgers ~ Core.EraRule "LEDGERS" era,
+    ledgers ~ EraRule "LEDGERS" era,
     STS ledgers,
     DSignable (Crypto era) (Hash (Crypto era) EraIndependentTxBody),
     Era era
   ) =>
-  Embed ledgers (BBODY era)
+  Embed ledgers (ShelleyBBODY era)
   where
   wrapFailed = LedgersFailure
   wrapEvent = LedgersEvent

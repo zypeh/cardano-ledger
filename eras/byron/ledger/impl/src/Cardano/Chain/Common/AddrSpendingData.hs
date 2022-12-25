@@ -3,6 +3,7 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE StandaloneKindSignatures #-}
 {-# LANGUAGE TypeApplications #-}
 
 module Cardano.Chain.Common.AddrSpendingData
@@ -24,6 +25,7 @@ import Cardano.Binary
     szCases,
   )
 import Cardano.Crypto.Signing (RedeemVerificationKey, VerificationKey)
+import Cardano.HeapWords
 import Cardano.Prelude
 import Data.Aeson (ToJSON)
 import Formatting (bprint, build)
@@ -32,6 +34,7 @@ import NoThunks.Class (NoThunks (..))
 
 -- | Data which is bound to an address and must be revealed in order to spend
 --   lovelace belonging to this address.
+type AddrSpendingData :: Type
 data AddrSpendingData
   = -- | Funds can be spent by revealing a 'VerificationKey' and providing a valid
     --   signature
@@ -72,6 +75,7 @@ instance FromCBOR AddrSpendingData where
 -- | Type of an address. It corresponds to constructors of 'AddrSpendingData'.
 --   It's separated, because 'Address' doesn't store 'AddrSpendingData', but we
 --   want to know its type.
+type AddrType :: Type
 data AddrType
   = ATVerKey
   | ATRedeem

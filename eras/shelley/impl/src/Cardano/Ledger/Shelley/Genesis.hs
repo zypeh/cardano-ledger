@@ -32,11 +32,10 @@ import qualified Cardano.Crypto.Hash.Class as Crypto
 import Cardano.Crypto.KES.Class (totalPeriodsKES)
 import Cardano.Ledger.Address
 import Cardano.Ledger.BaseTypes
-import Cardano.Ledger.Coin
+import Cardano.Ledger.Coin (Coin)
+import Cardano.Ledger.Core
 import Cardano.Ledger.Crypto (HASH, KES)
 import qualified Cardano.Ledger.Crypto as CC (Crypto)
-import Cardano.Ledger.Era
-import Cardano.Ledger.Hashes (EraIndependentTxBody)
 import Cardano.Ledger.Keys
 import Cardano.Ledger.SafeHash (unsafeMakeSafeHash)
 import Cardano.Ledger.Serialization
@@ -46,18 +45,18 @@ import Cardano.Ledger.Serialization
     utcTimeFromCBOR,
     utcTimeToCBOR,
   )
-import Cardano.Ledger.Shelley.Constraints (UsesTxOut (..))
 import Cardano.Ledger.Shelley.PParams
 import Cardano.Ledger.Shelley.StabilityWindow
 import Cardano.Ledger.Shelley.TxBody (PoolParams (..))
-import Cardano.Ledger.Shelley.UTxO
+import Cardano.Ledger.Shelley.UTxO (UTxO (UTxO))
 import Cardano.Ledger.TxIn (TxId (..), TxIn (..))
 import qualified Cardano.Ledger.Val as Val
-import Cardano.Slotting.EpochInfo
+import Cardano.Slotting.EpochInfo (EpochInfo)
 import Cardano.Slotting.Slot (EpochSize (..))
 import Cardano.Slotting.Time (SystemStart (SystemStart))
 import Data.Aeson (FromJSON (..), ToJSON (..), (.!=), (.:), (.:?), (.=))
 import qualified Data.Aeson as Aeson
+import qualified Data.ListMap as LM
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (catMaybes)
@@ -85,14 +84,14 @@ data ShelleyGenesisStaking crypto = ShelleyGenesisStaking
     --   The key in this map is the hash of the public key of the _pool_. This
     --   need not correspond to any payment or staking key, but must correspond
     --   to the cold key held by 'TPraosIsCoreNode'.
-    sgsPools :: !(Map (KeyHash 'StakePool crypto) (PoolParams crypto)),
+    sgsPools :: LM.ListMap (KeyHash 'StakePool crypto) (PoolParams crypto),
     -- | Stake-holding key hash credentials and the pools to delegate that stake
     -- to. We require the raw staking key hash in order to:
     --
     -- - Avoid pointer addresses, which would be tricky when there's no slot or
     --   transaction to point to.
     -- - Avoid script credentials.
-    sgsStake :: !(Map (KeyHash 'Staking crypto) (KeyHash 'StakePool crypto))
+    sgsStake :: LM.ListMap (KeyHash 'Staking crypto) (KeyHash 'StakePool crypto)
   }
   deriving stock (Eq, Show, Generic)
 
@@ -100,21 +99,21 @@ instance NoThunks (ShelleyGenesisStaking crypto)
 
 instance CC.Crypto crypto => ToCBOR (ShelleyGenesisStaking crypto) where
   toCBOR (ShelleyGenesisStaking pools stake) =
-    encodeListLen 2 <> mapToCBOR pools <> mapToCBOR stake
+    encodeListLen 2 <> toCBOR pools <> toCBOR stake
 
 instance CC.Crypto crypto => FromCBOR (ShelleyGenesisStaking crypto) where
   fromCBOR = do
     decodeRecordNamed "ShelleyGenesisStaking" (const 2) $ do
-      pools <- mapFromCBOR
-      stake <- mapFromCBOR
+      pools <- fromCBOR
+      stake <- fromCBOR
       pure $ ShelleyGenesisStaking pools stake
 
 -- | Empty genesis staking
 emptyGenesisStaking :: ShelleyGenesisStaking crypto
 emptyGenesisStaking =
   ShelleyGenesisStaking
-    { sgsPools = Map.empty,
-      sgsStake = Map.empty
+    { sgsPools = mempty,
+      sgsStake = mempty
     }
 
 -- | Shelley genesis information
@@ -135,10 +134,10 @@ data ShelleyGenesis era = ShelleyGenesis
     sgSlotLength :: !NominalDiffTime,
     sgUpdateQuorum :: !Word64,
     sgMaxLovelaceSupply :: !Word64,
-    sgProtocolParams :: !(PParams era),
+    sgProtocolParams :: !(ShelleyPParams era),
     sgGenDelegs :: !(Map (KeyHash 'Genesis (Crypto era)) (GenDelegPair (Crypto era))),
-    sgInitialFunds :: !(Map (Addr (Crypto era)) Coin),
-    sgStaking :: !(ShelleyGenesisStaking (Crypto era))
+    sgInitialFunds :: LM.ListMap (Addr (Crypto era)) Coin,
+    sgStaking :: ShelleyGenesisStaking (Crypto era)
   }
   deriving stock (Eq, Show, Generic)
 
@@ -148,24 +147,49 @@ sgActiveSlotCoeff :: ShelleyGenesis era -> ActiveSlotCoeff
 sgActiveSlotCoeff = mkActiveSlotCoeff . sgActiveSlotsCoeff
 
 instance Era era => ToJSON (ShelleyGenesis era) where
-  toJSON sg =
-    Aeson.object
-      [ "systemStart" .= sgSystemStart sg,
-        "networkMagic" .= sgNetworkMagic sg,
-        "networkId" .= sgNetworkId sg,
-        "activeSlotsCoeff" .= sgActiveSlotsCoeff sg,
-        "securityParam" .= sgSecurityParam sg,
-        "epochLength" .= sgEpochLength sg,
-        "slotsPerKESPeriod" .= sgSlotsPerKESPeriod sg,
-        "maxKESEvolutions" .= sgMaxKESEvolutions sg,
-        "slotLength" .= sgSlotLength sg,
-        "updateQuorum" .= sgUpdateQuorum sg,
-        "maxLovelaceSupply" .= sgMaxLovelaceSupply sg,
-        "protocolParams" .= sgProtocolParams sg,
-        "genDelegs" .= sgGenDelegs sg,
-        "initialFunds" .= sgInitialFunds sg,
-        "staking" .= sgStaking sg
-      ]
+  toJSON = Aeson.object . toShelleyGenesisPairs
+  toEncoding = Aeson.pairs . mconcat . toShelleyGenesisPairs
+
+toShelleyGenesisPairs ::
+  (Aeson.KeyValue a, CC.Crypto (Crypto era)) =>
+  ShelleyGenesis era ->
+  [a]
+toShelleyGenesisPairs
+  ShelleyGenesis
+    { sgSystemStart,
+      sgNetworkMagic,
+      sgNetworkId,
+      sgActiveSlotsCoeff,
+      sgSecurityParam,
+      sgEpochLength,
+      sgSlotsPerKESPeriod,
+      sgMaxKESEvolutions,
+      sgSlotLength,
+      sgUpdateQuorum,
+      sgMaxLovelaceSupply,
+      sgProtocolParams,
+      sgGenDelegs,
+      sgInitialFunds,
+      sgStaking
+    } =
+    let !strictSgInitialFunds = sgInitialFunds
+        !strictSgStaking = sgStaking
+     in [ "systemStart" .= sgSystemStart,
+          "networkMagic" .= sgNetworkMagic,
+          "networkId" .= sgNetworkId,
+          "activeSlotsCoeff" .= sgActiveSlotsCoeff,
+          "securityParam" .= sgSecurityParam,
+          "epochLength" .= sgEpochLength,
+          "slotsPerKESPeriod" .= sgSlotsPerKESPeriod,
+          "maxKESEvolutions" .= sgMaxKESEvolutions,
+          "slotLength" .= sgSlotLength,
+          "updateQuorum" .= sgUpdateQuorum,
+          "maxLovelaceSupply" .= sgMaxLovelaceSupply,
+          "protocolParams" .= sgProtocolParams,
+          "genDelegs" .= sgGenDelegs,
+          "initialFunds" .= strictSgInitialFunds,
+          "staking" .= strictSgStaking
+        ]
 
 instance Era era => FromJSON (ShelleyGenesis era) where
   parseJSON =
@@ -193,11 +217,17 @@ instance Era era => FromJSON (ShelleyGenesis era) where
          in UTCTime day time
 
 instance CC.Crypto crypto => ToJSON (ShelleyGenesisStaking crypto) where
-  toJSON sgs =
-    Aeson.object
-      [ "pools" .= sgsPools sgs,
-        "stake" .= sgsStake sgs
-      ]
+  toJSON = Aeson.object . toShelleyGenesisStakingPairs
+  toEncoding = Aeson.pairs . mconcat . toShelleyGenesisStakingPairs
+
+toShelleyGenesisStakingPairs ::
+  (Aeson.KeyValue a, CC.Crypto crypto) =>
+  ShelleyGenesisStaking crypto ->
+  [a]
+toShelleyGenesisStakingPairs ShelleyGenesisStaking {sgsPools, sgsStake} =
+  [ "pools" .= sgsPools,
+    "stake" .= sgsStake
+  ]
 
 instance CC.Crypto crypto => FromJSON (ShelleyGenesisStaking crypto) where
   parseJSON =
@@ -239,7 +269,7 @@ instance Era era => ToCBOR (ShelleyGenesis era) where
         <> toCBOR sgMaxLovelaceSupply
         <> toCBOR sgProtocolParams
         <> mapToCBOR sgGenDelegs
-        <> mapToCBOR sgInitialFunds
+        <> toCBOR sgInitialFunds
         <> toCBOR sgStaking
 
 instance Era era => FromCBOR (ShelleyGenesis era) where
@@ -258,7 +288,7 @@ instance Era era => FromCBOR (ShelleyGenesis era) where
       sgMaxLovelaceSupply <- fromCBOR
       sgProtocolParams <- fromCBOR
       sgGenDelegs <- mapFromCBOR
-      sgInitialFunds <- mapFromCBOR
+      sgInitialFunds <- fromCBOR
       sgStaking <- fromCBOR
       pure $
         ShelleyGenesis
@@ -284,16 +314,16 @@ instance Era era => FromCBOR (ShelleyGenesis era) where
 
 genesisUTxO ::
   forall era.
-  (Era era, UsesTxOut era) =>
+  EraTxOut era =>
   ShelleyGenesis era ->
   UTxO era
 genesisUTxO genesis =
   UTxO $
     Map.fromList
       [ (txIn, txOut)
-        | (addr, amount) <- Map.toList (sgInitialFunds genesis),
+        | (addr, amount) <- LM.unListMap (sgInitialFunds genesis),
           let txIn = initialFundsPseudoTxIn addr
-              txOut = makeTxOut (Proxy @era) addr (Val.inject amount)
+              txOut = mkBasicTxOut addr (Val.inject amount)
       ]
 
 -- | Compute the 'TxIn' of the initial UTxO pseudo-transaction corresponding

@@ -28,18 +28,16 @@ import Cardano.Ledger.Credential (Credential (..), StakeReference (..))
 import Cardano.Ledger.Keys (KeyHash, KeyRole (Staking))
 import Cardano.Ledger.Shelley.Genesis (ShelleyGenesisStaking (..))
 import qualified Cardano.Ledger.Shelley.LedgerState as LS
-import Cardano.Ledger.Shelley.PParams (PParams' (..))
-import Cardano.Ledger.Shelley.RewardProvenance (RewardProvenance)
-import Cardano.Ledger.Shelley.TxBody (PoolParams (..), TxOut (..))
+import Cardano.Ledger.Shelley.PParams (ShelleyPParamsHKD (..))
+import Cardano.Ledger.Shelley.TxBody (PoolParams (..), ShelleyTxOut (..))
 import Cardano.Ledger.Shelley.UTxO (UTxO (..))
 import Cardano.Slotting.EpochInfo
 import Cardano.Slotting.Slot (EpochNo)
 import Control.Monad.Reader (runReader, runReaderT)
-import Control.Provenance (runProvM, runWithProvM)
 import Control.State.Transition.Extended (IRC (..), TRC (..), applySTS)
-import Data.Default.Class (Default (def))
 import Data.Either (fromRight)
 import Data.Functor.Identity (runIdentity)
+import qualified Data.ListMap as LM
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import Data.Proxy (Proxy (..))
@@ -91,7 +89,7 @@ genChainInEpoch epoch = do
           . LS.nesEs
           $ chainNes genesisChainState
       initUtxoAddrs =
-        Maybe.mapMaybe (\(TxOut addr _) -> addrToKeyHash addr)
+        Maybe.mapMaybe (\(ShelleyTxOut addr _) -> addrToKeyHash addr)
           . Map.elems
           . unUTxO
           $ initUtxo
@@ -136,7 +134,7 @@ genChainInEpoch epoch = do
     mkGenesisStaking stakeMap =
       ShelleyGenesisStaking
         { sgsPools =
-            Map.fromList
+            LM.ListMap
               [ (hk, pp)
                 | (AllIssuerKeys {vrf, hk}, (owner : _)) <- stakeMap,
                   let pp =
@@ -153,7 +151,7 @@ genChainInEpoch epoch = do
                           }
               ],
           sgsStake =
-            Map.fromList
+            LM.ListMap
               [ (dlg, hk)
                 | (AllIssuerKeys {hk}, dlgs) <- stakeMap,
                   dlg <- dlgs
@@ -179,7 +177,7 @@ createRUpd ::
 createRUpd globals cs =
   runIdentity $
     runReaderT
-      (runProvM (LS.createRUpd epochSize bm es total asc k))
+      (LS.createRUpd epochSize bm es total asc k)
       globals
   where
     nes = chainNes cs
@@ -196,11 +194,11 @@ createRUpd globals cs =
 createRUpdWithProv ::
   Globals ->
   ChainState B ->
-  (LS.RewardUpdate B_Crypto, RewardProvenance B_Crypto)
+  (LS.RewardUpdate B_Crypto)
 createRUpdWithProv globals cs =
   runIdentity $
     runReaderT
-      (runWithProvM def (LS.createRUpd epochSize bm es total asc k))
+      (LS.createRUpd epochSize bm es total asc k)
       globals
   where
     nes = chainNes cs

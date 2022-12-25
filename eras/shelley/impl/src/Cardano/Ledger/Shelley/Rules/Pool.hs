@@ -12,11 +12,11 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module Cardano.Ledger.Shelley.Rules.Pool
-  ( POOL,
+  ( ShelleyPOOL,
     PoolEvent (..),
     PoolEnv (..),
     PredicateFailure,
-    PoolPredicateFailure (..),
+    ShelleyPoolPredFailure (..),
   )
 where
 
@@ -31,17 +31,14 @@ import Cardano.Ledger.BaseTypes
     Network,
     ProtVer,
     ShelleyBase,
-    StrictMaybe (..),
     epochInfoPure,
     invalidKey,
     networkId,
   )
 import Cardano.Ledger.Coin (Coin)
-import qualified Cardano.Ledger.Core as Core
+import Cardano.Ledger.Core
 import qualified Cardano.Ledger.Crypto as CC (Crypto (HASH))
-import Cardano.Ledger.Era (Crypto, Era)
 import Cardano.Ledger.Keys (KeyHash (..), KeyRole (..))
-import Cardano.Ledger.Serialization (decodeRecordSum)
 import qualified Cardano.Ledger.Shelley.HardForks as HardForks
 import Cardano.Ledger.Shelley.LedgerState (PState (..))
 import qualified Cardano.Ledger.Shelley.SoftForks as SoftForks
@@ -53,7 +50,7 @@ import Cardano.Ledger.Shelley.TxBody
     getRwdNetwork,
   )
 import Cardano.Ledger.Slot (EpochNo (..), SlotNo, epochInfoEpoch)
-import Control.Monad (when)
+import Control.Monad (forM_, when)
 import Control.Monad.Trans.Reader (asks)
 import Control.SetAlgebra (dom, eval, setSingleton, singleton, (∈), (∉), (∪), (⋪), (⨃))
 import Control.State.Transition
@@ -67,23 +64,23 @@ import Control.State.Transition
     (?!),
   )
 import qualified Data.ByteString as BS
+import Data.Coders (decodeRecordSum)
 import Data.Kind (Type)
-import Data.Typeable (Typeable)
 import Data.Word (Word64, Word8)
 import GHC.Generics (Generic)
 import GHC.Records (HasField (getField))
 import NoThunks.Class (NoThunks (..))
 
-data POOL (era :: Type)
+data ShelleyPOOL (era :: Type)
 
 data PoolEnv era
-  = PoolEnv SlotNo (Core.PParams era)
+  = PoolEnv SlotNo (PParams era)
 
-deriving instance (Show (Core.PParams era)) => Show (PoolEnv era)
+deriving instance (Show (PParams era)) => Show (PoolEnv era)
 
-deriving instance (Eq (Core.PParams era)) => Eq (PoolEnv era)
+deriving instance (Eq (PParams era)) => Eq (PoolEnv era)
 
-data PoolPredicateFailure era
+data ShelleyPoolPredFailure era
   = StakePoolNotRegisteredOnKeyPOOL
       !(KeyHash 'StakePool (Crypto era)) -- KeyHash which cannot be retired since it is not registered
   | StakePoolRetirementWrongEpochPOOL
@@ -104,25 +101,25 @@ data PoolPredicateFailure era
       !Int -- Size of the metadata hash
   deriving (Show, Eq, Generic)
 
-instance NoThunks (PoolPredicateFailure era)
+instance NoThunks (ShelleyPoolPredFailure era)
 
 instance
   ( Era era,
-    HasField "_minPoolCost" (Core.PParams era) Coin,
-    HasField "_eMax" (Core.PParams era) EpochNo,
-    HasField "_protocolVersion" (Core.PParams era) ProtVer
+    HasField "_minPoolCost" (PParams era) Coin,
+    HasField "_eMax" (PParams era) EpochNo,
+    HasField "_protocolVersion" (PParams era) ProtVer
   ) =>
-  STS (POOL era)
+  STS (ShelleyPOOL era)
   where
-  type State (POOL era) = PState (Crypto era)
+  type State (ShelleyPOOL era) = PState (Crypto era)
 
-  type Signal (POOL era) = DCert (Crypto era)
+  type Signal (ShelleyPOOL era) = DCert (Crypto era)
 
-  type Environment (POOL era) = PoolEnv era
+  type Environment (ShelleyPOOL era) = PoolEnv era
 
-  type BaseM (POOL era) = ShelleyBase
-  type PredicateFailure (POOL era) = PoolPredicateFailure era
-  type Event (POOL era) = PoolEvent era
+  type BaseM (ShelleyPOOL era) = ShelleyBase
+  type PredicateFailure (ShelleyPOOL era) = ShelleyPoolPredFailure era
+  type Event (ShelleyPOOL era) = PoolEvent era
 
   transitionRules = [poolDelegationTransition]
 
@@ -131,8 +128,8 @@ data PoolEvent era
   | ReregisterPool (KeyHash 'StakePool (Crypto era))
 
 instance
-  (Typeable era, Era era) =>
-  ToCBOR (PoolPredicateFailure era)
+  Era era =>
+  ToCBOR (ShelleyPoolPredFailure era)
   where
   toCBOR = \case
     StakePoolNotRegisteredOnKeyPOOL kh ->
@@ -150,7 +147,7 @@ instance
 
 instance
   (Era era) =>
-  FromCBOR (PoolPredicateFailure era)
+  FromCBOR (ShelleyPoolPredFailure era)
   where
   fromCBOR = decodeRecordSum "PredicateFailure (POOL era)" $
     \case
@@ -183,11 +180,11 @@ instance
 poolDelegationTransition ::
   forall era.
   ( Era era,
-    HasField "_minPoolCost" (Core.PParams era) Coin,
-    HasField "_eMax" (Core.PParams era) EpochNo,
-    HasField "_protocolVersion" (Core.PParams era) ProtVer
+    HasField "_minPoolCost" (PParams era) Coin,
+    HasField "_eMax" (PParams era) EpochNo,
+    HasField "_protocolVersion" (PParams era) ProtVer
   ) =>
-  TransitionRule (POOL era)
+  TransitionRule (ShelleyPOOL era)
 poolDelegationTransition = do
   TRC (PoolEnv slot pp, ps, c) <- judgmentContext
   let stpools = _pParams ps
@@ -201,13 +198,11 @@ poolDelegationTransition = do
         actualNetID == suppliedNetID
           ?! WrongNetworkPOOL actualNetID suppliedNetID (_poolId poolParam)
 
-      when (SoftForks.restrictPoolMetadataHash pp) $ do
-        case _poolMD poolParam of
-          SNothing -> pure ()
-          SJust pmd ->
-            let s = BS.length (_poolMDHash pmd)
-             in s <= fromIntegral (sizeHash ([] @(CC.HASH (Crypto era))))
-                  ?! PoolMedataHashTooBig (_poolId poolParam) s
+      when (SoftForks.restrictPoolMetadataHash pp) $
+        forM_ (_poolMD poolParam) $ \pmd ->
+          let s = BS.length (_poolMDHash pmd)
+           in s <= fromIntegral (sizeHash ([] @(CC.HASH (Crypto era))))
+                ?! PoolMedataHashTooBig (_poolId poolParam) s
 
       let poolCost = _poolCost poolParam
           minPoolCost = getField @"_minPoolCost" pp

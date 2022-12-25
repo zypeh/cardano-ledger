@@ -14,7 +14,7 @@ following links:
 
 Era | Design Documents | Formal Specification | CDDL
 ----|------------------|----------------------|-----
-Byron | | [Chain Spec](https://hydra.iohk.io/job/Cardano/cardano-ledger/byronChainSpec/latest/download-by-type/doc-pdf/blockchain-spec "Specification of the Blockchain Layer"), [Ledger Spec](https://hydra.iohk.io/job/Cardano/cardano-ledger/byronLedgerSpec/latest/download-by-type/doc-pdf/ledger-spec "A Formal Specification of the Cardano Ledger") | [CDDL](https://hydra.iohk.io/job/Cardano/cardano-ledger/blocksCDDLSpec/latest/download-by-type/doc-pdf/binary)
+Byron | | [Chain Spec](https://hydra.iohk.io/job/Cardano/cardano-ledger/byronChainSpec/latest/download-by-type/doc-pdf/blockchain-spec "Specification of the Blockchain Layer"), [Ledger Spec](https://hydra.iohk.io/job/Cardano/cardano-ledger/byronLedgerSpec/latest/download-by-type/doc-pdf/ledger-spec "A Formal Specification of the Cardano Ledger") | [CDDL](https://github.com/input-output-hk/cardano-ledger/tree/master/eras/byron/cddl-spec/byron.cddl), [PDF](https://hydra.iohk.io/job/Cardano/cardano-ledger/blocksCDDLSpec/latest/download-by-type/doc-pdf/binary)
 Shelley | [Design](https://hydra.iohk.io/job/Cardano/cardano-ledger/delegationDesignSpec/latest/download-by-type/doc-pdf/delegation_design_spec "Design Specification for Delegation and Incentives in Cardano") | [Spec](https://hydra.iohk.io/job/Cardano/cardano-ledger/shelleyLedgerSpec/latest/download-by-type/doc-pdf/ledger-spec "A Formal Specification of the Cardano Ledger") | [CDDL](https://github.com/input-output-hk/cardano-ledger/tree/master/eras/shelley/test-suite/cddl-files)
 Allegra & Mary | [Multi-Currency](https://eprint.iacr.org/2020/895 "Multi-Currency Ledgers"), [UTXOma](https://iohk.io/en/research/library/papers/utxoma-utxo-with-multi-asset-support/ "UTXOma:UTXO with Multi-Asset Support") | [Spec](https://hydra.iohk.io/job/Cardano/cardano-ledger/specs.shelley-ma/latest/download-by-type/doc-pdf/shelley-ma "A Formal Specification of the Cardano Ledger with a Native Multi-Asset Implementation") | [CDDL](https://github.com/input-output-hk/cardano-ledger/tree/master/eras/shelley-ma/test-suite/cddl-files)
 Alonzo | [eUTXO](https://iohk.io/en/research/library/papers/the-extended-utxo-model/ "The Extended UTXO Model")| [Spec](https://hydra.iohk.io/job/Cardano/cardano-ledger/specs.alonzo-ledger/latest/download-by-type/doc-pdf/alonzo-changes "A Formal Specification of the Cardano Ledger integrating Plutus Core") | [CDDL](https://github.com/input-output-hk/cardano-ledger/tree/master/eras/alonzo/test-suite/cddl-files)
@@ -27,6 +27,8 @@ Other Documents:
 - [Explanation of the small-step-semantics framework](https://hydra.iohk.io/job/Cardano/cardano-ledger/semanticsSpec/latest/download-by-type/doc-pdf/small-step-semantics): a guide to the notation and style used by our ledger rules.
 
 In addition, there is a formalization of the Ledger Specification in Isabelle/HOL which can be found [here](https://github.com/input-output-hk/fm-ledger-formalization).
+
+Some user documentation is published on [Read the Docs](https://cardano-ledger.readthedocs.io/en/latest)
 
 # Repository structure
 
@@ -127,6 +129,18 @@ For a continuous compilation of the `LaTeX` file run:
 
 ```shell
 nix-shell --pure --run "make watch"
+```
+
+## Updating dependencies
+
+When updating the [pinned hackage index-state](https://github.com/input-output-hk/cardano-ledger/blob/master/cabal.project) (for example, in order to get a new version of a package), it's necessary to make sure that [`hackage.nix` pin](https://github.com/input-output-hk/cardano-ledger/blob/master/nix/sources.json) points to a later date than the index-state, in order to avoid an error like this:
+```
+error: Unknown index-state 2021-08-08T00:00:00Z, the latest index-state I know about is 2021-08-06T00:00:00Z. You may need to update to a newer hackage.nix.
+```
+
+You can update the `sources.json` file using niv:
+```
+niv update hackage
 ```
 
 # Submitting an issue

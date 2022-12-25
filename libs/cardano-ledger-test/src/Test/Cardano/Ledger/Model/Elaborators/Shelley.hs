@@ -26,9 +26,10 @@ import Cardano.Ledger.Shelley.Genesis
   )
 import qualified Cardano.Ledger.Shelley.PParams as Shelley
 import Cardano.Ledger.Shelley.Rules.EraMapping ()
-import Cardano.Ledger.Shelley.Rules.Ledger (LedgerPredicateFailure (..))
-import Cardano.Ledger.Shelley.Rules.Utxo (UtxoPredicateFailure (..))
-import Cardano.Ledger.Shelley.Rules.Utxow (UtxowPredicateFailure (..))
+import Cardano.Ledger.Shelley.Rules.Ledger (ShelleyLedgerPredFailure (..))
+import Cardano.Ledger.Shelley.Rules.Utxo (ShelleyUtxoPredFailure (..))
+import Cardano.Ledger.Shelley.Rules.Utxow (ShelleyUtxowPredFailure (..))
+import Cardano.Ledger.Shelley.Tx (ShelleyTx (ShelleyTx), ShelleyTxBody (ShelleyTxBody))
 import qualified Cardano.Ledger.Shelley.Tx as Shelley
 import Cardano.Protocol.TPraos.API (PraosCrypto)
 import Cardano.Slotting.EpochInfo.API (epochInfoSize)
@@ -36,6 +37,7 @@ import Cardano.Slotting.Slot (EpochNo (..))
 import qualified Control.Monad.Trans.State as State hiding (state)
 import Data.Functor.Identity (Identity (..))
 import Data.Group (Group (..))
+import qualified Data.ListMap as LM
 import qualified Data.Map.Strict as Map
 import Data.Maybe.Strict (StrictMaybe (..))
 import Data.Time.Clock (secondsToNominalDiffTime)
@@ -105,7 +107,7 @@ instance
               [UtxowFailure (UtxoFailure (ValueNotConservedUTxO x' y'))]
 
   makeTxBody _ (TxBodyArguments maxTTL fee ins outs dcerts wdrl (NoMintSupport ()) (NoPlutusSupport ()) (NoPlutusSupport ()) (NoPlutusSupport ())) =
-    Shelley.TxBody
+    ShelleyTxBody
       { Shelley._inputs = ins,
         Shelley._outputs = outs,
         Shelley._certs = dcerts,
@@ -117,11 +119,11 @@ instance
       }
 
   makeTx _ realTxBody (TxWitnessArguments wits (NoScriptSupport ()) (NoPlutusSupport ()) (NoPlutusSupport ())) =
-    Shelley.Tx realTxBody (mempty {Shelley.addrWits = wits}) SNothing
+    ShelleyTx realTxBody (mempty {Shelley.addrWits = wits}) SNothing
 
 fromShelleyGlobals ::
   Globals ->
-  Shelley.PParams era ->
+  Shelley.ShelleyPParams era ->
   Map.Map (KeyHash 'Genesis (Crypto era)) (GenDelegPair (Crypto era)) ->
   Map.Map (Addr (Crypto era)) Coin ->
   ShelleyGenesis era
@@ -140,14 +142,14 @@ fromShelleyGlobals globals pp genDelegs initialFunds =
       sgMaxLovelaceSupply = maxLovelaceSupply globals,
       sgProtocolParams = pp,
       sgGenDelegs = genDelegs, --  genGenesisDelegationList
-      sgInitialFunds = initialFunds, -- genFundsList
+      sgInitialFunds = LM.ListMap $ Map.toList initialFunds, -- genFundsList
       sgStaking = emptyGenesisStaking -- genStaking
     }
 
 elaborateShelleyPParams ::
   KnownRequiredFeatures (EraFeatureSet era) =>
   ModelPParams (EraFeatureSet era) ->
-  Shelley.PParams era
+  Shelley.ShelleyPParams era
 elaborateShelleyPParams mpp =
   let minUTxOValue =
         bifoldMapSupportsFeature id (`pow` (29 :: Integer)) $ runIdentity $ _modelPParams_coinsPerUTxOWord mpp

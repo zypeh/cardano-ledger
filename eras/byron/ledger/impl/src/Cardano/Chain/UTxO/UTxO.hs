@@ -5,6 +5,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE StandaloneKindSignatures #-}
 {-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_GHC -fno-warn-missed-specialisations #-}
 
@@ -56,6 +57,7 @@ import Cardano.Chain.UTxO.Compact
   )
 import Cardano.Chain.UTxO.Tx (Tx (..), TxId, TxIn (..), TxOut (..))
 import Cardano.Crypto (serializeCborHash)
+import Cardano.HeapWords
 import Cardano.Prelude hiding (concat, empty, toList)
 import Data.Coerce
 import qualified Data.List.NonEmpty as NE
@@ -63,6 +65,7 @@ import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 import NoThunks.Class (NoThunks (..))
 
+type UTxO :: Type
 newtype UTxO = UTxO
   { unUTxO :: Map CompactTxIn CompactTxOut
   }
@@ -70,6 +73,7 @@ newtype UTxO = UTxO
   deriving newtype (HeapWords, FromCBOR, ToCBOR)
   deriving anyclass (NFData, NoThunks)
 
+type UTxOError :: Type
 data UTxOError
   = UTxOMissingInput TxIn
   | UTxOOverlappingUnion

@@ -9,7 +9,55 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Cardano.Ledger.Alonzo.TxInfo where
+module Cardano.Ledger.Alonzo.TxInfo
+  ( TxOutSource (..),
+    TranslationError (..),
+    transProtocolVersion,
+    validScript,
+    transDataHash,
+    transDataHash',
+    transKeyHash,
+    transSafeHash,
+    transHash,
+    txInfoId,
+    transStakeCred,
+    transStakeReference,
+    transCred,
+    transAddr,
+    transTxOutAddr,
+    slotToPOSIXTime,
+    transVITime,
+    txInfoIn',
+    txInfoIn,
+    txInfoOut,
+    transPolicyID,
+    transAssetName,
+    transValue,
+    transDCert,
+    transWdrl,
+    getWitVKeyHash,
+    transDataPair,
+    transExUnits,
+    exBudgetToExUnits,
+    transScriptPurpose,
+    VersionedTxInfo (..),
+    ExtendedUTxO (..),
+    alonzoTxInfo,
+    valContext,
+    ScriptFailure (..),
+    ScriptResult (..),
+    scriptPass,
+    scriptFail,
+    PlutusDebug (..),
+    PlutusError (..),
+    PlutusDebugInfo (..),
+    debugPlutus,
+    runPLCScript,
+    explainPlutusFailure,
+    validPlutusdata,
+    languages,
+  )
+where
 
 -- =============================================
 
@@ -19,37 +67,42 @@ import Cardano.Ledger.Address (Addr (..), RewardAcnt (..))
 import Cardano.Ledger.Alonzo.Data (Data (..), Datum (..), getPlutusData)
 import Cardano.Ledger.Alonzo.Language (Language (..))
 import Cardano.Ledger.Alonzo.Scripts
-  ( ExUnits (..),
-    Script (..),
+  ( AlonzoScript (..),
+    ExUnits (..),
     decodeCostModel,
     getEvaluationContext,
+    transProtocolVersion,
+    validScript,
   )
 import Cardano.Ledger.Alonzo.Tx
-  ( CostModel,
-    DataHash,
+  ( AlonzoTx,
+    CostModel,
     ScriptPurpose (..),
-    ValidatedTx,
     txdats',
+  )
+import Cardano.Ledger.Alonzo.TxBody
+  ( AlonzoEraTxBody (..),
+    AlonzoEraTxOut (..),
+    certsTxBodyL,
+    mintTxBodyL,
+    vldtTxBodyL,
+    wdrlsTxBodyL,
   )
 import Cardano.Ledger.Alonzo.TxWitness (RdmrPtr, TxWitness, unTxDats)
 import Cardano.Ledger.BaseTypes (ProtVer (..), StrictMaybe (..), TxIx, certIxToInt, txIxToInt)
 import Cardano.Ledger.Coin (Coin (..))
-import Cardano.Ledger.Core as Core (PParams, Tx, TxBody, TxOut, Value)
-import qualified Cardano.Ledger.Core as Core
+import Cardano.Ledger.Core as Core hiding (TranslationError)
 import Cardano.Ledger.Credential
   ( Credential (KeyHashObj, ScriptHashObj),
     Ptr (..),
     StakeReference (..),
   )
 import qualified Cardano.Ledger.Crypto as CC (Crypto)
-import Cardano.Ledger.Era (Era (..), getTxOutBootstrapAddress)
-import Cardano.Ledger.Hashes (EraIndependentData)
-import Cardano.Ledger.Keys (KeyHash (..), KeyRole (Witness), hashKey)
-import qualified Cardano.Ledger.Mary.Value as Mary (AssetName (..), PolicyID (..), Value (..))
+import Cardano.Ledger.Keys (KeyHash (..), hashKey)
+import Cardano.Ledger.Mary.Value (AssetName (..), MaryValue (..), PolicyID (..))
 import Cardano.Ledger.SafeHash (SafeHash, extractHash, hashAnnotated)
 import Cardano.Ledger.Serialization (Sized (sizedValue))
 import qualified Cardano.Ledger.Shelley.HardForks as HardForks
-import Cardano.Ledger.Shelley.Scripts (ScriptHash (..))
 import Cardano.Ledger.Shelley.TxBody
   ( DCert (..),
     DelegCert (..),
@@ -68,7 +121,6 @@ import Cardano.Slotting.Slot (EpochNo (..), SlotNo (..))
 import Cardano.Slotting.Time (SystemStart)
 import qualified Codec.Serialise as Cborg (Serialise (..))
 import Control.Arrow (left)
-import Control.DeepSeq (deepseq)
 import Data.ByteString as BS (ByteString, length)
 import qualified Data.ByteString.Base64 as B64
 import Data.ByteString.Short as SBS (ShortByteString, fromShort)
@@ -86,7 +138,6 @@ import Data.Fixed (HasResolution (resolution))
 import Data.List.NonEmpty (NonEmpty (..))
 import qualified Data.Map.Strict as Map
 import Data.Maybe (mapMaybe)
-import Data.Sequence.Strict (StrictSeq)
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Text (Text, pack)
@@ -95,11 +146,12 @@ import Data.Time.Clock.POSIX (utcTimeToPOSIXSeconds)
 import Data.Typeable (Proxy (..), Typeable)
 import GHC.Generics (Generic)
 import GHC.Records (HasField (..))
+import Lens.Micro
 import NoThunks.Class (NoThunks)
 import Numeric.Natural (Natural)
-import qualified Plutus.V1.Ledger.Api as PV1
-import Plutus.V1.Ledger.Contexts ()
-import qualified Plutus.V2.Ledger.Api as PV2
+import qualified PlutusLedgerApi.V1 as PV1
+import PlutusLedgerApi.V1.Contexts ()
+import qualified PlutusLedgerApi.V2 as PV2
 import Prettyprinter (Pretty (..))
 
 -- =========================================================
@@ -177,9 +229,6 @@ transDataHash' safe = PV1.DatumHash (transSafeHash safe)
 transKeyHash :: KeyHash d c -> PV1.PubKeyHash
 transKeyHash (KeyHash h) = PV1.PubKeyHash (PV1.toBuiltin (hashToBytes h))
 
-transScriptHash :: ScriptHash c -> PV1.ValidatorHash
-transScriptHash (ScriptHash h) = PV1.ValidatorHash (PV1.toBuiltin (hashToBytes h))
-
 transSafeHash :: SafeHash c i -> PV1.BuiltinByteString
 transSafeHash = PV1.toBuiltin . hashToBytes . extractHash
 
@@ -189,9 +238,9 @@ transHash = hashToBytes
 txInfoId :: TxId crypto -> PV1.TxId
 txInfoId (TxId safe) = PV1.TxId (transSafeHash safe)
 
-transStakeCred :: Credential keyrole crypto -> PV1.Credential
-transStakeCred (ScriptHashObj (ScriptHash kh)) =
-  PV1.ScriptCredential (PV1.ValidatorHash (PV1.toBuiltin (hashToBytes kh)))
+transStakeCred :: Credential kr c -> PV1.Credential
+transStakeCred (ScriptHashObj (ScriptHash sh)) =
+  PV1.ScriptCredential (PV1.ScriptHash (PV1.toBuiltin (hashToBytes sh)))
 transStakeCred (KeyHashObj (KeyHash kh)) =
   PV1.PubKeyCredential (PV1.PubKeyHash (PV1.toBuiltin (hashToBytes kh)))
 
@@ -206,24 +255,23 @@ transStakeReference StakeRefNull = Nothing
 transCred :: Credential keyrole crypto -> PV1.Credential
 transCred (KeyHashObj (KeyHash kh)) =
   PV1.PubKeyCredential (PV1.PubKeyHash (PV1.toBuiltin (hashToBytes kh)))
-transCred (ScriptHashObj (ScriptHash kh)) =
-  PV1.ScriptCredential (PV1.ValidatorHash (PV1.toBuiltin (hashToBytes kh)))
+transCred (ScriptHashObj (ScriptHash sh)) = PV1.ScriptCredential (PV1.ScriptHash (PV1.toBuiltin (hashToBytes sh)))
 
 transAddr :: Addr crypto -> Maybe PV1.Address
 transAddr (Addr _net object stake) = Just (PV1.Address (transCred object) (transStakeReference stake))
 transAddr (AddrBootstrap _bootaddr) = Nothing
 
-transTxOutAddr :: Era era => TxOut era -> Maybe PV1.Address
+transTxOutAddr :: EraTxOut era => TxOut era -> Maybe PV1.Address
 transTxOutAddr txOut = do
   -- filter out Byron addresses without uncompacting them
-  case getTxOutBootstrapAddress txOut of
+  case txOut ^. bootAddrTxOutF of
     Just _ -> Nothing
     -- The presence of a Byron address is caught above in the Just case
-    Nothing -> transAddr (getTxOutAddr txOut)
+    Nothing -> transAddr (txOut ^. addrTxOutL)
 
 slotToPOSIXTime ::
   HasField "_protocolVersion" (PParams era) ProtVer =>
-  Core.PParams era ->
+  PParams era ->
   EpochInfo (Either Text) ->
   SystemStart ->
   SlotNo ->
@@ -243,7 +291,7 @@ slotToPOSIXTime pp ei sysS s = do
 -- | translate a validity interval to POSIX time
 transVITime ::
   HasField "_protocolVersion" (PParams era) ProtVer =>
-  Core.PParams era ->
+  PParams era ->
   EpochInfo (Either Text) ->
   SystemStart ->
   ValidityInterval ->
@@ -272,50 +320,42 @@ txInfoIn' (TxIn txid txIx) = PV1.TxOutRef (txInfoId txid) (toInteger (txIxToInt 
 -- | Given a TxIn, look it up in the UTxO. If it exists, translate it and return
 --   (Just translation). If does not exist in the UTxO, return Nothing.
 txInfoIn ::
-  forall era c i.
-  ( Era era,
-    Value era ~ Mary.Value (Crypto era),
-    HasField "datahash" (TxOut era) (StrictMaybe (SafeHash c i))
-  ) =>
+  (AlonzoEraTxOut era, Value era ~ MaryValue (Crypto era)) =>
   TxIn (Crypto era) ->
   TxOut era ->
   Maybe PV1.TxInInfo
-txInfoIn txin txout = do
-  let valout = transValue (getField @"value" txout)
-      dhash = case getField @"datahash" txout of
+txInfoIn txIn txOut = do
+  let val = transValue (txOut ^. valueTxOutL)
+      dataHash = case txOut ^. dataHashTxOutL of
         SNothing -> Nothing
-        SJust safehash -> Just (PV1.DatumHash (transSafeHash safehash))
-  addr <- transTxOutAddr txout
-  pure $ PV1.TxInInfo (txInfoIn' txin) (PV1.TxOut addr valout dhash)
+        SJust safeHash -> Just (PV1.DatumHash (transSafeHash safeHash))
+  addr <- transTxOutAddr txOut
+  pure $ PV1.TxInInfo (txInfoIn' txIn) (PV1.TxOut addr val dataHash)
 
 -- | Given a TxOut, translate it and return (Just transalation). It is
 --   possible the address part is a Bootstrap Address, in that case return Nothing
 --   I.e. don't include Bootstrap Addresses in the answer.
 txInfoOut ::
-  forall era c.
-  ( Era era,
-    Value era ~ Mary.Value (Crypto era),
-    HasField "datahash" (Core.TxOut era) (StrictMaybe (DataHash c))
-  ) =>
-  Core.TxOut era ->
+  (AlonzoEraTxOut era, Value era ~ MaryValue (Crypto era)) =>
+  TxOut era ->
   Maybe PV1.TxOut
-txInfoOut txout = do
-  let val = getField @"value" txout
-      datahash = getField @"datahash" txout
-  addr <- transTxOutAddr txout
-  pure (PV1.TxOut addr (transValue @(Crypto era) val) (transDataHash datahash))
+txInfoOut txOut = do
+  let val = txOut ^. valueTxOutL
+      dataHash = txOut ^. dataHashTxOutL
+  addr <- transTxOutAddr txOut
+  pure (PV1.TxOut addr (transValue val) (transDataHash dataHash))
 
 -- ==================================
 -- translate Values
 
-transPolicyID :: Mary.PolicyID crypto -> PV1.CurrencySymbol
-transPolicyID (Mary.PolicyID (ScriptHash x)) = PV1.CurrencySymbol (PV1.toBuiltin (hashToBytes x))
+transPolicyID :: PolicyID crypto -> PV1.CurrencySymbol
+transPolicyID (PolicyID (ScriptHash x)) = PV1.CurrencySymbol (PV1.toBuiltin (hashToBytes x))
 
-transAssetName :: Mary.AssetName -> PV1.TokenName
-transAssetName (Mary.AssetName bs) = PV1.TokenName (PV1.toBuiltin (SBS.fromShort bs))
+transAssetName :: AssetName -> PV1.TokenName
+transAssetName (AssetName bs) = PV1.TokenName (PV1.toBuiltin (SBS.fromShort bs))
 
-transValue :: Mary.Value c -> PV1.Value
-transValue (Mary.Value n mp) = Map.foldlWithKey' accum1 justada mp
+transValue :: MaryValue c -> PV1.Value
+transValue (MaryValue n mp) = Map.foldlWithKey' accum1 justada mp
   where
     accum1 ans sym mp2 = Map.foldlWithKey' accum2 ans mp2
       where
@@ -398,12 +438,12 @@ class ExtendedUTxO era where
   -- Compute a Digest of the current transaction to pass to the script
   --    This is the major component of the valContext function.
   txInfo ::
-    Core.PParams era ->
+    PParams era ->
     Language ->
     EpochInfo (Either Text) ->
     SystemStart ->
     UTxO era ->
-    Core.Tx era ->
+    Tx era ->
     Either (TranslationError (Crypto era)) VersionedTxInfo
 
   -- Compute two sets for all TwoPhase scripts in a Tx.
@@ -411,59 +451,53 @@ class ExtendedUTxO era where
   -- set 2) TxIns that are TwoPhase scripts, and should have a DataHash but don't.
   {- { h | (_ → (a,_,h)) ∈ txins tx ◁ utxo, isNonNativeScriptAddress tx a} -}
   inputDataHashes ::
-    Map.Map (ScriptHash (Crypto era)) (Core.Script era) ->
-    ValidatedTx era ->
+    Map.Map (ScriptHash (Crypto era)) (Script era) ->
+    AlonzoTx era ->
     UTxO era ->
     (Set (DataHash (Crypto era)), Set (TxIn (Crypto era)))
 
   txscripts ::
     UTxO era ->
-    Core.Tx era ->
-    Map.Map (ScriptHash (Crypto era)) (Core.Script era)
+    Tx era ->
+    Map.Map (ScriptHash (Crypto era)) (Script era)
 
   getAllowedSupplimentalDataHashes ::
-    Core.TxBody era ->
+    TxBody era ->
     UTxO era ->
     Set (DataHash (Crypto era))
 
   getDatum ::
-    Core.Tx era ->
+    Tx era ->
     UTxO era ->
     ScriptPurpose (Crypto era) ->
     Maybe (Data era)
 
   getTxOutDatum ::
-    Core.TxOut era -> Datum era
+    TxOut era -> Datum era
 
   allOuts ::
-    Core.TxBody era ->
-    [Core.TxOut era]
+    TxBody era ->
+    [TxOut era]
   allOuts = map sizedValue . allSizedOuts
 
   allSizedOuts ::
-    Core.TxBody era ->
-    [Sized (Core.TxOut era)]
+    TxBody era ->
+    [Sized (TxOut era)]
 
 alonzoTxInfo ::
   forall era.
-  ( Era era,
-    Value era ~ Mary.Value (Crypto era),
-    HasField "wits" (Core.Tx era) (TxWitness era),
-    HasField "datahash" (TxOut era) (StrictMaybe (SafeHash (Crypto era) EraIndependentData)),
-    HasField "_protocolVersion" (PParams era) ProtVer,
-    HasField "inputs" (Core.TxBody era) (Set (TxIn (Crypto era))),
-    HasField "reqSignerHashes" (Core.TxBody era) (Set (KeyHash 'Witness (Crypto era))),
-    HasField "certs" (Core.TxBody era) (StrictSeq (DCert (Crypto era))),
-    HasField "wdrls" (Core.TxBody era) (Wdrl (Crypto era)),
-    HasField "mint" (Core.TxBody era) (Mary.Value (Crypto era)),
-    HasField "vldt" (Core.TxBody era) ValidityInterval
+  ( EraTx era,
+    AlonzoEraTxBody era,
+    Value era ~ MaryValue (Crypto era),
+    Witnesses era ~ TxWitness era,
+    HasField "_protocolVersion" (PParams era) ProtVer
   ) =>
-  Core.PParams era ->
+  PParams era ->
   Language ->
   EpochInfo (Either Text) ->
   SystemStart ->
   UTxO era ->
-  Core.Tx era ->
+  Tx era ->
   Either (TranslationError (Crypto era)) VersionedTxInfo
 alonzoTxInfo pp lang ei sysS utxo tx = do
   timeRange <- left TimeTranslationPastHorizon $ transVITime pp ei sysS interval
@@ -472,33 +506,34 @@ alonzoTxInfo pp lang ei sysS utxo tx = do
         case Map.lookup txIn (unUTxO utxo) of
           Nothing -> Left $ TranslationLogicMissingInput txIn
           Just txOut -> Right (txIn, txOut)
-  txOuts <- mapM lookupTxOut (Set.toList (getField @"inputs" tbody))
+  txIns <- mapM lookupTxOut (Set.toList (txBody ^. inputsTxBodyL))
   case lang of
     PlutusV1 ->
       Right . TxInfoPV1 $
         PV1.TxInfo
-          { PV1.txInfoInputs = mapMaybe (uncurry txInfoIn) txOuts,
-            PV1.txInfoOutputs = mapMaybe txInfoOut (foldr (:) [] outs),
-            PV1.txInfoFee = transValue (inject @(Mary.Value (Crypto era)) fee),
-            PV1.txInfoMint = transValue forge,
-            PV1.txInfoDCert = foldr (\c ans -> transDCert c : ans) [] (getField @"certs" tbody),
-            PV1.txInfoWdrl = Map.toList (transWdrl (getField @"wdrls" tbody)),
+          { PV1.txInfoInputs = mapMaybe (uncurry txInfoIn) txIns,
+            PV1.txInfoOutputs = mapMaybe txInfoOut (foldr (:) [] txOuts),
+            PV1.txInfoFee = transValue (inject @(MaryValue (Crypto era)) fee),
+            PV1.txInfoMint = transValue mint,
+            PV1.txInfoDCert = foldr (\c ans -> transDCert c : ans) [] (txBody ^. certsTxBodyL),
+            PV1.txInfoWdrl = Map.toList (transWdrl (txBody ^. wdrlsTxBodyL)),
             PV1.txInfoValidRange = timeRange,
-            PV1.txInfoSignatories = map transKeyHash (Set.toList (getField @"reqSignerHashes" tbody)),
+            PV1.txInfoSignatories = map transKeyHash (Set.toList (txBody ^. reqSignerHashesTxBodyL)),
             PV1.txInfoData = map transDataPair datpairs,
-            PV1.txInfoId = PV1.TxId (transSafeHash (hashAnnotated @(Crypto era) tbody))
+            PV1.txInfoId = PV1.TxId (transSafeHash (hashAnnotated @(Crypto era) txBody))
           }
     _ -> Left $ LanguageNotSupported lang
   where
-    tbody :: Core.TxBody era
-    tbody = getField @"body" tx
-    _witnesses = getField @"wits" tx
-    outs = getField @"outputs" tbody
-    fee = getField @"txfee" tbody
-    forge = getField @"mint" tbody
-    interval = getField @"vldt" tbody
+    txBody :: TxBody era
+    txBody = tx ^. bodyTxL
+    txWits :: TxWitness era
+    txWits = tx ^. witsTxL
+    txOuts = txBody ^. outputsTxBodyL
+    fee = txBody ^. feeTxBodyL
+    mint = txBody ^. mintTxBodyL
+    interval = txBody ^. vldtTxBodyL
 
-    datpairs = Map.toList (unTxDats $ txdats' _witnesses)
+    datpairs = Map.toList (unTxDats $ txdats' txWits)
 
 -- | valContext pairs transaction data with a script purpose.
 --   See figure 22 of the Alonzo specification.
@@ -622,7 +657,7 @@ debugPlutus db =
 -- | Run a Plutus Script, given the script and the bounds on resources it is allocated.
 runPLCScript ::
   forall era.
-  Show (Script era) =>
+  Show (AlonzoScript era) =>
   Proxy era ->
   ProtVer ->
   Language ->
@@ -659,7 +694,7 @@ runPLCScript proxy pv lang cm scriptbytestring units ds =
 -- be decoded.
 explainPlutusFailure ::
   forall era.
-  Show (Script era) =>
+  Show (AlonzoScript era) =>
   Proxy era ->
   ProtVer ->
   Language ->
@@ -669,91 +704,74 @@ explainPlutusFailure ::
   CostModel ->
   ExUnits ->
   ScriptResult
-explainPlutusFailure _proxy pv lang scriptbytestring e ds@[dat, redeemer, info] cm eu =
-  -- A three data argument script.
-  let ss :: Script era
-      ss = PlutusScript lang scriptbytestring
-      name :: String
-      name = show ss
-   in case PV1.fromData info of
-        Nothing -> scriptFail $ PlutusSF line db
-          where
-            line =
-              pack $
-                unlines
-                  [ "\nThe 3 arg plutus script (" ++ name ++ ") fails.",
-                    show e,
-                    "The protocol version is: " ++ show pv,
-                    "The data is: " ++ show dat,
-                    "The redeemer is: " ++ show redeemer,
-                    "The third data argument, does not decode to a context\n" ++ show info
-                  ]
-            db = PlutusDebugV1 cm eu scriptbytestring ds pv
-        Just info2 -> scriptFail $ PlutusSF line db
-          where
-            info3 = show (pretty (info2 :: PV1.ScriptContext))
-            line =
-              pack $
-                unlines
-                  [ "\nThe 3 arg plutus script (" ++ name ++ ") fails.",
-                    show e,
-                    "The protocol version is: " ++ show pv,
-                    "The data is: " ++ show dat,
-                    "The redeemer is: " ++ show redeemer,
-                    "The context is:\n" ++ info3
-                  ]
-            db = PlutusDebugV1 cm eu scriptbytestring ds pv
-explainPlutusFailure _proxy pv lang scriptbytestring e ds@[redeemer, info] cm eu =
-  -- A two data argument script.
-  let ss :: Script era
-      ss = PlutusScript lang scriptbytestring
-      name :: String
-      name = show ss
-   in case PV1.fromData info of
-        Nothing -> scriptFail $ PlutusSF line db
-          where
-            line =
-              pack $
-                unlines
-                  [ "\nThe 2 arg plutus script (" ++ name ++ ") fails.",
-                    show e,
-                    "The protocol version is: " ++ show pv,
-                    "The redeemer is: " ++ show redeemer,
-                    "The second data argument, does not decode to a context\n" ++ show info
-                  ]
-            db = PlutusDebugV1 cm eu scriptbytestring ds pv
-        Just info2 -> scriptFail $ PlutusSF line db
-          where
-            info3 = show (pretty (info2 :: PV1.ScriptContext))
-            line =
-              pack $
-                unlines
-                  [ "\nThe 2 arg plutus script (" ++ name ++ ") fails.",
-                    show e,
-                    "The protocol version is: " ++ show pv,
-                    "The redeemer is: " ++ show redeemer,
-                    "The context is:\n" ++ info3
-                  ]
-            db = PlutusDebugV1 cm eu scriptbytestring ds pv
 explainPlutusFailure _proxy pv lang scriptbytestring e ds cm eu =
-  -- A script with the wrong number of arguments
-  scriptFail $ PlutusSF line db
-  where
-    ss :: Script era
-    ss = PlutusScript lang scriptbytestring
-    name :: String
-    name = show ss
-    line =
-      pack $
-        unlines
-          ( [ "\nThe plutus script (" ++ name ++ ") fails.",
-              show e,
-              "The protocol version is: " ++ show pv,
-              "It was passed these " ++ show (Prelude.length ds) ++ " data arguments."
+  let ss :: AlonzoScript era
+      ss = PlutusScript lang scriptbytestring
+      name :: String
+      name = show ss
+      firstLine = "\nThe " ++ show lang ++ " script (" ++ name ++ ") fails."
+      pvLine = "The protocol version is: " ++ show pv
+      plutusError = "The plutus error is: " ++ show e
+      dataLines =
+        case ds of
+          [dat, redeemer, info] ->
+            case lang of
+              PlutusV1 ->
+                case PV1.fromData info of
+                  Nothing ->
+                    [ "The data is: " ++ show dat,
+                      "The redeemer is: " ++ show redeemer,
+                      "The third data argument, does not translate to a V1 script context\n" ++ show info
+                    ]
+                  Just info2 ->
+                    [ "The data is: " ++ show dat,
+                      "The redeemer is: " ++ show redeemer,
+                      "The script context is:\n" ++ show (pretty (info2 :: PV1.ScriptContext))
+                    ]
+              PlutusV2 ->
+                case PV2.fromData info of
+                  Nothing ->
+                    [ "The data is: " ++ show dat,
+                      "The redeemer is: " ++ show redeemer,
+                      "The third data argument, does not translate to a V2 script context\n" ++ show info
+                    ]
+                  Just info2 ->
+                    [ "The data is: " ++ show dat,
+                      "The redeemer is: " ++ show redeemer,
+                      "The script context is:\n" ++ show (pretty (info2 :: PV2.ScriptContext))
+                    ]
+          [redeemer, info] ->
+            case lang of
+              PlutusV1 ->
+                case PV1.fromData info of
+                  Nothing ->
+                    [ "The redeemer is: " ++ show redeemer,
+                      "The second data argument, does not translate to a V1 script context\n" ++ show info
+                    ]
+                  Just info2 ->
+                    [ "The redeemer is: " ++ show redeemer,
+                      "The script context is:\n" ++ show (pretty (info2 :: PV1.ScriptContext))
+                    ]
+              PlutusV2 ->
+                case PV2.fromData info of
+                  Nothing ->
+                    [ "The redeemer is: " ++ show redeemer,
+                      "The second data argument, does not translate to a V2 script context\n" ++ show info
+                    ]
+                  Just info2 ->
+                    [ "The redeemer is: " ++ show redeemer,
+                      "The script context is:\n" ++ show (pretty (info2 :: PV2.ScriptContext))
+                    ]
+          _ ->
+            [ "Received an unexpected number of Data",
+              "The data was:\n" ++ show ds
             ]
-              ++ map show ds
-          )
-    db = PlutusDebugV1 cm eu scriptbytestring ds pv
+      line = pack . unlines $ firstLine : plutusError : pvLine : dataLines
+
+      db = case lang of
+        PlutusV1 -> PlutusDebugV1 cm eu scriptbytestring ds pv
+        PlutusV2 -> PlutusDebugV2 cm eu scriptbytestring ds pv
+   in scriptFail $ PlutusSF line db
 
 validPlutusdata :: PV1.Data -> Bool
 validPlutusdata (PV1.Constr _n ds) = all validPlutusdata ds
@@ -763,25 +781,13 @@ validPlutusdata (PV1.List ds) = all validPlutusdata ds
 validPlutusdata (PV1.I _n) = True
 validPlutusdata (PV1.B bs) = BS.length bs <= 64
 
--- | Test that every Alonzo script represents a real Script.
---     Run deepseq to see that there are no infinite computations and that
---     every Plutus Script unflattens into a real PV1.Script
-validScript :: ProtVer -> Script era -> Bool
-validScript pv scrip = case scrip of
-  TimelockScript sc -> deepseq sc True
-  PlutusScript PlutusV1 bytes -> PV1.isScriptWellFormed (transProtocolVersion pv) bytes
-  PlutusScript PlutusV2 bytes -> PV2.isScriptWellFormed (transProtocolVersion pv) bytes
-
-transProtocolVersion :: ProtVer -> PV1.ProtocolVersion
-transProtocolVersion (ProtVer major minor) = PV1.ProtocolVersion (fromIntegral major) (fromIntegral minor)
-
--- | Compute the Set of Languages in an era, where Alonzo.Scripts are used
+-- | Compute the Set of Languages in an era, where 'AlonzoScripts' are used
 languages ::
   forall era.
   ( ExtendedUTxO era,
-    Core.Script era ~ Script era
+    Script era ~ AlonzoScript era
   ) =>
-  Core.Tx era ->
+  Tx era ->
   UTxO era ->
   Set (ScriptHash (Crypto era)) ->
   Set Language

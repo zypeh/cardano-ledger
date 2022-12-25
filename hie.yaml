@@ -57,6 +57,9 @@ cradle:
     - path: "eras/babbage/impl/src"
       component: "lib:cardano-ledger-babbage"
 
+    - path: "eras/conway/impl/src"
+      component: "lib:cardano-ledger-conway"
+
     - path: "eras/babbage/test-suite/src"
       component: "cardano-ledger-babbage-test"
 
@@ -65,6 +68,9 @@ cradle:
 
     - path: "libs/cardano-ledger-test/src"
       component: "lib:cardano-ledger-test"
+
+    - path: "libs/cardano-ledger-test/test"
+      component: "test:cardano-ledger-test"
 
     - path: "libs/cardano-ledger-test/bench"
       component: "cardano-ledger-test:bench:bench"
@@ -110,3 +116,6 @@ cradle:
 
     - path: "libs/cardano-protocol-tpraos"
       component: "lib:cardano-protocol-tpraos"
+
+    - path: "libs/ledger-state"
+      component: "lib:ledger-state"

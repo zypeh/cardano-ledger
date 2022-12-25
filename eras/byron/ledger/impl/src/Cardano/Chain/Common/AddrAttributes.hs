@@ -4,6 +4,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE StandaloneKindSignatures #-}
 
 module Cardano.Chain.Common.AddrAttributes
   ( AddrAttributes (..),
@@ -27,6 +28,7 @@ import Cardano.Chain.Common.Attributes
     toCBORAttributes,
   )
 import Cardano.Chain.Common.NetworkMagic (NetworkMagic (..))
+import Cardano.HeapWords
 import Cardano.Prelude
 import Data.Aeson (ToJSON (..), object, (.=))
 import qualified Data.ByteString.Char8 as Char8
@@ -38,6 +40,7 @@ import NoThunks.Class (NoThunks (..))
 -- | Additional information stored along with address. It's intended
 -- to be put into 'Attributes' data type to make it extensible with
 -- softfork.
+type AddrAttributes :: Type
 data AddrAttributes = AddrAttributes
   { aaVKDerivationPath :: !(Maybe HDAddressPayload),
     aaNetworkMagic :: !NetworkMagic
@@ -130,6 +133,7 @@ instance FromCBOR (Attributes AddrAttributes) where
         _ -> pure Nothing
 
 -- | Passphrase is a hash of root verification key.
+type HDPassphrase :: Type
 data HDPassphrase = HDPassphrase !ByteString
   deriving (Eq, Show)
 
@@ -145,6 +149,7 @@ data HDPassphrase = HDPassphrase !ByteString
 --
 -- It is still distinguished as an attribute, but not used by the ledger,
 -- because the attributes size limits treat this attribute specially.
+type HDAddressPayload :: Type
 newtype HDAddressPayload = HDAddressPayload
   { getHDAddressPayload :: ByteString
   }

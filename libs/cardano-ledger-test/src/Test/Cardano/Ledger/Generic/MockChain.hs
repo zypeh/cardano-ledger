@@ -1,5 +1,6 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -37,13 +38,13 @@ import Cardano.Ledger.Shelley.LedgerState
 import Cardano.Ledger.Shelley.RewardUpdate (PulsingRewUpdate)
 import Cardano.Ledger.Shelley.Rules.Ledger (LedgerEnv)
 import Cardano.Ledger.Shelley.Rules.Ledgers
-  ( LEDGERS,
-    LedgersEnv (..),
-    LedgersEvent,
-    LedgersPredicateFailure,
+  ( ShelleyLEDGERS,
+    ShelleyLedgersEnv (..),
+    ShelleyLedgersEvent,
+    ShelleyLedgersPredFailure,
   )
 import Cardano.Ledger.Shelley.Rules.Rupd (RupdEnv)
-import Cardano.Ledger.Shelley.Rules.Tick (TICK, TickEvent, TickPredicateFailure)
+import Cardano.Ledger.Shelley.Rules.Tick (ShelleyTICK, ShelleyTickEvent, ShelleyTickPredFailure)
 import Cardano.Slotting.Slot (EpochNo, SlotNo)
 import Control.State.Transition
   ( Embed (..),
@@ -57,6 +58,8 @@ import Control.State.Transition
 import qualified Data.Map.Strict as Map
 import Data.Maybe.Strict (StrictMaybe)
 import Data.Sequence.Strict (StrictSeq (..), fromStrict)
+import GHC.Generics (Generic)
+import NoThunks.Class (NoThunks, ThunkInfo, noThunks)
 import Test.Cardano.Ledger.Generic.Functions (TotalAda (..))
 import Test.Cardano.Ledger.Generic.PrettyCore
   ( pcNewEpochState,
@@ -72,15 +75,15 @@ data MOCKCHAIN era -- This is a Testing only STS instance
 type instance Core.EraRule "MOCKCHAIN" era = MOCKCHAIN era
 
 data MockChainFailure era
-  = MockChainFromTickFailure !(TickPredicateFailure era)
-  | MockChainFromLedgersFailure !(LedgersPredicateFailure era)
+  = MockChainFromTickFailure !(ShelleyTickPredFailure era)
+  | MockChainFromLedgersFailure !(ShelleyLedgersPredFailure era)
   | BlocksOutOfOrder
       !SlotNo -- The last applied block SlotNo
       !SlotNo -- The candidate block SlotNo
 
 data MockChainEvent era
-  = MockChainFromTickEvent !(TickEvent era)
-  | MockChainFromLedgersEvent !(LedgersEvent era)
+  = MockChainFromTickEvent !(ShelleyTickEvent era)
+  | MockChainFromLedgersEvent !(ShelleyLedgersEvent era)
 
 data MockBlock era = MockBlock
   { mbIssuer :: !(KeyHash 'StakePool (Crypto era)),
@@ -113,12 +116,16 @@ instance Show (MockBlock era) where
 instance Reflect era => TotalAda (MockChainState era) where
   totalAda (MockChainState nes _ _) = totalAda nes
 
+deriving instance Generic (MockChainState era)
+
+instance (Era era, NoThunks (NewEpochState era)) => NoThunks (MockChainState era)
+
 -- ======================================================================
 
 instance
   ( Reflect era,
-    STS (LEDGERS era),
-    STS (TICK era),
+    STS (ShelleyLEDGERS era),
+    STS (ShelleyTICK era),
     State (Core.EraRule "TICK" era) ~ NewEpochState era,
     Signal (Core.EraRule "TICK" era) ~ SlotNo,
     Environment (Core.EraRule "TICK" era) ~ (),
@@ -140,7 +147,7 @@ instance
 
 chainTransition ::
   forall era.
-  ( STS (LEDGERS era),
+  ( STS (ShelleyLEDGERS era),
     State (Core.EraRule "TICK" era) ~ NewEpochState era,
     Signal (Core.EraRule "TICK" era) ~ SlotNo,
     Environment (Core.EraRule "TICK" era) ~ (),
@@ -164,7 +171,7 @@ chainTransition = do
   let newblocksmade = BlocksMade (Map.unionWith (+) current (Map.singleton issuer 1))
 
   newledgerState <-
-    trans @(LEDGERS era) $ TRC (LedgersEnv slot pparams account, ledgerState, fromStrict txs)
+    trans @(ShelleyLEDGERS era) $ TRC (LedgersEnv slot pparams account, ledgerState, fromStrict txs)
 
   let newEpochstate = epochState {esLState = newledgerState}
       newNewEpochState = nes' {nesEs = newEpochstate, nesBcur = newblocksmade}
@@ -175,7 +182,7 @@ chainTransition = do
 -- Embed instances
 
 instance
-  ( STS (TICK era),
+  ( STS (ShelleyTICK era),
     Signal (Core.EraRule "RUPD" era) ~ SlotNo,
     State (Core.EraRule "RUPD" era) ~ StrictMaybe (PulsingRewUpdate (Crypto era)),
     Environment (Core.EraRule "RUPD" era) ~ RupdEnv era,
@@ -184,18 +191,18 @@ instance
     State (Core.EraRule "NEWEPOCH" era) ~ NewEpochState era,
     Environment (Core.EraRule "NEWEPOCH" era) ~ ()
   ) =>
-  Embed (TICK era) (MOCKCHAIN era)
+  Embed (ShelleyTICK era) (MOCKCHAIN era)
   where
   wrapFailed = MockChainFromTickFailure
   wrapEvent = MockChainFromTickEvent
 
 instance
-  ( STS (LEDGERS era),
+  ( STS (ShelleyLEDGERS era),
     State (Core.EraRule "LEDGER" era) ~ LedgerState era,
     Environment (Core.EraRule "LEDGER" era) ~ LedgerEnv era,
     Signal (Core.EraRule "LEDGER" era) ~ Core.Tx era
   ) =>
-  Embed (LEDGERS era) (MOCKCHAIN era)
+  Embed (ShelleyLEDGERS era) (MOCKCHAIN era)
   where
   wrapFailed = MockChainFromLedgersFailure
   wrapEvent = MockChainFromLedgersEvent
@@ -203,16 +210,16 @@ instance
 -- ================================================================
 
 deriving instance
-  (Show (TickEvent era), Show (LedgersEvent era)) => Show (MockChainEvent era)
+  (Show (ShelleyTickEvent era), Show (ShelleyLedgersEvent era)) => Show (MockChainEvent era)
 
 deriving instance
-  (Eq (TickEvent era), Eq (LedgersEvent era)) => Eq (MockChainEvent era)
+  (Eq (ShelleyTickEvent era), Eq (ShelleyLedgersEvent era)) => Eq (MockChainEvent era)
 
 deriving instance
-  (Show (TickPredicateFailure era), Show (LedgersPredicateFailure era)) => Show (MockChainFailure era)
+  (Show (ShelleyTickPredFailure era), Show (ShelleyLedgersPredFailure era)) => Show (MockChainFailure era)
 
 deriving instance
-  (Eq (TickPredicateFailure era), Eq (LedgersPredicateFailure era)) => Eq (MockChainFailure era)
+  (Eq (ShelleyTickPredFailure era), Eq (ShelleyLedgersPredFailure era)) => Eq (MockChainFailure era)
 
 ppMockChainState ::
   Reflect era =>
@@ -242,6 +249,7 @@ instance PrettyA (MockBlock era) where prettyA = ppMockBlock
 
 ppMockChainFailure :: Proof era -> MockChainFailure era -> PDoc
 ppMockChainFailure proof x = case proof of
+  (Conway _) -> help x
   (Babbage _) -> help x
   (Alonzo _) -> help x
   (Mary _) -> help x
@@ -256,3 +264,11 @@ ppMockChainFailure proof x = case proof of
         [ ("Last applied block", ppSlotNo lastslot),
           ("Candidate block", ppSlotNo cand)
         ]
+
+noThunksGen :: Proof era -> MockChainState era -> IO (Maybe ThunkInfo)
+noThunksGen (Conway _) = noThunks []
+noThunksGen (Babbage _) = noThunks []
+noThunksGen (Alonzo _) = noThunks []
+noThunksGen (Mary _) = noThunks []
+noThunksGen (Allegra _) = noThunks []
+noThunksGen (Shelley _) = noThunks []

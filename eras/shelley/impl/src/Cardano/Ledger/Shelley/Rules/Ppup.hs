@@ -10,9 +10,9 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module Cardano.Ledger.Shelley.Rules.Ppup
-  ( PPUP,
-    PPUPEnv (..),
-    PpupPredicateFailure (..),
+  ( ShelleyPPUP,
+    PpupEnv (..),
+    ShelleyPpupPredFailure (..),
     PpupEvent (..),
     PredicateFailure,
     VotingPeriod (..),
@@ -26,29 +26,45 @@ import Cardano.Binary
     encodeListLen,
   )
 import Cardano.Ledger.BaseTypes
-import Cardano.Ledger.Core (PParamsDelta)
-import qualified Cardano.Ledger.Core as Core
-import Cardano.Ledger.Era (Crypto, Era)
-import Cardano.Ledger.Keys
-import Cardano.Ledger.Serialization (decodeRecordSum)
-import Cardano.Ledger.Shelley.LedgerState (PPUPState (..), pvCanFollow)
+  ( Globals (stabilityWindow),
+    ProtVer,
+    ShelleyBase,
+    StrictMaybe (SJust),
+    epochInfoPure,
+    invalidKey,
+  )
+import Cardano.Ledger.Core
+import Cardano.Ledger.Keys (GenDelegs (GenDelegs), KeyHash, KeyRole (Genesis))
 import Cardano.Ledger.Shelley.PParams
+  ( PPUPState (..),
+    ProposedPPUpdates (ProposedPPUpdates),
+    Update (..),
+    pvCanFollow,
+  )
 import Cardano.Ledger.Slot
+  ( Duration (Duration),
+    EpochNo (EpochNo),
+    SlotNo,
+    epochInfoEpoch,
+    epochInfoFirst,
+    (*-),
+  )
 import Control.Monad.Trans.Reader (asks)
 import Control.SetAlgebra (dom, eval, (⊆), (⨃))
 import Control.State.Transition
+import Data.Coders (decodeRecordSum)
 import qualified Data.Map.Strict as Map
 import Data.Set (Set)
 import Data.Typeable (Typeable)
 import Data.Word (Word8)
 import GHC.Generics (Generic)
-import GHC.Records
+import GHC.Records (HasField (..))
 import NoThunks.Class (NoThunks (..))
 
-data PPUP era
+data ShelleyPPUP era
 
-data PPUPEnv era
-  = PPUPEnv SlotNo (Core.PParams era) (GenDelegs (Crypto era))
+data PpupEnv era
+  = PPUPEnv SlotNo (PParams era) (GenDelegs (Crypto era))
 
 data VotingPeriod = VoteForThisEpoch | VoteForNextEpoch
   deriving (Show, Eq, Generic)
@@ -66,43 +82,56 @@ instance FromCBOR VotingPeriod where
       1 -> pure VoteForNextEpoch
       k -> invalidKey k
 
-data PpupPredicateFailure era
-  = NonGenesisUpdatePPUP
-      !(Set (KeyHash 'Genesis (Crypto era))) -- KeyHashes which are voting
-      !(Set (KeyHash 'Genesis (Crypto era))) -- KeyHashes which should be voting
-  | PPUpdateWrongEpoch
-      !EpochNo -- current epoch
-      !EpochNo -- intended epoch of update
-      !VotingPeriod -- voting period within the epoch
-  | PVCannotFollowPPUP
-      !ProtVer -- the first bad protocol version
+data ShelleyPpupPredFailure era
+  = -- | An update was proposed by a key hash that is not one of the genesis keys.
+    --  The first set contains the key hashes which were a part of the update.
+    --  The second set contains the key hashes of the genesis keys.
+    NonGenesisUpdatePPUP
+      !(Set (KeyHash 'Genesis (Crypto era)))
+      !(Set (KeyHash 'Genesis (Crypto era)))
+  | -- | An update was proposed for the wrong epoch.
+    --  The first 'EpochNo' is the current epoch.
+    --  The second 'EpochNo' is the epoch listed in the update.
+    --  The last parameter indicates if the update was intended
+    --  for the current or the next epoch.
+    PPUpdateWrongEpoch
+      !EpochNo
+      !EpochNo
+      !VotingPeriod
+  | -- | An update was proposed which contains an invalid protocol version.
+    --  New protocol versions must either increase the major
+    --  number by exactly one and set the minor version to zero,
+    --  or keep the major version the same and increase the minor
+    --  version by exactly one.
+    PVCannotFollowPPUP
+      !ProtVer
   deriving (Show, Eq, Generic)
 
-instance NoThunks (PpupPredicateFailure era)
+instance NoThunks (ShelleyPpupPredFailure era)
 
 newtype PpupEvent era = NewEpoch EpochNo
 
 instance
   ( Typeable era,
-    HasField "_protocolVersion" (Core.PParams era) ProtVer,
-    HasField "_protocolVersion" (PParamsDelta era) (StrictMaybe ProtVer)
+    HasField "_protocolVersion" (PParams era) ProtVer,
+    HasField "_protocolVersion" (PParamsUpdate era) (StrictMaybe ProtVer)
   ) =>
-  STS (PPUP era)
+  STS (ShelleyPPUP era)
   where
-  type State (PPUP era) = PPUPState era
-  type Signal (PPUP era) = Maybe (Update era)
-  type Environment (PPUP era) = PPUPEnv era
-  type BaseM (PPUP era) = ShelleyBase
-  type PredicateFailure (PPUP era) = PpupPredicateFailure era
-  type Event (PPUP era) = PpupEvent era
+  type State (ShelleyPPUP era) = PPUPState era
+  type Signal (ShelleyPPUP era) = Maybe (Update era)
+  type Environment (ShelleyPPUP era) = PpupEnv era
+  type BaseM (ShelleyPPUP era) = ShelleyBase
+  type PredicateFailure (ShelleyPPUP era) = ShelleyPpupPredFailure era
+  type Event (ShelleyPPUP era) = PpupEvent era
 
   initialRules = []
 
   transitionRules = [ppupTransitionNonEmpty]
 
 instance
-  (Typeable era, Era era) =>
-  ToCBOR (PpupPredicateFailure era)
+  Era era =>
+  ToCBOR (ShelleyPpupPredFailure era)
   where
   toCBOR = \case
     (NonGenesisUpdatePPUP a b) ->
@@ -116,7 +145,7 @@ instance
 
 instance
   (Era era) =>
-  FromCBOR (PpupPredicateFailure era)
+  FromCBOR (ShelleyPpupPredFailure era)
   where
   fromCBOR = decodeRecordSum "PredicateFailure (PPUP era)" $
     \case
@@ -136,10 +165,10 @@ instance
 
 ppupTransitionNonEmpty ::
   ( Typeable era,
-    HasField "_protocolVersion" (Core.PParams era) ProtVer,
-    HasField "_protocolVersion" (PParamsDelta era) (StrictMaybe ProtVer)
+    HasField "_protocolVersion" (PParams era) ProtVer,
+    HasField "_protocolVersion" (PParamsUpdate era) (StrictMaybe ProtVer)
   ) =>
-  TransitionRule (PPUP era)
+  TransitionRule (ShelleyPPUP era)
 ppupTransitionNonEmpty = do
   TRC
     ( PPUPEnv slot pp (GenDelegs _genDelegs),
@@ -156,9 +185,10 @@ ppupTransitionNonEmpty = do
       let goodPV =
             pvCanFollow (getField @"_protocolVersion" pp)
               . getField @"_protocolVersion"
-      let badPVs = Map.filter (not . goodPV) pup
-      case Map.toList (Map.map (getField @"_protocolVersion") badPVs) of
-        ((_, SJust pv) : _) -> failBecause $ PVCannotFollowPPUP pv
+      let badPVs = filter (not . goodPV) (Map.elems pup)
+      case map (getField @"_protocolVersion") badPVs of
+        -- All Nothing cases have been filtered out by 'pvCanFollow'
+        SJust pv : _ -> failBecause $ PVCannotFollowPPUP pv
         _ -> pure ()
 
       sp <- liftSTS $ asks stabilityWindow
