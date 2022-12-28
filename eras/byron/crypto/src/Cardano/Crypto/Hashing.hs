@@ -67,7 +67,7 @@ import Cardano.Ledger.Binary
     serialize,
     withWordSize,
   )
-import Cardano.Prelude hiding (cborError)
+import Cardano.Prelude hiding (cborError, HeapWords)
 import Crypto.Hash (Blake2b_256, Digest, HashAlgorithm, hashDigestSize)
 import qualified Crypto.Hash as Hash
 import Data.Aeson
