@@ -10,7 +10,7 @@ repository cardano-haskell-packages
     c00aae8461a256275598500ea0e187588c35a5d5d7454fb57eac18d9edb86a56
     d4a35cd3121aa00d18544bb0ac01c3e1691d618f462c46129271bccf39f7e8ee
 
--- See CONTRIBUTING for information about these, including some Nix commands 
+-- See CONTRIBUTING for information about these, including some Nix commands
 -- you need to run if you change them
 
 index-state: 2022-11-09T00:00:00Z
@@ -91,7 +91,7 @@ constraints:
   , heapwords >= 0.1.0.1
   , protolude >= 0.3.2
   -- cardano-crypto-class does not work with vector>0.13 see https://github.com/input-output-hk/cardano-base/issues/327
-  , vector < 0.13 
+  , vector < 0.13
 
   -- TODO: these should be set in cabal files, but avoiding setting them in lower dependencies for initial CHaP release
   , base-deriving-via == 0.1.0.0
@@ -187,3 +187,22 @@ package small-steps
 
 package set-algebra
   ghc-options: -Werror
+
+source-repository-package
+  type: git
+  location: https://github.com/input-output-hk/cardano-base
+  tag: 7b44644e13b7eab80309f12219b1998a3c4f9ad2
+  -- tag: 0f3a867493059e650cda69e20a5cbf1ace289a57
+  --sha256: 0p0az3sbkhb7njji8xxdrfb0yx2gc8fmrh872ffm8sfip1w29gg1
+  subdir:
+    base-deriving-via
+    binary
+    binary/test
+    cardano-crypto-class
+    cardano-crypto-praos
+    cardano-crypto-tests
+    measures
+    orphans-deriving-via
+    slotting
+    cardano-strict-containers
+    heapwords
